@@ -1,5 +1,50 @@
 # emdash
 
+## 0.30.0
+
+### Minor Changes
+
+- [#1890](https://github.com/emdash-cms/emdash/pull/1890) [`82827d3`](https://github.com/emdash-cms/emdash/commit/82827d3f8ffdaa4fae688b89cdcc139aa6c25810) Thanks [@swissky](https://github.com/swissky)! - Adds a Backups page to admin settings: download a complete content backup (all content including drafts and trash, schema, taxonomies, menus, widgets, media metadata, and site settings — never user accounts or secrets) with one click, and optionally enable daily automatic backups to the site's storage bucket with configurable retention. A new `backups:manage` permission gates the feature to admins.
+
+- [#2007](https://github.com/emdash-cms/emdash/pull/2007) [`6fb52b0`](https://github.com/emdash-cms/emdash/commit/6fb52b08139dead03f61324abe1ed10a9e5552e0) Thanks [@khoinguyenpham04](https://github.com/khoinguyenpham04)! - Adds `emdash media repair-usage` and the `media_usage_repair` MCP tool for repairing content media usage indexes by collection or across all collections; automation should inspect the structured repair status because non-complete results can still be successful invocations.
+
+- [#1868](https://github.com/emdash-cms/emdash/pull/1868) [`4c57ee2`](https://github.com/emdash-cms/emdash/commit/4c57ee216f242ef163ae269ec6ff6abfba716e6f) Thanks [@afonsojramos](https://github.com/afonsojramos)! - Invited users can now accept their invite by signing in with Google or GitHub, instead of only creating a passkey.
+
+### Patch Changes
+
+- [#1505](https://github.com/emdash-cms/emdash/pull/1505) [`fbb04ab`](https://github.com/emdash-cms/emdash/commit/fbb04abcff5b909e28541d3b3e5fca3089870b83) Thanks [@swissky](https://github.com/swissky)! - The admin shell now falls back to the Site Icon configured in Settings → General for its favicon, so the EmDash backend is branded like the public site. An explicit build-time `admin.favicon` still takes precedence, and the default EmDash mark is used when neither is set.
+
+- [#1992](https://github.com/emdash-cms/emdash/pull/1992) [`7b9e558`](https://github.com/emdash-cms/emdash/commit/7b9e5589a79435b8cf069528fdbdb4dd9b8988ae) Thanks [@swissky](https://github.com/swissky)! - Fixes a circular redirect loop when a slug rename is reverted. Renaming a slug back to a previous value now removes the stale redirect that shadowed the restored URL, so the page stays reachable.
+
+- [#1979](https://github.com/emdash-cms/emdash/pull/1979) [`039c5dc`](https://github.com/emdash-cms/emdash/commit/039c5dc6d5ecef03bc8be68616234834abdd20cc) Thanks [@masonjames](https://github.com/masonjames)! - Fixes browser uploads for custom S3-compatible storage adapters by allowing their runtime upload origin in the admin Content Security Policy.
+
+- [#1945](https://github.com/emdash-cms/emdash/pull/1945) [`6c96ac8`](https://github.com/emdash-cms/emdash/commit/6c96ac8b68d6ba514aba51d5a5282c499afc22d6) Thanks [@swissky](https://github.com/swissky)! - Fixes unsaved inline (visual) editor changes being silently lost when navigating away, e.g. via the browser back button. Edits are now flushed with a keepalive request when the page unloads.
+
+- [#2080](https://github.com/emdash-cms/emdash/pull/2080) [`de44730`](https://github.com/emdash-cms/emdash/commit/de44730990e8a10b70b0a64ed3747f7038a31eec) Thanks [@logelog](https://github.com/logelog)! - Fixes trusted plugin API routes receiving empty site metadata and relative URLs by using the same site context as plugin hooks.
+
+- [#2018](https://github.com/emdash-cms/emdash/pull/2018) [`32be60b`](https://github.com/emdash-cms/emdash/commit/32be60b87f091e24897c78d39b5d15de93946aab) Thanks [@ttmx](https://github.com/ttmx)! - Adds schedulerless cron access, scheduled publication timestamps, and external authentication support to plugin routes.
+
+- [#1980](https://github.com/emdash-cms/emdash/pull/1980) [`32f8261`](https://github.com/emdash-cms/emdash/commit/32f8261fc028dc6941a14d891a83722c8c830209) Thanks [@swissky](https://github.com/swissky)! - Fixes plugin storage `startsWith` queries treating `%`, `_`, and `\` in the prefix as LIKE wildcards instead of literal characters.
+
+- [#2082](https://github.com/emdash-cms/emdash/pull/2082) [`cf6e4fa`](https://github.com/emdash-cms/emdash/commit/cf6e4fa5d259c24d7ae3038c55039fc56c6c2923) Thanks [@logelog](https://github.com/logelog)! - Fixes production build warnings when database adapters do not provide the optional cold-start query coalescing dialect.
+
+- [#2084](https://github.com/emdash-cms/emdash/pull/2084) [`d303738`](https://github.com/emdash-cms/emdash/commit/d30373826208bd0182e842d20ca718a78a0585c6) Thanks [@logelog](https://github.com/logelog)! - Avoid production render warnings when Astro's built-in CSP is disabled while preserving JSON-LD script hashes when it is enabled.
+
+- [#2081](https://github.com/emdash-cms/emdash/pull/2081) [`6890edd`](https://github.com/emdash-cms/emdash/commit/6890edd3b82b076da43d43685195321e83f50914) Thanks [@logelog](https://github.com/logelog)! - Fixes sandboxed plugins receiving empty site metadata and relative URLs from `ctx.url()`.
+
+- [#2050](https://github.com/emdash-cms/emdash/pull/2050) [`cfdb8f0`](https://github.com/emdash-cms/emdash/commit/cfdb8f00ea18dc728e6e0fb910cc71d56478ea63) Thanks [@edrpls](https://github.com/edrpls)! - Fixes admin-account recovery when `emdash:setup_complete` is set but the users table is empty (a wiped or sanitised database copied between environments). `/api/setup/status` already resumes the wizard at the admin step for this state, but the admin-step routes rejected it with `SETUP_COMPLETE`, leaving no UI path to an admin account. Both routes now reject on the flag only when a user also exists; the fully-set-up and admin-exists rejections are unchanged.
+
+- [#1962](https://github.com/emdash-cms/emdash/pull/1962) [`c24b7d3`](https://github.com/emdash-cms/emdash/commit/c24b7d3be5efa95e7874e48360e31fdc8b27a06d) Thanks [@MA2153](https://github.com/MA2153)! - Fixes taxonomy-filtered collection listings reading the entire collection on SQLite/D1 when the term is selective. Such listings now seek the matching entries directly, cutting D1 rows-read from tens of thousands to the page size.
+
+- [#2085](https://github.com/emdash-cms/emdash/pull/2085) [`84173dd`](https://github.com/emdash-cms/emdash/commit/84173dd64ed67da3035f88f37fc573c9fe9753a5) Thanks [@logelog](https://github.com/logelog)! - Watch resolved sandbox plugin entry files so rebuilding a plugin invalidates its embedded virtual module during development.
+
+- Updated dependencies [[`82827d3`](https://github.com/emdash-cms/emdash/commit/82827d3f8ffdaa4fae688b89cdcc139aa6c25810), [`2cb8dd3`](https://github.com/emdash-cms/emdash/commit/2cb8dd3cb6af04e1f0f8dbb825ade372c52cac05), [`44e2685`](https://github.com/emdash-cms/emdash/commit/44e268560d145f2367093f9b4028e9b7f312c7a9), [`3176f4f`](https://github.com/emdash-cms/emdash/commit/3176f4fff3e93cbe52d49b9c7293aeccefa9e512), [`1c15097`](https://github.com/emdash-cms/emdash/commit/1c150977628d729c7b501f24c60a9f65fbb02123), [`a272e58`](https://github.com/emdash-cms/emdash/commit/a272e58fab994046ba214659328dbf9674fc26ad), [`4c57ee2`](https://github.com/emdash-cms/emdash/commit/4c57ee216f242ef163ae269ec6ff6abfba716e6f), [`07c9f21`](https://github.com/emdash-cms/emdash/commit/07c9f210db300803f49ecf2b8a18fe173e459a28), [`b871de2`](https://github.com/emdash-cms/emdash/commit/b871de20c4389514c761b6db8c3c3d36f2a1d991), [`1d7550b`](https://github.com/emdash-cms/emdash/commit/1d7550bba157b114d54c6df95d5e11e1903e54f3), [`2da14cc`](https://github.com/emdash-cms/emdash/commit/2da14cc9fff44a761df44114b2f1da273a9a69d1), [`8903aef`](https://github.com/emdash-cms/emdash/commit/8903aef771f98fb505911ac8c7c655f3ff9103e4)]:
+  - @emdash-cms/admin@0.30.0
+  - @emdash-cms/auth@0.30.0
+  - @emdash-cms/plugin-types@0.3.0
+  - @emdash-cms/registry-client@0.3.4
+  - @emdash-cms/gutenberg-to-portable-text@0.30.0
+
 ## 0.29.0
 
 ### Minor Changes

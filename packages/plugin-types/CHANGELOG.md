@@ -1,5 +1,11 @@
 # @emdash-cms/plugin-types
 
+## 0.3.0
+
+### Minor Changes
+
+- [#2067](https://github.com/emdash-cms/emdash/pull/2067) [`07c9f21`](https://github.com/emdash-cms/emdash/commit/07c9f210db300803f49ecf2b8a18fe173e459a28) Thanks [@ascorbic](https://github.com/ascorbic)! - Adds plugin manifest schema validation (`pluginManifestSchema`, `reconcileManifestAccess`) and declared-access canonicalization helpers (`canonicalizeDeclaredAccess`, `diffDeclaredAccess`, escalation detection, and the `CanonicalDeclaredAccess` types) for validating plugin manifests and comparing the access a plugin declares.
+
 ## 0.2.0
 
 ### Minor Changes
