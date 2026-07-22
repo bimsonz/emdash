@@ -16,6 +16,7 @@ import {
 	UnsupportedPortableTextMarksError,
 	assertPortableTextMarksSupported,
 } from "./mark-safety.js";
+import { normalizeNestingAttrs } from "./nesting.js";
 import {
 	deriveLegacyListId,
 	normalizeProseMirrorOrderedListJson,
@@ -40,6 +41,8 @@ import type {
 	PortableTextGalleryBlock,
 	PortableTextCodeBlock,
 	PortableTextIframeBlock,
+	PortableTextNestingBlock,
+	PortableTextNestingColumn,
 } from "./types.js";
 
 function generateKey(): string {
@@ -67,7 +70,26 @@ export function portableTextToProsemirror(
 	}
 	assertPortableTextMarksSupported(blocks);
 	const preserveIdentity = options.preserveIdentity === true;
+	const content = convertBlocks(blocks, preserveIdentity, "root");
 
+	return normalizeProseMirrorOrderedListJson({
+		type: "doc",
+		content: content.length > 0 ? content : [{ type: "paragraph" }],
+	});
+}
+
+/**
+ * Convert a run of Portable Text blocks to ProseMirror nodes.
+ *
+ * Shared by the document root and by nesting columns, so list and blockquote
+ * runs regroup the same way at every depth. `context` seeds legacy list ids and
+ * must be unique per container.
+ */
+function convertBlocks(
+	blocks: PortableTextBlock[],
+	preserveIdentity: boolean,
+	context: string,
+): ProseMirrorNode[] {
 	const content: ProseMirrorNode[] = [];
 	let i = 0;
 
@@ -108,7 +130,7 @@ export function portableTextToProsemirror(
 				}
 			}
 
-			content.push(convertList(listBlocks, listType, `root:${runStart}`, preserveIdentity));
+			content.push(convertList(listBlocks, listType, `${context}:${runStart}`, preserveIdentity));
 		} else if (isTextBlock(block) && block.style === "blockquote") {
 			// Collect a blockquote "run": Portable Text is flat, so a
 			// multi-paragraph quote is stored as consecutive blocks with
@@ -154,10 +176,7 @@ export function portableTextToProsemirror(
 		}
 	}
 
-	return normalizeProseMirrorOrderedListJson({
-		type: "doc",
-		content: content.length > 0 ? content : [{ type: "paragraph" }],
-	});
+	return content;
 }
 
 function identityAttrs(
@@ -260,6 +279,10 @@ function isCodeBlock(block: PortableTextBlock): block is PortableTextCodeBlock {
 	return block._type === "code";
 }
 
+function isNestingBlock(block: PortableTextBlock): block is PortableTextNestingBlock {
+	return block._type === "nestingBlock";
+}
+
 /**
  * Convert a single Portable Text block to ProseMirror node
  */
@@ -293,6 +316,9 @@ function convertBlock(
 	}
 	if (isCodeBlock(block)) {
 		return convertCodeBlock(block, preserveIdentity);
+	}
+	if (isNestingBlock(block)) {
+		return convertNestingBlock(block, preserveIdentity);
 	}
 	if (block._type === "htmlBlock") {
 		return {
@@ -753,6 +779,47 @@ function convertMalformedImage(
 			block._key,
 			preserveIdentity,
 		),
+	};
+}
+
+/**
+ * Convert a nesting block (grid/flex container) to ProseMirror.
+ *
+ * A nesting block holds `nestingColumn+` and each column holds `block+`. Column
+ * blocks go back through `convertBlocks`, so nested lists, quotes and further
+ * containers regroup exactly as they do at the root.
+ */
+function convertNestingBlock(
+	block: PortableTextNestingBlock,
+	preserveIdentity: boolean,
+): ProseMirrorNode {
+	const columns = (Array.isArray(block.children) ? block.children : []).map((column, index) =>
+		convertNestingColumn(column, preserveIdentity, `${block._key}:${index}`),
+	);
+	const attrs = normalizeNestingAttrs(block);
+	return {
+		type: "nestingBlock",
+		attrs: identityAttrs(
+			{ ...attrs, columns: Math.max(1, columns.length) },
+			block._key,
+			preserveIdentity,
+		),
+		content:
+			columns.length > 0 ? columns : [{ type: "nestingColumn", content: [{ type: "paragraph" }] }],
+	};
+}
+
+function convertNestingColumn(
+	column: PortableTextNestingColumn,
+	preserveIdentity: boolean,
+	context: string,
+): ProseMirrorNode {
+	const blocks = Array.isArray(column.children) ? column.children : [];
+	assertPortableTextMarksSupported(blocks);
+	const content = convertBlocks(blocks, preserveIdentity, context);
+	return {
+		type: "nestingColumn",
+		content: content.length > 0 ? content : [{ type: "paragraph" }],
 	};
 }
 

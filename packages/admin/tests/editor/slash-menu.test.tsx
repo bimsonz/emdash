@@ -763,7 +763,7 @@ describe("Slash Command Menu", () => {
 		const groupLabels = Array.from(menu.querySelectorAll('[role="group"]'), (group) =>
 			group.getAttribute("aria-label"),
 		);
-		expect(groupLabels).toEqual(["Basic blocks", "Media", "Advanced", "Embeds"]);
+		expect(groupLabels).toEqual(["Basic blocks", "Layout", "Media", "Advanced", "Embeds"]);
 
 		await userEvent.keyboard("image");
 
