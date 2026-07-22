@@ -202,6 +202,31 @@ export interface PortableTextVideoBlock {
 }
 
 /**
+ * Nesting block (grid/flex container holding other blocks as children)
+ */
+export type NestingLayout = "grid" | "flex";
+export type NestingGap = "none" | "sm" | "md" | "lg";
+export type NestingAlign = "start" | "center" | "end" | "stretch";
+
+/** A single column (cell) inside a nesting block, holding its own blocks. */
+export interface PortableTextNestingColumn {
+	_type: "nestingColumn";
+	_key: string;
+	children: PortableTextBlock[];
+}
+
+export interface PortableTextNestingBlock {
+	_type: "nestingBlock";
+	_key: string;
+	layout: NestingLayout;
+	/** Number of columns; kept in sync with `children.length`. */
+	columns: number;
+	gap: NestingGap;
+	align: NestingAlign;
+	children: PortableTextNestingColumn[];
+}
+
+/**
  * Unknown/custom block (preserved for plugin compatibility)
  */
 export interface PortableTextUnknownBlock {
@@ -222,6 +247,7 @@ export type PortableTextBlock =
 	| PortableTextIframeBlock
 	| PortableTextVideoBlock
 	| PortableTextTableBlock
+	| PortableTextNestingBlock
 	| PortableTextUnknownBlock;
 
 /**

@@ -75,6 +75,8 @@ export const PortableTextIdentityExtension = Extension.create({
 					"videoBlock",
 					"horizontalRule",
 					"gallery",
+					"nestingBlock",
+					"nestingColumn",
 					PORTABLE_TEXT_BLOCK_NODE,
 				],
 				attributes: { [PORTABLE_TEXT_KEY_ATTR]: hiddenAttribute },
