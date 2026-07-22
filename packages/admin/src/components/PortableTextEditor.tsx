@@ -88,6 +88,7 @@ import {
 	DotsSixVertical,
 	CaretDown,
 	type Icon,
+	ColumnsIcon,
 } from "@phosphor-icons/react";
 import { X } from "@phosphor-icons/react";
 import { Extension, Mark, type Range } from "@tiptap/core";
@@ -133,6 +134,7 @@ import { HtmlBlockExtension } from "./editor/HtmlBlockNode";
 import { ImageExtension } from "./editor/ImageNode";
 import { MarkdownLinkExtension } from "./editor/MarkdownLinkExtension";
 import { EmDashOrderedList } from "./editor/ordered-list";
+import { NestingBlockExtension, NestingColumnExtension } from "./editor/NestingBlockNode";
 import {
 	type PluginBlockDef,
 	PluginBlockExtension,
@@ -375,6 +377,8 @@ const PortableTextIdentityExtension = Extension.create({
 					"tableCell",
 					"tableHeader",
 					"pluginBlock",
+					"nestingBlock",
+					"nestingColumn",
 				],
 				attributes: { [PORTABLE_TEXT_KEY_ATTR]: hiddenAttribute },
 			},
@@ -563,6 +567,18 @@ function normalizeOrderedListJson(doc: { type: "doc"; content: PortableTextProse
 	return normalized;
 }
 
+// Nesting block layout coercion
+const NESTING_GAPS = ["none", "sm", "md", "lg"] as const;
+const NESTING_ALIGNS = ["start", "center", "end", "stretch"] as const;
+
+function pickNestingGap(v: unknown): (typeof NESTING_GAPS)[number] {
+	return NESTING_GAPS.find((g) => g === v) ?? "md";
+}
+
+function pickNestingAlign(v: unknown): (typeof NESTING_ALIGNS)[number] {
+	return NESTING_ALIGNS.find((a) => a === v) ?? "start";
+}
+
 // ProseMirror to Portable Text converter
 function prosemirrorToPortableText(doc: {
 	type: string;
@@ -713,6 +729,44 @@ function convertPMNode(
 				_type: "htmlBlock",
 				_key: portableTextKeyFromAttrs(node.attrs) ?? generateKey(),
 				html: typeof rawHtml === "string" ? rawHtml : "",
+			};
+		}
+
+		case "nestingBlock": {
+			const attrs = node.attrs ?? {};
+			const columnNodes = (node.content || []) as Array<Parameters<typeof convertPMNode>[0]>;
+			const columns: PortableTextBlock[] = [];
+
+			for (const [c, col] of columnNodes.entries()) {
+				if (col.type !== "nestingColumn") continue;
+
+				const colChildren: PortableTextBlock[] = [];
+				const children = (col.content || []) as Array<Parameters<typeof convertPMNode>[0]>;
+
+				for (const [i, child] of children.entries()) {
+					const converted = convertPMNode(child, `${path}:col${c}:${i}`);
+
+					if (converted) {
+						if (Array.isArray(converted)) colChildren.push(...converted);
+						else colChildren.push(converted);
+					}
+				}
+
+				columns.push({
+					_type: "nestingColumn",
+					_key: portableTextKeyFromAttrs(col.attrs) ?? generateKey(),
+					children: colChildren,
+				});
+			}
+
+			return {
+				_type: "nestingBlock",
+				_key: portableTextKeyFromAttrs(node.attrs) ?? generateKey(),
+				layout: attrs.layout === "flex" ? "flex" : "grid",
+				columns: Math.max(1, columns.length),
+				gap: pickNestingGap(attrs.gap),
+				align: pickNestingAlign(attrs.align),
+				children: columns,
 			};
 		}
 
@@ -1370,6 +1424,41 @@ function convertPTBlock(block: PortableTextBlock): unknown {
 			};
 		}
 
+		case "nestingBlock": {
+			const nb = block as { layout?: unknown; gap?: unknown; align?: unknown; children?: unknown };
+			const rawChildren = Array.isArray(nb.children) ? nb.children : [];
+
+			const columns = rawChildren.map((child) => {
+				const c = child as { _type?: unknown; _key?: unknown; children?: unknown };
+				const colBlocks =
+					c._type === "nestingColumn" && Array.isArray(c.children)
+						? (c.children as PortableTextBlock[])
+						: [child as PortableTextBlock];
+
+				return {
+					type: "nestingColumn",
+					attrs: attrStr(c._key) ? attrsWithPortableTextKey(undefined, c._key as string) : undefined,
+					content: portableTextToProsemirror(colBlocks).content,
+				};
+			});
+
+			return {
+				type: "nestingBlock",
+				attrs: attrsWithPortableTextKey(
+					{
+						layout: nb.layout === "flex" ? "flex" : "grid",
+						gap: pickNestingGap(nb.gap),
+						align: pickNestingAlign(nb.align),
+					},
+					block._key,
+				),
+				content:
+					columns.length > 0
+						? columns
+						: [{ type: "nestingColumn", content: [{ type: "paragraph" }] }],
+			};
+		}
+
 		default: {
 			return convertCustomBlock(block);
 		}
@@ -1757,6 +1846,29 @@ const defaultSlashCommands: SlashCommandItem[] = [
 				.focus()
 				.deleteRange(range)
 				.insertTable({ rows: 3, cols: 3, withHeaderRow: true })
+				.run();
+		},
+	},
+	{
+		id: "nestingBlock",
+		title: msg`Nesting container`,
+		description: msg`Grid or flex layout holding other blocks`,
+		icon: ColumnsIcon,
+		category: msg`Layout`,
+		aliases: ["nest", "container", "layout", "grid", "flex", "columns"],
+		command: ({ editor, range }) => {
+			editor
+				.chain()
+				.focus()
+				.deleteRange(range)
+				.insertContent({
+					type: "nestingBlock",
+					attrs: { layout: "grid", gap: "md", align: "start" },
+					content: [
+						{ type: "nestingColumn", content: [{ type: "paragraph" }] },
+						{ type: "nestingColumn", content: [{ type: "paragraph" }] },
+					],
+				})
 				.run();
 		},
 	},
@@ -3090,6 +3202,8 @@ export function PortableTextEditor({
 			PluginBlockExtension,
 			Subscript,
 			Superscript,
+			NestingBlockExtension,
+			NestingColumnExtension,
 			Table.configure({
 				allowTableNodeSelection: true,
 				resizable: true,

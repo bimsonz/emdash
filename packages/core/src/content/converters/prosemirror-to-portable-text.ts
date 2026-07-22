@@ -9,6 +9,7 @@ import {
 	UnsupportedPortableTextMarksError,
 	assertProseMirrorMarksSupported,
 } from "./mark-safety.js";
+import { normalizeNestingAttrs } from "./nesting.js";
 import { readOrderedListMetadata, type OrderedListMetadata } from "./numbered-list.js";
 import {
 	PORTABLE_TEXT_BLOCK_NODE,
@@ -30,6 +31,7 @@ import type {
 	PortableTextGalleryBlock,
 	PortableTextCodeBlock,
 	PortableTextHtmlBlock,
+	PortableTextNestingBlock,
 } from "./types.js";
 
 /**
@@ -48,12 +50,27 @@ export function prosemirrorToPortableText(doc: ProseMirrorDocument): PortableTex
 	}
 	assertProseMirrorMarksSupported(doc);
 
-	const blocks: PortableTextBlock[] = [];
-	const usedBlockKeys = new Set<string>();
+	const last = doc.content.length - 1;
+	const content = doc.content.filter((node, i) => i !== last || !isUnkeyedEmptyParagraph(node));
+	return convertNodes(content, "root", new Set());
+}
 
-	for (const [i, node] of doc.content.entries()) {
-		if (i === doc.content.length - 1 && isUnkeyedEmptyParagraph(node)) continue;
-		const converted = convertNode(node, `root:${i}`);
+/**
+ * Convert a run of ProseMirror nodes to Portable Text blocks.
+ *
+ * Shared by the document root and by nesting columns. `usedBlockKeys` is one set
+ * for the whole document, so a key duplicated inside a column is repaired the same
+ * way as one duplicated at the root.
+ */
+function convertNodes(
+	nodes: ProseMirrorNode[],
+	path: string,
+	usedBlockKeys: Set<string>,
+): PortableTextBlock[] {
+	const blocks: PortableTextBlock[] = [];
+
+	for (const [i, node] of nodes.entries()) {
+		const converted = convertNode(node, `${path}:${i}`, usedBlockKeys);
 		for (const block of converted ? (Array.isArray(converted) ? converted : [converted]) : []) {
 			let key = block._key;
 			if (usedBlockKeys.has(key)) {
@@ -82,6 +99,7 @@ function isUnkeyedEmptyParagraph(node: ProseMirrorNode): boolean {
 function convertNode(
 	node: ProseMirrorNode,
 	path: string,
+	usedBlockKeys: Set<string>,
 ): PortableTextBlock | PortableTextBlock[] | null {
 	switch (node.type) {
 		case PORTABLE_TEXT_BLOCK_NODE:
@@ -113,6 +131,9 @@ function convertNode(
 
 		case "gallery":
 			return convertGallery(node);
+
+		case "nestingBlock":
+			return convertNestingBlock(node, path, usedBlockKeys);
 
 		case "horizontalRule":
 			return {
@@ -336,6 +357,33 @@ function convertHtmlBlock(node: ProseMirrorNode): PortableTextHtmlBlock {
 		_type: "htmlBlock",
 		_key: portableTextKeyFromAttrs(node.attrs) ?? generateKey(),
 		html: typeof rawHtml === "string" ? rawHtml : "",
+	};
+}
+
+/**
+ * Convert a nesting block (grid/flex container) to Portable Text.
+ *
+ * The container holds `nestingColumn` nodes; each becomes a column object with its
+ * own `children` blocks, and `columns` is derived from the column count.
+ */
+function convertNestingBlock(
+	node: ProseMirrorNode,
+	path: string,
+	usedBlockKeys: Set<string>,
+): PortableTextNestingBlock {
+	const columns = (node.content ?? [])
+		.filter((child) => child.type === "nestingColumn")
+		.map((col, index) => ({
+			_type: "nestingColumn" as const,
+			_key: portableTextKeyFromAttrs(col.attrs) ?? generateKey(),
+			children: convertNodes(col.content ?? [], `${path}:col${index}`, usedBlockKeys),
+		}));
+	return {
+		_type: "nestingBlock",
+		_key: portableTextKeyFromAttrs(node.attrs) ?? generateKey(),
+		...normalizeNestingAttrs(node.attrs ?? {}),
+		columns: Math.max(1, columns.length),
+		children: columns,
 	};
 }
 
