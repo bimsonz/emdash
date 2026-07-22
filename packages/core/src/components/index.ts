@@ -51,6 +51,7 @@ export { default as Columns } from "./Columns.astro";
 export { default as Break } from "./Break.astro";
 export { default as HtmlBlock } from "./HtmlBlock.astro";
 export { default as Iframe } from "./Iframe.astro";
+export { default as NestingBlock } from "./NestingBlock.astro";
 export { default as Table } from "./Table.astro";
 export { default as Button } from "./Button.astro";
 export { default as Buttons } from "./Buttons.astro";
@@ -81,6 +82,7 @@ import IframeComponent from "./Iframe.astro";
 // Pre-configured components object for PortableText
 import ImageComponent from "./Image.astro";
 import { emdashMarkComponents } from "./marks.js";
+import NestingBlockComponent from "./NestingBlock.astro";
 import OrderedListComponent from "./OrderedList.astro";
 import PullquoteComponent from "./Pullquote.astro";
 import TableComponent from "./Table.astro";
@@ -107,6 +109,7 @@ export const emdashComponents = {
 		embed: EmbedComponent,
 		gallery: GalleryComponent,
 		columns: ColumnsComponent,
+		nestingBlock: NestingBlockComponent,
 		break: BreakComponent,
 		htmlBlock: HtmlBlockComponent,
 		iframe: IframeComponent,
