@@ -10,7 +10,7 @@ import * as path from "node:path";
 import type { APIRoute } from "astro";
 import { ulid } from "ulidx";
 
-import { canReadMediaUsageCount, requirePerm } from "#api/authorize.js";
+import { canReadDrafts, requirePerm } from "#api/authorize.js";
 import { apiError, apiSuccess, handleError, unwrapResult } from "#api/error.js";
 import { GLOBAL_UPLOAD_ALLOWLIST, resolveFieldAllowlist } from "#api/handlers/media-allowlist.js";
 import { handleMediaUsageSummaries } from "#api/handlers/media-usage.js";
@@ -70,7 +70,7 @@ export const GET: APIRoute = async ({ request, locals }) => {
 		return apiSuccess({ items: itemsWithUrl, nextCursor: result.data.nextCursor });
 	}
 
-	const includeCount = canReadMediaUsageCount(user, locals.tokenScopes);
+	const includeCount = canReadDrafts(user, locals.tokenScopes);
 	const usageResult = await handleMediaUsageSummaries(
 		emdash.db,
 		itemsWithUrl.map((item) => item.id),

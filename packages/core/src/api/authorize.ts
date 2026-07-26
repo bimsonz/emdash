@@ -15,7 +15,21 @@ interface UserLike {
 	role: RoleLevel;
 }
 
-export function canReadMediaUsageCount(
+/**
+ * May this caller see non-published content (drafts, scheduled, trash)?
+ *
+ * Role alone is not enough. API tokens are always owned by an admin -- creating
+ * one requires `Role.ADMIN` and records the caller as its owner -- so gating on
+ * the owner's role lets every token read drafts no matter how narrowly it was
+ * scoped. A key issued for a public website with `content:read` would still be
+ * served unpublished pages, which means unpublishing does not take content off
+ * the site.
+ *
+ * So a token must additionally carry the `admin` scope. Session-authenticated
+ * requests have no scopes (`tokenScopes === undefined`) and are judged on role
+ * alone as before, which leaves the admin UI untouched.
+ */
+export function canReadDrafts(
 	user: UserLike | null | undefined,
 	tokenScopes: string[] | undefined,
 ): boolean {
