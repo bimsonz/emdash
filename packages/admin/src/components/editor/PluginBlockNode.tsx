@@ -269,8 +269,9 @@ function PluginBlockNodeView({
 			<div className="relative group">
 				{/* Main block content */}
 				<div className="rounded-lg border bg-kumo-base">
-					{/* Header with icon, label, and actions */}
-					<div className="flex items-center gap-3 px-4 py-3">
+					{/* Wraps because the action buttons hold their width while hidden, leaving
+					    the label almost none in a narrow column. */}
+					<div className="flex flex-wrap items-center gap-3 px-4 py-3">
 						{/* Icon */}
 						<div
 							className={cn(
@@ -282,7 +283,7 @@ function PluginBlockNodeView({
 						</div>
 
 						{/* Label and ID */}
-						<div className="flex-1 min-w-0">
+						<div className="min-w-0 flex-1 basis-24">
 							<div className="text-sm font-medium">{label}</div>
 							{!isEditing && (
 								<div className="text-xs text-kumo-subtle truncate font-mono">{displayId}</div>
