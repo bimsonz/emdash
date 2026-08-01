@@ -14,12 +14,28 @@ import * as React from "react";
 import { fetchCollections, fetchContentList, getDraftStatus } from "../lib/api";
 import type { ContentItem } from "../lib/api";
 import { useDebouncedValue } from "../lib/hooks";
+import { contentUrl } from "../lib/url";
 import { cn } from "../lib/utils";
 
 interface ContentPickerModalProps {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
-	onSelect: (item: { collection: string; id: string; title: string }) => void;
+	onSelect: (item: {
+		collection: string;
+		id: string;
+		title: string;
+		/** The item's own slug, when it has one. */
+		slug: string | null;
+		/**
+		 * Where the item lives on the public site, from the collection's `urlPattern`.
+		 *
+		 * Resolved here because this is the only component that holds both the item and the
+		 * collection it came from. Callers that store a reference (the menu editor, which sends
+		 * `referenceCollection` + `referenceId` and lets the API resolve it) can ignore this;
+		 * callers that need a URL now (a link in body content) cannot get one any other way.
+		 */
+		url: string | null;
+	}) => void;
 }
 
 function getItemTitle(item: { data: Record<string, unknown>; slug: string | null; id: string }) {
@@ -101,10 +117,14 @@ export function ContentPickerModal({ open, onOpenChange, onSelect }: ContentPick
 	}, [open]);
 
 	const handleSelect = (item: ContentItem) => {
+		const collection = collections.find((c) => c.slug === selectedCollection);
 		onSelect({
 			collection: selectedCollection,
 			id: item.id,
 			title: getItemTitle(item),
+			slug: item.slug,
+			// No slug means nothing addressable to link to — a URL built from the id would 404.
+			url: item.slug ? contentUrl(selectedCollection, item.slug, collection?.urlPattern) : null,
 		});
 		onOpenChange(false);
 	};

@@ -56,6 +56,7 @@ import {
 	ListNumbers,
 	Quotes,
 	Link as LinkIcon,
+	MagnifyingGlass,
 	Image as ImageIcon,
 	Images,
 	ArrowUUpLeft,
@@ -124,6 +125,7 @@ import {
 	registerPluginBlocks,
 	resolveIcon,
 } from "./editor/PluginBlockNode";
+import { ContentPickerModal } from "./ContentPickerModal";
 import { MediaPickerModal } from "./MediaPickerModal";
 import { SectionPickerModal } from "./SectionPickerModal";
 
@@ -3220,6 +3222,12 @@ function EditorBubbleMenu({
 }) {
 	const [showLinkInput, setShowLinkInput] = React.useState(false);
 	const [linkUrl, setLinkUrl] = React.useState("");
+	/*
+	 * Linking to something on this site should not require knowing its URL. The picker already
+	 * exists for menus, so this reuses that component rather than inventing a second one — which
+	 * also means the two ways of linking to a page cannot drift apart.
+	 */
+	const [showContentPicker, setShowContentPicker] = React.useState(false);
 	const inputRef = React.useRef<HTMLInputElement>(null);
 	const { t } = useLingui();
 	const activeMarks = useEditorState({
@@ -3259,6 +3267,23 @@ function EditorBubbleMenu({
 		setLinkUrl("");
 	};
 
+	/**
+	 * Apply a link to a picked content item.
+	 *
+	 * A `null` url means the entry has no slug, so there is nothing addressable to point at — the
+	 * picker offers it because it exists, but linking to it would 404. Leaving the input open with
+	 * the picker closed is the honest outcome: nothing was applied.
+	 */
+	const handlePickContent = (item: { url: string | null }) => {
+		setShowContentPicker(false);
+		if (!item.url) {
+			return;
+		}
+		editor.chain().focus().extendMarkRange("link").setLink({ href: item.url }).run();
+		setShowLinkInput(false);
+		setLinkUrl("");
+	};
+
 	const handleKeyDown = (e: React.KeyboardEvent) => {
 		if (e.key === "Enter") {
 			e.preventDefault();
@@ -3271,6 +3296,7 @@ function EditorBubbleMenu({
 	};
 
 	return (
+		<>
 		<BubbleMenu
 			editor={editor}
 			pluginKey={INLINE_BUBBLE_MENU_KEY}
@@ -3314,6 +3340,18 @@ function EditorBubbleMenu({
 						className="h-8 w-48 text-sm"
 						aria-label={t`URL`}
 					/>
+					<Button
+						type="button"
+						variant="ghost"
+						shape="square"
+						className="h-8 w-8"
+						onMouseDown={(event) => event.preventDefault()}
+						onClick={() => setShowContentPicker(true)}
+						title={t`Link to content`}
+						aria-label={t`Link to content`}
+					>
+						<MagnifyingGlass className="h-4 w-4" />
+					</Button>
 					<Button
 						type="button"
 						variant="ghost"
@@ -3386,7 +3424,14 @@ function EditorBubbleMenu({
 					</BubbleButton>
 				</>
 			)}
-		</BubbleMenu>
+			</BubbleMenu>
+			{/* Outside the bubble menu: it is a floating element that unmounts on selection change. */}
+			<ContentPickerModal
+				open={showContentPicker}
+				onOpenChange={setShowContentPicker}
+				onSelect={handlePickContent}
+			/>
+		</>
 	);
 }
 
@@ -3590,6 +3635,8 @@ function EditorToolbar({
 	const { t } = useLingui();
 	const [showLinkPopover, setShowLinkPopover] = React.useState(false);
 	const [linkUrl, setLinkUrl] = React.useState("");
+	/** Same picker as the selection bubble menu, so both ways of adding a link behave alike. */
+	const [showContentPicker, setShowContentPicker] = React.useState(false);
 	const linkInputRef = React.useRef<HTMLInputElement>(null);
 
 	// Subscribe to editor state changes for reactive button states
@@ -3638,6 +3685,17 @@ function EditorToolbar({
 
 	const handleRemoveLink = () => {
 		editor.chain().focus().extendMarkRange("link").unsetLink().run();
+		setShowLinkPopover(false);
+		setLinkUrl("");
+	};
+
+	/** A `null` url means the entry has no slug, so there is nothing to link to. */
+	const handlePickContent = (item: { url: string | null }) => {
+		setShowContentPicker(false);
+		if (!item.url) {
+			return;
+		}
+		editor.chain().focus().extendMarkRange("link").setLink({ href: item.url }).run();
 		setShowLinkPopover(false);
 		setLinkUrl("");
 	};
@@ -3881,6 +3939,17 @@ function EditorToolbar({
 									className="h-8 w-52 text-sm"
 									aria-label={t`URL`}
 								/>
+								<Button
+									type="button"
+									variant="ghost"
+									shape="square"
+									className="h-8 w-8"
+									onClick={() => setShowContentPicker(true)}
+									title={t`Link to content`}
+									aria-label={t`Link to content`}
+								>
+									<MagnifyingGlass className="h-4 w-4" />
+								</Button>
 							</div>
 							<div className="flex justify-between">
 								<Button
@@ -3952,7 +4021,17 @@ function EditorToolbar({
 		</div>
 	);
 
-	return <TooltipProvider>{toolbar}</TooltipProvider>;
+	return (
+		<TooltipProvider>
+			{toolbar}
+			{/* Outside the toolbar: the link popover closes when the picker takes focus. */}
+			<ContentPickerModal
+				open={showContentPicker}
+				onOpenChange={setShowContentPicker}
+				onSelect={handlePickContent}
+			/>
+		</TooltipProvider>
+	);
 }
 
 function ToolbarGroup({ children }: { children: React.ReactNode }) {
