@@ -8,7 +8,7 @@
 
 import type { APIRoute } from "astro";
 
-import { canReadMediaUsageCount, requireOwnerPerm, requirePerm } from "#api/authorize.js";
+import { canReadDrafts, requireOwnerPerm, requirePerm } from "#api/authorize.js";
 import { apiError, apiSuccess, handleError, unwrapResult } from "#api/error.js";
 import { handleMediaUsageSummaries } from "#api/handlers/media-usage.js";
 import { isParseError, parseBody, parseQuery } from "#api/parse.js";
@@ -39,7 +39,7 @@ export const GET: APIRoute = async ({ params, request, locals }) => {
 	const result = await emdash.handleMediaGet(id);
 	if (!result.success || query.includeUsage !== "1") return unwrapResult(result);
 
-	const includeCount = canReadMediaUsageCount(user, locals.tokenScopes);
+	const includeCount = canReadDrafts(user, locals.tokenScopes);
 	const usageResult = await handleMediaUsageSummaries(emdash.db, [id], { includeCount });
 	if (!usageResult.success) return unwrapResult(usageResult);
 	const usage = usageResult.data[id];

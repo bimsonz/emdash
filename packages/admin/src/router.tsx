@@ -166,10 +166,9 @@ function patchAutosaveQueries(
 			data?: Record<string, unknown>;
 			slug?: string;
 		};
-		locale?: string;
 	},
 ) {
-	const { collection, id, savedItem, payload, locale } = params;
+	const { collection, id, savedItem, payload } = params;
 	const draftRevisionId = savedItem.draftRevisionId;
 
 	if (draftRevisionId) {
@@ -194,10 +193,11 @@ function patchAutosaveQueries(
 		});
 	}
 
-	queryClient.setQueryData<ContentItem>(
-		locale ? ["content", collection, id, { locale }] : ["content", collection, id],
-		savedItem,
-	);
+	// The read query's key carries a locale object this function cannot reconstruct: it holds the
+	// entry's stored locale while the reader holds the active one, and those differ whenever i18n
+	// is off. Match by prefix -- an exact-key write that misses leaves `draftRevisionId` stale, and
+	// with it the control for publishing what was just saved.
+	queryClient.setQueriesData<ContentItem>({ queryKey: ["content", collection, id] }, savedItem);
 }
 
 // Create a base root route without Shell for setup
@@ -985,7 +985,6 @@ function ContentEditPage() {
 					data: variables.changes.data,
 					slug: variables.changes.slug,
 				},
-				locale: variables.targetLocale,
 			});
 			// Keep the cache fresh without refetching older server state back into the form
 			// while the user is still typing.

@@ -899,6 +899,15 @@ function MediaPickerItem({
 				>
 					<p className="text-xs text-white truncate">{item.filename}</p>
 				</div>
+
+				{item.width && item.height ? (
+					<div
+						className="absolute top-1 end-1 rounded bg-black/70 px-1.5 py-0.5 text-[0.65rem] font-medium text-white tabular-nums"
+						aria-hidden="true"
+					>
+						{`${item.width} × ${item.height}`}
+					</div>
+				) : null}
 			</button>
 		</li>
 	);
@@ -981,6 +990,15 @@ function ProviderMediaItem({
 				>
 					<p className="text-xs text-white truncate">{item.filename}</p>
 				</div>
+
+				{item.width && item.height ? (
+					<div
+						className="absolute top-1 end-1 rounded bg-black/70 px-1.5 py-0.5 text-[0.65rem] font-medium text-white tabular-nums"
+						aria-hidden="true"
+					>
+						{`${item.width} × ${item.height}`}
+					</div>
+				) : null}
 			</button>
 		</li>
 	);

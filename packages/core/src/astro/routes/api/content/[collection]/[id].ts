@@ -9,7 +9,7 @@
 import { hasPermission } from "@emdash-cms/auth";
 import type { APIRoute } from "astro";
 
-import { requirePerm, requireOwnerPerm } from "#api/authorize.js";
+import { canReadDrafts, requirePerm, requireOwnerPerm } from "#api/authorize.js";
 import { apiError, mapErrorStatus, unwrapResult } from "#api/error.js";
 import { parseBody, isParseError } from "#api/parse.js";
 import { contentUpdateBody } from "#api/schemas.js";
@@ -17,7 +17,7 @@ import { contentUpdateBody } from "#api/schemas.js";
 export const prerender = false;
 
 export const GET: APIRoute = async ({ params, url, locals }) => {
-	const { emdash, user } = locals;
+	const { emdash, user, tokenScopes } = locals;
 	if (!emdash?.handleContentGet) {
 		return apiError("NOT_CONFIGURED", "EmDash is not initialized", 500);
 	}
@@ -29,9 +29,9 @@ export const GET: APIRoute = async ({ params, url, locals }) => {
 
 	const result = await emdash.handleContentGet(collection, id, locale);
 
-	// Hide non-published items from users without content:read_drafts. Return
+	// Hide non-published items from callers that may not read drafts. Return
 	// 404 (not 403) so subscribers can't enumerate draft IDs by status code.
-	if (result.success && !hasPermission(user, "content:read_drafts")) {
+	if (result.success && !canReadDrafts(user, tokenScopes)) {
 		const data =
 			result.data && typeof result.data === "object"
 				? // eslint-disable-next-line typescript/no-unsafe-type-assertion -- handler returns unknown data; narrowed by typeof check

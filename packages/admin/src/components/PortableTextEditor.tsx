@@ -82,6 +82,7 @@ import {
 	DotsSixVertical,
 	CaretDown,
 	type Icon,
+	ColumnsIcon,
 } from "@phosphor-icons/react";
 import { X } from "@phosphor-icons/react";
 import { Extension, type Range } from "@tiptap/core";
@@ -116,6 +117,7 @@ import { HeadingDropdownMenu } from "./editor/HeadingDropdownMenu";
 import { HtmlBlockExtension } from "./editor/HtmlBlockNode";
 import { ImageExtension } from "./editor/ImageNode";
 import { MarkdownLinkExtension } from "./editor/MarkdownLinkExtension";
+import { NestingBlockExtension, NestingColumnExtension } from "./editor/NestingBlockNode";
 import {
 	type PluginBlockDef,
 	PluginBlockExtension,
@@ -240,6 +242,23 @@ function sanitizeGalleryImages(value: unknown, withKeys = false): GalleryImage[]
 // Helpers for safely extracting typed values from ProseMirror attrs (Record<string, any>)
 const attrStr = (v: unknown): string | undefined => (typeof v === "string" && v ? v : undefined);
 const attrNum = (v: unknown): number | undefined => (typeof v === "number" && v ? v : undefined);
+
+// Nesting block layout coercion
+const NESTING_GAPS = ["none", "sm", "md", "lg"] as const;
+const NESTING_ALIGNS = ["start", "center", "end", "stretch"] as const;
+const NESTING_WIDTHS = ["equal", "wide-first", "wide-last", "narrow-first", "narrow-last"] as const;
+
+function pickNestingGap(v: unknown): (typeof NESTING_GAPS)[number] {
+	return NESTING_GAPS.find((g) => g === v) ?? "md";
+}
+
+function pickNestingAlign(v: unknown): (typeof NESTING_ALIGNS)[number] {
+	return NESTING_ALIGNS.find((a) => a === v) ?? "start";
+}
+
+function pickNestingWidths(v: unknown): (typeof NESTING_WIDTHS)[number] {
+	return NESTING_WIDTHS.find((w) => w === v) ?? "equal";
+}
 
 // ProseMirror to Portable Text converter
 function prosemirrorToPortableText(doc: {
@@ -366,6 +385,40 @@ function convertPMNode(node: {
 				_type: "htmlBlock",
 				_key: generateKey(),
 				html: typeof rawHtml === "string" ? rawHtml : "",
+			};
+		}
+
+		case "nestingBlock": {
+			const attrs = node.attrs ?? {};
+			const columnNodes = (node.content || []) as Array<Parameters<typeof convertPMNode>[0]>;
+			const columns: PortableTextBlock[] = [];
+
+			for (const col of columnNodes) {
+				if (col.type !== "nestingColumn") continue;
+
+				const colChildren: PortableTextBlock[] = [];
+
+				for (const child of (col.content || []) as Array<Parameters<typeof convertPMNode>[0]>) {
+					const converted = convertPMNode(child);
+
+					if (converted) {
+						if (Array.isArray(converted)) colChildren.push(...converted);
+						else colChildren.push(converted);
+					}
+				}
+
+				columns.push({ _type: "nestingColumn", _key: generateKey(), children: colChildren });
+			}
+
+			return {
+				_type: "nestingBlock",
+				_key: generateKey(),
+				layout: attrs.layout === "flex" ? "flex" : "grid",
+				columns: Math.max(1, columns.length),
+				gap: pickNestingGap(attrs.gap),
+				align: pickNestingAlign(attrs.align),
+				widths: pickNestingWidths(attrs.widths),
+				children: columns,
 			};
 		}
 
@@ -877,6 +930,41 @@ function convertPTBlock(block: PortableTextBlock): unknown {
 			};
 		}
 
+		case "nestingBlock": {
+			const nb = block as {
+				layout?: unknown;
+				gap?: unknown;
+				align?: unknown;
+				widths?: unknown;
+				children?: unknown;
+			};
+			const rawChildren = Array.isArray(nb.children) ? nb.children : [];
+
+			const columns = rawChildren.map((child) => {
+				const c = child as { _type?: unknown; children?: unknown };
+				const colBlocks =
+					c._type === "nestingColumn" && Array.isArray(c.children)
+						? (c.children as PortableTextBlock[])
+						: [child as PortableTextBlock];
+
+				return { type: "nestingColumn", content: portableTextToProsemirror(colBlocks).content };
+			});
+
+			return {
+				type: "nestingBlock",
+				attrs: {
+					layout: nb.layout === "flex" ? "flex" : "grid",
+					gap: pickNestingGap(nb.gap),
+					align: pickNestingAlign(nb.align),
+					widths: pickNestingWidths(nb.widths),
+				},
+				content:
+					columns.length > 0
+						? columns
+						: [{ type: "nestingColumn", content: [{ type: "paragraph" }] }],
+			};
+		}
+
 		default: {
 			// Treat unknown block types as plugin blocks (embeds)
 			// These have an id field (or url for backwards compat) for the embed source,
@@ -884,27 +972,18 @@ function convertPTBlock(block: PortableTextBlock): unknown {
 			const { _type, _key, id, url, ...rest } = block as Record<string, unknown>;
 			// Filter out _-prefixed keys to prevent accumulation across edit cycles
 			const data = Object.fromEntries(Object.entries(rest).filter(([k]) => !k.startsWith("_")));
-			const hasFieldData = Object.keys(data).length > 0;
-			if (id || url || hasFieldData) {
-				return {
-					type: "pluginBlock",
-					attrs: {
-						blockType: _type,
-						id: id || url || "",
-						data,
-					},
-				};
-			}
-			// Truly unknown blocks with no data at all
+			// A plugin block whose fields are all optional stores nothing until one is filled in,
+			// and a block that takes no configuration at all never stores anything. Both are
+			// legitimate, so presence of data cannot decide whether this is a plugin block.
+			// PluginBlockNode already labels a type it does not recognise, which is a better
+			// failure than replacing the block with an error string the editor cannot act on.
 			return {
-				type: "paragraph",
-				content: [
-					{
-						type: "text",
-						text: `[Unknown block type: ${block._type}]`,
-						marks: [{ type: "code" }],
-					},
-				],
+				type: "pluginBlock",
+				attrs: {
+					blockType: _type,
+					id: id || url || "",
+					data,
+				},
 			};
 		}
 	}
@@ -1211,6 +1290,29 @@ const defaultSlashCommands: SlashCommandItem[] = [
 				.focus()
 				.deleteRange(range)
 				.insertTable({ rows: 3, cols: 3, withHeaderRow: true })
+				.run();
+		},
+	},
+	{
+		id: "nestingBlock",
+		title: msg`Nesting container`,
+		description: msg`Grid or flex layout holding other blocks`,
+		icon: ColumnsIcon,
+		category: msg`Layout`,
+		aliases: ["nest", "container", "layout", "grid", "flex", "columns"],
+		command: ({ editor, range }) => {
+			editor
+				.chain()
+				.focus()
+				.deleteRange(range)
+				.insertContent({
+					type: "nestingBlock",
+					attrs: { layout: "grid", gap: "md", align: "start" },
+					content: [
+						{ type: "nestingColumn", content: [{ type: "paragraph" }] },
+						{ type: "nestingColumn", content: [{ type: "paragraph" }] },
+					],
+				})
 				.run();
 		},
 	},
@@ -1530,12 +1632,6 @@ function buildPluginBlockFormValues(
 	return initialValues ? { ...defaults, ...initialValues } : defaults;
 }
 
-function hasPluginBlockFormData(values: Record<string, unknown>): boolean {
-	return Object.values(values).some(
-		(value) => value !== undefined && value !== null && value !== "",
-	);
-}
-
 /**
  * Plugin block insertion/editing modal.
  * When the block has `fields`, renders Block Kit elements.
@@ -1560,7 +1656,8 @@ function PluginBlockModal({
 	React.useEffect(() => {
 		if (block) {
 			setFormValues(buildPluginBlockFormValues(block, initialValues));
-			if (!block.fields || block.fields.length === 0) {
+			// Only URL mode has an input to focus; a fields-less Block Kit form has none.
+			if (!Array.isArray(block.fields)) {
 				setTimeout(() => inputRef.current?.focus(), 0);
 			}
 		}
@@ -1569,7 +1666,8 @@ function PluginBlockModal({
 	const handleSubmit = (e: React.FormEvent) => {
 		e.preventDefault();
 		e.stopPropagation();
-		if (block?.fields && block.fields.length > 0) {
+		// Same rule as `hasFields` below: a declared `fields` array means Block Kit, empty or not.
+		if (Array.isArray(block?.fields)) {
 			onInsert(formValues);
 		} else {
 			const url = typeof formValues.id === "string" ? formValues.id.trim() : "";
@@ -1584,12 +1682,32 @@ function PluginBlockModal({
 	};
 
 	const isEditing = !!initialValues;
-	const hasFields = block?.fields && block.fields.length > 0;
+	/*
+	 * Block Kit mode when the block declares a `fields` array — including an empty one.
+	 *
+	 * `fields: []` is a plugin saying "this block takes no configuration", which is not the same as
+	 * declaring no `fields` at all, and only the latter means "this is a URL embed". Keying on
+	 * `length > 0` conflated them, so a block with nothing to configure was shown a URL box it had
+	 * no use for, with Insert disabled until something was typed into it.
+	 */
+	const hasFields = Array.isArray(block?.fields);
 
-	// For simple URL mode, check if the URL is non-empty
-	// For Block Kit fields, require at least one field to have a value
+	/*
+	 * A block that declares fields can always be inserted.
+	 *
+	 * The previous rule was "at least one field must have a value", which no plugin could express
+	 * or opt out of: there is no `required` flag on any Block Kit element. It made two legitimate
+	 * shapes uninsertable — a block whose only field is an optional heading, and a block that takes
+	 * no configuration at all — and it failed silently, disabling the button with nothing on screen
+	 * to say why.
+	 *
+	 * This is the insert-path counterpart of treating an unrecognised `_type` as a plugin block
+	 * whether or not it carries data: the type is the block, the fields are its configuration.
+	 *
+	 * URL mode is unchanged. There the URL *is* the block, so an empty one has nothing to insert.
+	 */
 	const canSubmit = hasFields
-		? hasPluginBlockFormData(formValues)
+		? true
 		: typeof formValues.id === "string" && formValues.id.trim().length > 0;
 
 	// Size the dialog based on field complexity. The default `sm` is right for
@@ -2138,10 +2256,7 @@ export type { PluginBlockDef } from "./editor/PluginBlockNode";
 // Exported for unit testing (pure functions, no React dependencies)
 export { prosemirrorToPortableText as _prosemirrorToPortableText };
 export { portableTextToProsemirror as _portableTextToProsemirror };
-export {
-	buildPluginBlockFormValues as _buildPluginBlockFormValues,
-	hasPluginBlockFormData as _hasPluginBlockFormData,
-};
+export { buildPluginBlockFormValues as _buildPluginBlockFormValues };
 
 // =============================================================================
 // Editor Footer with Writing Metrics
@@ -2517,6 +2632,8 @@ export function PortableTextEditor({
 			ImageExtension,
 			MarkdownLinkExtension,
 			PluginBlockExtension,
+			NestingBlockExtension,
+			NestingColumnExtension,
 			Table.configure({
 				resizable: true,
 			}),
