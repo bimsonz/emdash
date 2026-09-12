@@ -40,6 +40,12 @@ const pluginBlocks: NonNullable<PortableTextEditorProps["pluginBlocks"]> = [
 			{ type: "number_input", action_id: "columns", label: "Columns", min: 1, max: 4 },
 		],
 	},
+	{
+		type: "test.divider",
+		pluginId: "test-blocks",
+		label: "Plain Divider",
+		fields: [],
+	},
 ];
 
 /**
@@ -64,7 +70,12 @@ async function editBlock(block: Record<string, unknown>) {
 }
 
 /** Inserts the URL-only block from the slash menu, which is the only way its dialog opens. */
-async function insertEmbed() {
+function insertEmbed() {
+	return insertFromSlashMenu("zebra", "Zebra Video");
+}
+
+/** Opens the insert dialog of a plugin block from the slash menu. */
+async function insertFromSlashMenu(query: string, label: string) {
 	const onChange = vi.fn<NonNullable<PortableTextEditorProps["onChange"]>>();
 	const screen = await render(
 		<PortableTextEditor
@@ -87,14 +98,12 @@ async function insertEmbed() {
 		return element as HTMLElement;
 	});
 	await userEvent.click(paragraph);
-	await userEvent.keyboard("{End}{Enter}/zebra");
+	await userEvent.keyboard(`{End}{Enter}/${query}`);
 	await vi.waitFor(() =>
-		expect(document.querySelector("[data-slash-command-menu]")?.textContent).toContain(
-			"Zebra Video",
-		),
+		expect(document.querySelector("[data-slash-command-menu]")?.textContent).toContain(label),
 	);
 	await userEvent.keyboard("{Enter}");
-	const dialog = screen.getByRole("dialog", { name: "Insert Zebra Video" });
+	const dialog = screen.getByRole("dialog", { name: `Insert ${label}` });
 	await expect.element(dialog).toBeVisible();
 	return { screen, dialog, onChange };
 }
@@ -138,20 +147,26 @@ describe("plugin block modal errors", () => {
 		);
 	});
 
-	it("asks for at least one value before saving an emptied block", async () => {
+	// Block Kit elements have no required flag, so no field can make a block need a value.
+	it("saves a block whose fields were all emptied", async () => {
 		const { dialog, onChange } = await editBlock({ _type: "test.hero", heading: "Before" });
-		const heading = dialog.getByRole("textbox", { name: "Heading" });
-		await heading.fill("");
+		await dialog.getByRole("textbox", { name: "Heading" }).fill("");
 		await dialog.getByRole("button", { name: "Save", exact: true }).click();
 
-		await expect
-			.element(dialog.getByRole("alert").filter({ hasText: "Fill in at least one field." }))
-			.toBeVisible();
-		await expect.element(heading).toHaveFocus();
-		expect(savedBlock(onChange, "test.hero")).toBeUndefined();
+		await expect.element(dialog).not.toBeInTheDocument();
+		await vi.waitFor(() => expect(savedBlock(onChange, "test.hero")).toBeDefined());
+		expect(savedBlock(onChange, "test.hero")?.heading).not.toBe("Before");
+	});
 
-		await heading.fill("After");
-		expect(dialog.getByText("Fill in at least one field.").query()).toBeNull();
+	it("inserts a block that declares no fields, without asking for a URL", async () => {
+		const { dialog, onChange } = await insertFromSlashMenu("plain divider", "Plain Divider");
+
+		await expect.element(dialog).toHaveAccessibleDescription("This block has nothing to fill in.");
+		expect(dialog.getByRole("textbox").query()).toBeNull();
+		await dialog.getByRole("button", { name: "Insert", exact: true }).click();
+
+		await expect.element(dialog).not.toBeInTheDocument();
+		await vi.waitFor(() => expect(savedBlock(onChange, "test.divider")).toBeDefined());
 	});
 
 	it("points at a number outside the field's range", async () => {
