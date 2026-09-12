@@ -62,6 +62,7 @@ import {
 	ListNumbers,
 	Quotes,
 	Link as LinkIcon,
+	MagnifyingGlass,
 	Image as ImageIcon,
 	Images,
 	ArrowUUpLeft,
@@ -124,6 +125,7 @@ import {
 import { cn } from "../lib/utils";
 import { CaretNext } from "./ArrowIcons.js";
 import { BlockKitMediaPickerField } from "./BlockKitMediaPickerField";
+import { ContentPickerModal } from "./ContentPickerModal";
 import { CodeBlockExtension } from "./editor/CodeBlockNode";
 import { CodeMarkExtension } from "./editor/CodeMarkExtension";
 import { DragHandleWrapper } from "./editor/DragHandleWrapper";
@@ -133,8 +135,8 @@ import { HeadingDropdownMenu } from "./editor/HeadingDropdownMenu";
 import { HtmlBlockExtension } from "./editor/HtmlBlockNode";
 import { ImageExtension } from "./editor/ImageNode";
 import { MarkdownLinkExtension } from "./editor/MarkdownLinkExtension";
-import { EmDashOrderedList } from "./editor/ordered-list";
 import { NestingBlockExtension, NestingColumnExtension } from "./editor/NestingBlockNode";
+import { EmDashOrderedList } from "./editor/ordered-list";
 import {
 	type PluginBlockDef,
 	PluginBlockExtension,
@@ -1449,7 +1451,9 @@ function convertPTBlock(block: PortableTextBlock): unknown {
 
 				return {
 					type: "nestingColumn",
-					attrs: attrStr(c._key) ? attrsWithPortableTextKey(undefined, c._key as string) : undefined,
+					attrs: attrStr(c._key)
+						? attrsWithPortableTextKey(undefined, c._key as string)
+						: undefined,
 					content: portableTextToProsemirror(colBlocks).content,
 				};
 			});
@@ -2256,7 +2260,8 @@ function PluginBlockModal({
 
 	// Block Kit elements have no required flag, so a form with every field empty is a
 	// valid block. In URL mode the URL is the block, so an empty one has nothing to insert.
-	const canSubmit = hasFields || (typeof formValues.id === "string" && formValues.id.trim().length > 0);
+	const canSubmit =
+		hasFields || (typeof formValues.id === "string" && formValues.id.trim().length > 0);
 
 	// Size the dialog based on field complexity. The default `sm` is right for
 	// simple URL embeds (one field) but cramps Block Kit forms with several
@@ -3866,6 +3871,7 @@ function EditorBubbleMenu({
 }) {
 	const [showLinkInput, setShowLinkInput] = React.useState(false);
 	const [linkUrl, setLinkUrl] = React.useState("");
+	const [showContentPicker, setShowContentPicker] = React.useState(false);
 	const inputRef = React.useRef<HTMLInputElement>(null);
 	const { t } = useLingui();
 	const activeMarks = useEditorState({
@@ -3907,6 +3913,15 @@ function EditorBubbleMenu({
 		setLinkUrl("");
 	};
 
+	// A picked entry with no slug has no public URL, so nothing is applied.
+	const handlePickContent = (item: { url: string | null }) => {
+		setShowContentPicker(false);
+		if (!item.url) return;
+		editor.chain().focus().extendMarkRange("link").setLink({ href: item.url }).run();
+		setShowLinkInput(false);
+		setLinkUrl("");
+	};
+
 	const handleKeyDown = (e: React.KeyboardEvent) => {
 		if (e.key === "Enter") {
 			e.preventDefault();
@@ -3919,136 +3934,156 @@ function EditorBubbleMenu({
 	};
 
 	return (
-		<BubbleMenu
-			editor={editor}
-			pluginKey={INLINE_BUBBLE_MENU_KEY}
-			appendTo={appendTo}
-			options={{
-				strategy: "absolute",
-				placement: "top",
-				offset: 8,
-				flip: getCollisionOptions,
-				shift: getCollisionOptions,
-				size: () => ({
-					...getCollisionOptions(),
-					apply: ({ availableWidth, elements }) => {
-						elements.floating.style.maxWidth = `${Math.max(0, availableWidth)}px`;
-						elements.floating.style.overflowX = "auto";
-						elements.floating.style.borderRadius = "var(--radius-lg)";
-					},
-				}),
-			}}
-			shouldShow={({ editor: activeEditor, element, state, view }) => {
-				const { selection } = state;
-				return (
-					activeEditor.isEditable &&
-					(selection instanceof TextSelection || selection instanceof AllSelection) &&
-					!selection.empty &&
-					(view.hasFocus() || element.contains(document.activeElement))
-				);
-			}}
-			data-emdash-inline-bubble-menu
-			className="z-[100] flex items-center gap-0.5 rounded-lg border bg-kumo-base p-1 shadow-lg"
-		>
-			{showLinkInput ? (
-				<div className="flex items-center gap-1">
-					<Input
-						ref={inputRef}
-						type="url"
-						placeholder={t`https://...`}
-						value={linkUrl}
-						onChange={(e) => setLinkUrl(e.target.value)}
-						onKeyDown={handleKeyDown}
-						className="h-8 w-48 text-sm"
-						aria-label={t`URL`}
-					/>
-					<Button
-						type="button"
-						variant="ghost"
-						shape="square"
-						className="h-8 w-8"
-						onClick={handleSetLink}
-						title={t`Apply link`}
-						aria-label={t`Apply link`}
-					>
-						<ArrowSquareOut className="h-4 w-4" />
-					</Button>
-					{activeMarks.link && (
+		<>
+			<BubbleMenu
+				editor={editor}
+				pluginKey={INLINE_BUBBLE_MENU_KEY}
+				appendTo={appendTo}
+				options={{
+					strategy: "absolute",
+					placement: "top",
+					offset: 8,
+					flip: getCollisionOptions,
+					shift: getCollisionOptions,
+					size: () => ({
+						...getCollisionOptions(),
+						apply: ({ availableWidth, elements }) => {
+							elements.floating.style.maxWidth = `${Math.max(0, availableWidth)}px`;
+							elements.floating.style.overflowX = "auto";
+							elements.floating.style.borderRadius = "var(--radius-lg)";
+						},
+					}),
+				}}
+				shouldShow={({ editor: activeEditor, element, state, view }) => {
+					const { selection } = state;
+					return (
+						activeEditor.isEditable &&
+						(selection instanceof TextSelection || selection instanceof AllSelection) &&
+						!selection.empty &&
+						(view.hasFocus() || element.contains(document.activeElement))
+					);
+				}}
+				data-emdash-inline-bubble-menu
+				className="z-[100] flex items-center gap-0.5 rounded-lg border bg-kumo-base p-1 shadow-lg"
+			>
+				{showLinkInput ? (
+					<div className="flex items-center gap-1">
+						<Input
+							ref={inputRef}
+							type="url"
+							placeholder={t`https://...`}
+							value={linkUrl}
+							onChange={(e) => setLinkUrl(e.target.value)}
+							onKeyDown={handleKeyDown}
+							className="h-8 w-48 text-sm"
+							aria-label={t`URL`}
+						/>
 						<Button
 							type="button"
 							variant="ghost"
 							shape="square"
-							className="h-8 w-8 text-kumo-danger"
-							onClick={handleRemoveLink}
-							title={t`Remove link`}
-							aria-label={t`Remove link`}
+							className="h-8 w-8"
+							onMouseDown={(event) => event.preventDefault()}
+							onClick={() => setShowContentPicker(true)}
+							title={t`Link to content`}
+							aria-label={t`Link to content`}
 						>
-							<LinkBreak className="h-4 w-4" />
+							<MagnifyingGlass className="h-4 w-4" />
 						</Button>
-					)}
-				</div>
-			) : (
-				<>
-					<BubbleButton
-						onClick={() => editor.chain().focus().toggleBold().run()}
-						active={activeMarks.bold}
-						title={t`Bold`}
-					>
-						<TextB className="h-4 w-4" />
-					</BubbleButton>
-					<BubbleButton
-						onClick={() => editor.chain().focus().toggleItalic().run()}
-						active={activeMarks.italic}
-						title={t`Italic`}
-					>
-						<TextItalic className="h-4 w-4" />
-					</BubbleButton>
-					<BubbleButton
-						onClick={() => editor.chain().focus().toggleUnderline().run()}
-						active={activeMarks.underline}
-						title={t`Underline`}
-					>
-						<TextUnderline className="h-4 w-4" />
-					</BubbleButton>
-					<BubbleButton
-						onClick={() => editor.chain().focus().toggleStrike().run()}
-						active={activeMarks.strike}
-						title={t`Strikethrough`}
-					>
-						<TextStrikethrough className="h-4 w-4" />
-					</BubbleButton>
-					<BubbleButton
-						onClick={() => editor.chain().focus().toggleSubscript().run()}
-						active={activeMarks.subscript}
-						title={t`Subscript`}
-					>
-						<TextSubscript className="h-4 w-4" />
-					</BubbleButton>
-					<BubbleButton
-						onClick={() => editor.chain().focus().toggleSuperscript().run()}
-						active={activeMarks.superscript}
-						title={t`Superscript`}
-					>
-						<TextSuperscript className="h-4 w-4" />
-					</BubbleButton>
-					<BubbleButton
-						onClick={() => editor.chain().focus().toggleCode().run()}
-						active={activeMarks.code}
-						title={t`Code`}
-					>
-						<Code className="h-4 w-4" />
-					</BubbleButton>
-					<div className="w-px h-6 bg-kumo-line mx-1" />
-					<BubbleButton
-						onClick={() => setShowLinkInput(true)}
-						active={activeMarks.link}
-						title={activeMarks.link ? t`Edit link` : t`Add link`}
-					>
-						<LinkIcon className="h-4 w-4" />
-					</BubbleButton>
-				</>
-			)}
-		</BubbleMenu>
+						<Button
+							type="button"
+							variant="ghost"
+							shape="square"
+							className="h-8 w-8"
+							onClick={handleSetLink}
+							title={t`Apply link`}
+							aria-label={t`Apply link`}
+						>
+							<ArrowSquareOut className="h-4 w-4" />
+						</Button>
+						{activeMarks.link && (
+							<Button
+								type="button"
+								variant="ghost"
+								shape="square"
+								className="h-8 w-8 text-kumo-danger"
+								onClick={handleRemoveLink}
+								title={t`Remove link`}
+								aria-label={t`Remove link`}
+							>
+								<LinkBreak className="h-4 w-4" />
+							</Button>
+						)}
+					</div>
+				) : (
+					<>
+						<BubbleButton
+							onClick={() => editor.chain().focus().toggleBold().run()}
+							active={activeMarks.bold}
+							title={t`Bold`}
+						>
+							<TextB className="h-4 w-4" />
+						</BubbleButton>
+						<BubbleButton
+							onClick={() => editor.chain().focus().toggleItalic().run()}
+							active={activeMarks.italic}
+							title={t`Italic`}
+						>
+							<TextItalic className="h-4 w-4" />
+						</BubbleButton>
+						<BubbleButton
+							onClick={() => editor.chain().focus().toggleUnderline().run()}
+							active={activeMarks.underline}
+							title={t`Underline`}
+						>
+							<TextUnderline className="h-4 w-4" />
+						</BubbleButton>
+						<BubbleButton
+							onClick={() => editor.chain().focus().toggleStrike().run()}
+							active={activeMarks.strike}
+							title={t`Strikethrough`}
+						>
+							<TextStrikethrough className="h-4 w-4" />
+						</BubbleButton>
+						<BubbleButton
+							onClick={() => editor.chain().focus().toggleSubscript().run()}
+							active={activeMarks.subscript}
+							title={t`Subscript`}
+						>
+							<TextSubscript className="h-4 w-4" />
+						</BubbleButton>
+						<BubbleButton
+							onClick={() => editor.chain().focus().toggleSuperscript().run()}
+							active={activeMarks.superscript}
+							title={t`Superscript`}
+						>
+							<TextSuperscript className="h-4 w-4" />
+						</BubbleButton>
+						<BubbleButton
+							onClick={() => editor.chain().focus().toggleCode().run()}
+							active={activeMarks.code}
+							title={t`Code`}
+						>
+							<Code className="h-4 w-4" />
+						</BubbleButton>
+						<div className="w-px h-6 bg-kumo-line mx-1" />
+						<BubbleButton
+							onClick={() => setShowLinkInput(true)}
+							active={activeMarks.link}
+							title={activeMarks.link ? t`Edit link` : t`Add link`}
+						>
+							<LinkIcon className="h-4 w-4" />
+						</BubbleButton>
+					</>
+				)}
+			</BubbleMenu>
+			{/* Outside the bubble menu, which unmounts when the selection changes. */}
+			<ContentPickerModal
+				open={showContentPicker}
+				onOpenChange={setShowContentPicker}
+				onSelect={handlePickContent}
+			/>
+		</>
 	);
 }
 
@@ -4254,6 +4289,7 @@ function EditorToolbar({
 	const { t } = useLingui();
 	const [showLinkPopover, setShowLinkPopover] = React.useState(false);
 	const [linkUrl, setLinkUrl] = React.useState("");
+	const [showContentPicker, setShowContentPicker] = React.useState(false);
 	const linkInputRef = React.useRef<HTMLInputElement>(null);
 
 	// Subscribe to editor state changes for reactive button states
@@ -4305,6 +4341,15 @@ function EditorToolbar({
 
 	const handleRemoveLink = () => {
 		editor.chain().focus().extendMarkRange("link").unsetLink().run();
+		setShowLinkPopover(false);
+		setLinkUrl("");
+	};
+
+	// A picked entry with no slug has no public URL, so nothing is applied.
+	const handlePickContent = (item: { url: string | null }) => {
+		setShowContentPicker(false);
+		if (!item.url) return;
+		editor.chain().focus().extendMarkRange("link").setLink({ href: item.url }).run();
 		setShowLinkPopover(false);
 		setLinkUrl("");
 	};
@@ -4572,6 +4617,17 @@ function EditorToolbar({
 									className="h-8 w-52 text-sm"
 									aria-label={t`URL`}
 								/>
+								<Button
+									type="button"
+									variant="ghost"
+									shape="square"
+									className="h-8 w-8"
+									onClick={() => setShowContentPicker(true)}
+									title={t`Link to content`}
+									aria-label={t`Link to content`}
+								>
+									<MagnifyingGlass className="h-4 w-4" />
+								</Button>
 							</div>
 							<div className="flex justify-between">
 								<Button
@@ -4643,7 +4699,17 @@ function EditorToolbar({
 		</div>
 	);
 
-	return <TooltipProvider>{toolbar}</TooltipProvider>;
+	return (
+		<TooltipProvider>
+			{toolbar}
+			{/* Outside the toolbar: the link popover closes when the picker takes focus. */}
+			<ContentPickerModal
+				open={showContentPicker}
+				onOpenChange={setShowContentPicker}
+				onSelect={handlePickContent}
+			/>
+		</TooltipProvider>
+	);
 }
 
 function ToolbarGroup({ children }: { children: React.ReactNode }) {

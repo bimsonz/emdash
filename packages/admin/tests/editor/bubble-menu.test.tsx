@@ -30,6 +30,48 @@ vi.mock("../../src/components/SectionPickerModal", () => ({
 	SectionPickerModal: () => null,
 }));
 
+vi.mock("../../src/components/ContentPickerModal", () => ({
+	ContentPickerModal: ({
+		open,
+		onSelect,
+	}: {
+		open: boolean;
+		onSelect: (item: {
+			collection: string;
+			id: string;
+			title: string;
+			slug: string | null;
+			url: string | null;
+		}) => void;
+	}) =>
+		open ? (
+			<div role="dialog" aria-label="Pick content">
+				<button
+					type="button"
+					onClick={() =>
+						onSelect({
+							collection: "pages",
+							id: "p1",
+							title: "About",
+							slug: "about",
+							url: "/about",
+						})
+					}
+				>
+					About
+				</button>
+				<button
+					type="button"
+					onClick={() =>
+						onSelect({ collection: "pages", id: "p2", title: "Untitled", slug: null, url: null })
+					}
+				>
+					Untitled
+				</button>
+			</div>
+		) : null,
+}));
+
 vi.mock("../../src/components/editor/DragHandleWrapper", () => ({
 	DragHandleWrapper: () => null,
 }));
@@ -646,6 +688,55 @@ describe("Bubble Menu", () => {
 			expect(link).toBeTruthy();
 			expect(link!.getAttribute("href")).toBe("https://example.com");
 		});
+	});
+
+	it("links the selection to a picked content item", async () => {
+		const { editor, pm } = await renderEditor();
+		await focusAndSelectAll(editor, pm);
+
+		const menu = await waitForBubbleMenu();
+		getBubbleButton(menu, "Add link")!.click();
+		await vi.waitFor(() => {
+			expect(getBubbleButton(menu, "Link to content")).toBeTruthy();
+		});
+		getBubbleButton(menu, "Link to content")!.click();
+
+		const dialog = await vi.waitFor(() => {
+			const el = document.querySelector('[role="dialog"][aria-label="Pick content"]');
+			expect(el).toBeTruthy();
+			return el as HTMLElement;
+		});
+		(dialog.querySelector("button") as HTMLButtonElement).click();
+
+		await vi.waitFor(() => {
+			const link = pm.querySelector("a");
+			expect(link).toBeTruthy();
+			expect(link!.getAttribute("href")).toBe("/about");
+		});
+	});
+
+	it("applies nothing when the picked item has no URL", async () => {
+		const { editor, pm } = await renderEditor();
+		await focusAndSelectAll(editor, pm);
+
+		const menu = await waitForBubbleMenu();
+		getBubbleButton(menu, "Add link")!.click();
+		await vi.waitFor(() => {
+			expect(getBubbleButton(menu, "Link to content")).toBeTruthy();
+		});
+		getBubbleButton(menu, "Link to content")!.click();
+
+		const dialog = await vi.waitFor(() => {
+			const el = document.querySelector('[role="dialog"][aria-label="Pick content"]');
+			expect(el).toBeTruthy();
+			return el as HTMLElement;
+		});
+		(dialog.querySelectorAll("button")[1] as HTMLButtonElement).click();
+
+		await vi.waitFor(() => {
+			expect(document.querySelector('[role="dialog"][aria-label="Pick content"]')).toBeNull();
+		});
+		expect(pm.querySelector("a")).toBeNull();
 	});
 
 	it("applies link on Enter key in URL input", async () => {

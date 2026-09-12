@@ -69,6 +69,48 @@ vi.mock("../../src/components/SectionPickerModal", () => ({
 	SectionPickerModal: () => null,
 }));
 
+vi.mock("../../src/components/ContentPickerModal", () => ({
+	ContentPickerModal: ({
+		open,
+		onSelect,
+	}: {
+		open: boolean;
+		onSelect: (item: {
+			collection: string;
+			id: string;
+			title: string;
+			slug: string | null;
+			url: string | null;
+		}) => void;
+	}) =>
+		open ? (
+			<div role="dialog" aria-label="Pick content">
+				<button
+					type="button"
+					onClick={() =>
+						onSelect({
+							collection: "pages",
+							id: "p1",
+							title: "About",
+							slug: "about",
+							url: "/about",
+						})
+					}
+				>
+					About
+				</button>
+				<button
+					type="button"
+					onClick={() =>
+						onSelect({ collection: "pages", id: "p2", title: "Untitled", slug: null, url: null })
+					}
+				>
+					Untitled
+				</button>
+			</div>
+		) : null,
+}));
+
 vi.mock("../../src/components/editor/DragHandleWrapper", () => ({
 	DragHandleWrapper: () => null,
 }));
@@ -1205,6 +1247,27 @@ describe("Link Insertion", () => {
 			const link = getToolbarButton(screen, "Insert Link").element();
 			expect(link.getAttribute("aria-pressed")).toBe("true");
 			expectVisibleActiveState(link);
+		});
+	});
+
+	it("links the selection to a picked content item", async () => {
+		const { screen, editor } = await renderEditor();
+		await focusAndSelectAll(screen);
+
+		screen.getByRole("button", { name: "Insert Link" }).element().click();
+		await expect.element(screen.getByRole("button", { name: "Link to content" })).toBeVisible();
+		screen.getByRole("button", { name: "Link to content" }).element().click();
+
+		await expect.element(screen.getByRole("dialog", { name: "Pick content" })).toBeVisible();
+		screen
+			.getByRole("dialog", { name: "Pick content" })
+			.getByRole("button", { name: "About" })
+			.element()
+			.click();
+
+		await vi.waitFor(() => {
+			expect(editor.isActive("link")).toBe(true);
+			expect(editor.getAttributes("link").href).toBe("/about");
 		});
 	});
 

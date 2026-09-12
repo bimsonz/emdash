@@ -15,13 +15,24 @@ import { fetchCollections, fetchContentList, fetchManifest, getDraftStatus } fro
 import type { ContentItem } from "../lib/api";
 import { getEntryTitle } from "../lib/entryTitle.js";
 import { useDebouncedValue } from "../lib/hooks";
+import { contentUrl } from "../lib/url";
 import { cn } from "../lib/utils";
 import { ContentStatusLabel, type ContentStatusState } from "./ContentStatusBadge.js";
 
 interface ContentPickerModalProps {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
-	onSelect: (item: { collection: string; id: string; title: string }) => void;
+	onSelect: (item: {
+		collection: string;
+		id: string;
+		title: string;
+		slug: string | null;
+		/**
+		 * The item's public URL from its collection's `urlPattern`, or `null` when it has no
+		 * slug. Resolved here because only this component holds both the item and its collection.
+		 */
+		url: string | null;
+	}) => void;
 }
 
 export function ContentPickerModal({ open, onOpenChange, onSelect }: ContentPickerModalProps) {
@@ -101,10 +112,13 @@ export function ContentPickerModal({ open, onOpenChange, onSelect }: ContentPick
 	}, [open]);
 
 	const handleSelect = (item: ContentItem) => {
+		const collection = collections.find((c) => c.slug === selectedCollection);
 		onSelect({
 			collection: selectedCollection,
 			id: item.id,
 			title: getEntryTitle(item, titleField),
+			slug: item.slug,
+			url: item.slug ? contentUrl(selectedCollection, item.slug, collection?.urlPattern) : null,
 		});
 		onOpenChange(false);
 	};
