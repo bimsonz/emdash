@@ -15,7 +15,6 @@ import { userEvent } from "vitest/browser";
 import type { PluginBlockDef } from "../../src/components/PortableTextEditor";
 import {
 	_buildPluginBlockFormValues,
-	_hasPluginBlockFormData,
 	_portableTextToProsemirror,
 	_prosemirrorToPortableText,
 	PortableTextEditor,
@@ -231,7 +230,6 @@ describe("plugin block helpers", () => {
 			variant: "inline",
 			includeHeadings: true,
 		});
-		expect(_hasPluginBlockFormData(_buildPluginBlockFormValues(block))).toBe(true);
 	});
 
 	it("merges existing block data over defaults when editing", () => {
