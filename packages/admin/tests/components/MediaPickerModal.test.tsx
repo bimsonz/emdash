@@ -224,6 +224,16 @@ describe("MediaPickerModal", () => {
 			expect(image?.style.objectPosition).toBe("20% 80%");
 		});
 
+		it("shows each image's pixel dimensions", async () => {
+			const screen = await renderModal({ open: true });
+			await expect
+				.element(screen.getByRole("button", { name: "photo.jpg" }).getByText("800 × 600"))
+				.toBeInTheDocument();
+			await expect
+				.element(screen.getByRole("button", { name: "landscape.png" }).getByText("1200 × 800"))
+				.toBeInTheDocument();
+		});
+
 		it("shows the modal title", async () => {
 			const screen = await renderModal({ title: "Pick an Image" });
 			await expect.element(screen.getByText("Pick an Image")).toBeInTheDocument();
