@@ -2402,12 +2402,6 @@ function buildPluginBlockFormValues(
 	return initialValues ? { ...defaults, ...initialValues } : defaults;
 }
 
-function hasPluginBlockFormData(values: Record<string, unknown>): boolean {
-	return Object.values(values).some(
-		(value) => value !== undefined && value !== null && value !== "",
-	);
-}
-
 /**
  * Plugin block insertion/editing modal.
  * When the block has `fields`, renders Block Kit elements.
@@ -2432,7 +2426,8 @@ function PluginBlockModal({
 	React.useEffect(() => {
 		if (block) {
 			setFormValues(buildPluginBlockFormValues(block, initialValues));
-			if (!block.fields || block.fields.length === 0) {
+			// Only URL mode has an input to focus.
+			if (!Array.isArray(block.fields)) {
 				setTimeout(() => inputRef.current?.focus(), 0);
 			}
 		}
@@ -2441,7 +2436,7 @@ function PluginBlockModal({
 	const handleSubmit = (e: React.FormEvent) => {
 		e.preventDefault();
 		e.stopPropagation();
-		if (block?.fields && block.fields.length > 0) {
+		if (Array.isArray(block?.fields)) {
 			onInsert(formValues);
 		} else {
 			const url = typeof formValues.id === "string" ? formValues.id.trim() : "";
@@ -2456,13 +2451,14 @@ function PluginBlockModal({
 	};
 
 	const isEditing = !!initialValues;
-	const hasFields = block?.fields && block.fields.length > 0;
+	// A declared `fields` array means Block Kit mode, even when it is empty: a block
+	// that takes no configuration is not a URL embed. Only an absent `fields` is.
+	const hasFields = Array.isArray(block?.fields);
 
-	// For simple URL mode, check if the URL is non-empty
-	// For Block Kit fields, require at least one field to have a value
-	const canSubmit = hasFields
-		? hasPluginBlockFormData(formValues)
-		: typeof formValues.id === "string" && formValues.id.trim().length > 0;
+	// Block Kit elements have no required flag, so a form with every field empty is a
+	// valid block. In URL mode the URL is the block, so an empty one has nothing to insert.
+	const canSubmit =
+		hasFields || (typeof formValues.id === "string" && formValues.id.trim().length > 0);
 
 	const dialogSize = hasFields ? "xl" : "sm";
 
@@ -3010,10 +3006,7 @@ export type { PluginBlockDef } from "./editor/PluginBlockNode";
 // Exported for unit testing (pure functions, no React dependencies)
 export { prosemirrorToPortableText as _prosemirrorToPortableText };
 export { portableTextToProsemirror as _portableTextToProsemirror };
-export {
-	buildPluginBlockFormValues as _buildPluginBlockFormValues,
-	hasPluginBlockFormData as _hasPluginBlockFormData,
-};
+export { buildPluginBlockFormValues as _buildPluginBlockFormValues };
 
 // =============================================================================
 // Editor Footer with Writing Metrics
