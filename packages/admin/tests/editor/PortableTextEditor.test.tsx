@@ -14,7 +14,6 @@ import { userEvent } from "vitest/browser";
 import type { PluginBlockDef } from "../../src/components/PortableTextEditor";
 import {
 	_buildPluginBlockFormValues,
-	_hasPluginBlockFormData,
 	_portableTextToProsemirror,
 	_prosemirrorToPortableText,
 	PortableTextEditor,
@@ -187,6 +186,45 @@ function textBlock(
 // 1. Plugin block helpers
 // =============================================================================
 
+describe("plugin block modal", () => {
+	async function openModalFor(block: PluginBlockDef) {
+		const { screen, editor } = await renderAndGetEditor({ value: [], pluginBlocks: [block] });
+		const storage = (editor.storage as unknown as Record<string, Record<string, unknown>>)
+			.pluginBlock;
+		await vi.waitFor(() => expect(typeof storage.onEditBlock).toBe("function"));
+		await React.act(async () => {
+			(storage.onEditBlock as (attrs: unknown) => void)({
+				blockType: block.type,
+				id: "",
+				data: {},
+				pos: 0,
+			});
+		});
+		return screen;
+	}
+
+	it("can submit a block whose fields are all empty", async () => {
+		const screen = await openModalFor({
+			type: "test.heading",
+			pluginId: "test-blocks",
+			label: "Heading",
+			fields: [{ type: "text_input", action_id: "heading", label: "Heading" }],
+		});
+		await expect.element(screen.getByRole("button", { name: /^(Save|Insert)$/ })).toBeEnabled();
+	});
+
+	it("treats an empty fields array as Block Kit mode, not a URL embed", async () => {
+		const screen = await openModalFor({
+			type: "test.divider",
+			pluginId: "test-blocks",
+			label: "Divider",
+			fields: [],
+		});
+		await expect.element(screen.getByRole("button", { name: /^(Save|Insert)$/ })).toBeEnabled();
+		await expect.element(screen.getByRole("dialog").getByRole("textbox")).not.toBeInTheDocument();
+	});
+});
+
 describe("plugin block helpers", () => {
 	it("builds form state from field initial_value defaults", () => {
 		const block: PluginBlockDef = {
@@ -217,7 +255,6 @@ describe("plugin block helpers", () => {
 			variant: "inline",
 			includeHeadings: true,
 		});
-		expect(_hasPluginBlockFormData(_buildPluginBlockFormValues(block))).toBe(true);
 	});
 
 	it("merges existing block data over defaults when editing", () => {
