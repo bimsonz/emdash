@@ -8,7 +8,7 @@
 import { hasPermission } from "@emdash-cms/auth";
 import type { APIRoute } from "astro";
 
-import { requirePerm, requireOwnerPerm } from "#api/authorize.js";
+import { canReadDrafts, requirePerm, requireOwnerPerm } from "#api/authorize.js";
 import { apiError, mapErrorStatus, unwrapResult } from "#api/error.js";
 import { parseBody, parseQuery, isParseError } from "#api/parse.js";
 import { contentListQuery, contentCreateBody } from "#api/schemas.js";
@@ -16,7 +16,7 @@ import { contentListQuery, contentCreateBody } from "#api/schemas.js";
 export const prerender = false;
 
 export const GET: APIRoute = async ({ params, url, locals }) => {
-	const { emdash, user } = locals;
+	const { emdash, user, tokenScopes } = locals;
 	if (!emdash?.handleContentList) {
 		return apiError("NOT_CONFIGURED", "EmDash is not initialized", 500);
 	}
@@ -27,11 +27,10 @@ export const GET: APIRoute = async ({ params, url, locals }) => {
 	if (isParseError(query)) return query;
 
 	// Subscribers must only see published content; force the status filter
-	// regardless of caller-supplied value. Any user with content:read_drafts
-	// (CONTRIBUTOR+) keeps the requested filter.
-	const params_ = hasPermission(user, "content:read_drafts")
-		? query
-		: { ...query, status: "published" };
+	// regardless of caller-supplied value. Any caller that may read drafts
+	// keeps the requested filter -- see canReadDrafts for why an API token
+	// needs the admin scope on top of its owner's role.
+	const params_ = canReadDrafts(user, tokenScopes) ? query : { ...query, status: "published" };
 
 	const result = await emdash.handleContentList(collection, params_);
 

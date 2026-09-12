@@ -15,7 +15,15 @@ interface UserLike {
 	role: RoleLevel;
 }
 
-export function canReadMediaUsageCount(
+/**
+ * Whether a caller may see non-published content (drafts, scheduled, trash) and
+ * counts derived from it.
+ *
+ * Every API token is admin-owned, so a role check alone lets a token scoped to
+ * `content:read` serve unpublished entries. A token therefore also needs the
+ * `admin` scope. Session requests carry no scopes and are judged on role alone.
+ */
+export function canReadDrafts(
 	user: UserLike | null | undefined,
 	tokenScopes: string[] | undefined,
 ): boolean {

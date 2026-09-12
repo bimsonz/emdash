@@ -162,6 +162,8 @@ function ctx(opts: {
 	params?: Record<string, string>;
 	url?: string;
 	request?: Request;
+	/** Set for Bearer-authenticated requests; absent for session auth. */
+	tokenScopes?: string[];
 }): APIContext {
 	const url = new URL(opts.url ?? "http://localhost/");
 	return {
@@ -171,6 +173,7 @@ function ctx(opts: {
 		locals: {
 			user: opts.user,
 			emdash: opts.emdash,
+			tokenScopes: opts.tokenScopes,
 		},
 		cache: { enabled: false, invalidate: vi.fn() },
 		// eslint-disable-next-line typescript/no-unsafe-type-assertion -- minimal stub for tests
@@ -225,6 +228,31 @@ describe("GET /content/:collection — subscriber drafts leak", () => {
 		const res = await getList(ctx({ user: contributor, emdash }));
 		expect(res.status).toBe(200);
 		// status param is undefined (caller-controlled), not forced
+		const call = emdash.handleContentList.mock.calls[0]?.[1];
+		expect(call?.status).toBeUndefined();
+	});
+
+	it("forces status=published for an admin-owned token without the admin scope", async () => {
+		const emdash = buildEmdash({ listItems: items });
+		const res = await getList(
+			ctx({
+				user: admin,
+				emdash,
+				tokenScopes: ["content:read"],
+				url: "http://localhost/?status=draft",
+			}),
+		);
+		expect(res.status).toBe(200);
+		expect(emdash.handleContentList).toHaveBeenCalledWith(
+			"post",
+			expect.objectContaining({ status: "published" }),
+		);
+	});
+
+	it("keeps the requested filter for a token carrying the admin scope", async () => {
+		const emdash = buildEmdash({ listItems: items });
+		const res = await getList(ctx({ user: admin, emdash, tokenScopes: ["admin"] }));
+		expect(res.status).toBe(200);
 		const call = emdash.handleContentList.mock.calls[0]?.[1];
 		expect(call?.status).toBeUndefined();
 	});
@@ -285,6 +313,32 @@ describe("GET /content/:collection/:id — subscriber drafts leak", () => {
 		const emdash = buildEmdash({ getItem: makeItem({ id: "p1", status: "draft" }) });
 		const res = await getItem(
 			ctx({ user: contributor, emdash, params: { collection: "post", id: "p1" } }),
+		);
+		expect(res.status).toBe(200);
+	});
+
+	it("returns 404 to an admin-owned token without the admin scope fetching a draft", async () => {
+		const emdash = buildEmdash({ getItem: makeItem({ id: "p1", status: "draft" }) });
+		const res = await getItem(
+			ctx({
+				user: admin,
+				emdash,
+				tokenScopes: ["content:read"],
+				params: { collection: "post", id: "p1" },
+			}),
+		);
+		expect(res.status).toBe(404);
+	});
+
+	it("allows a token carrying the admin scope to fetch a draft", async () => {
+		const emdash = buildEmdash({ getItem: makeItem({ id: "p1", status: "draft" }) });
+		const res = await getItem(
+			ctx({
+				user: admin,
+				emdash,
+				tokenScopes: ["admin"],
+				params: { collection: "post", id: "p1" },
+			}),
 		);
 		expect(res.status).toBe(200);
 	});
