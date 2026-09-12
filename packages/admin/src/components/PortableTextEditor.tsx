@@ -1176,17 +1176,10 @@ function buildPluginBlockFormValues(
 	return initialValues ? { ...defaults, ...initialValues } : defaults;
 }
 
-function hasPluginBlockFormData(values: Record<string, unknown>): boolean {
-	return Object.values(values).some(
-		(value) => value !== undefined && value !== null && value !== "",
-	);
-}
-
 interface PluginBlockProblems {
 	url?: MessageDescriptor;
 	/** Top-level fields by `action_id`. */
 	fields: Record<string, MessageDescriptor>;
-	form?: MessageDescriptor;
 }
 
 const ABSOLUTE_URI_PATTERN = /^([a-z][a-z0-9+.-]*):\S+$/i;
@@ -1217,16 +1210,17 @@ function pluginBlockProblems(
 	block: PluginBlockDef | null,
 	values: Record<string, unknown>,
 ): PluginBlockProblems {
-	const fields = block?.fields ?? [];
-	if (fields.length === 0) {
+	const fields = block?.fields;
+	// A declared `fields` array means Block Kit mode, even when it is empty: a block
+	// that takes no configuration is not a URL embed. Only an absent `fields` is.
+	if (!Array.isArray(fields)) {
 		const url = typeof values.id === "string" ? values.id.trim() : "";
 		return isEmbeddableUrl(url)
 			? { fields: {} }
 			: { fields: {}, url: msg`Enter a full URL, such as https://example.com.` };
 	}
-	if (!hasPluginBlockFormData(values)) {
-		return { fields: {}, form: msg`Fill in at least one field.` };
-	}
+	// Block Kit elements have no required flag, so a block with every field empty is
+	// valid: a plugin can't ask for a value, and can't waive a rule that asks for one.
 	const fieldProblems: Record<string, MessageDescriptor> = {};
 	for (const field of fields) {
 		const problem = numberRangeProblem(field, values[field.action_id]);
@@ -1343,7 +1337,8 @@ function PluginBlockModal({
 			setTouched(false);
 			setSubmitted(false);
 			setInsertProblem(undefined);
-			if (!block.fields || block.fields.length === 0) {
+			// Only URL mode has an input to focus.
+			if (!Array.isArray(block.fields)) {
 				setTimeout(() => inputRef.current?.focus(), 0);
 			}
 		}
@@ -1351,20 +1346,19 @@ function PluginBlockModal({
 
 	const problems = pluginBlockProblems(block, formValues);
 	const urlError = submitted && problems.url ? t(problems.url) : undefined;
-	const formError = submitted && problems.form ? t(problems.form) : null;
 	const fieldErrors = submitted ? problems.fields : {};
 
 	const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
 		e.stopPropagation();
 		const form = e.currentTarget;
-		if (problems.url || problems.form || Object.keys(problems.fields).length > 0) {
+		if (problems.url || Object.keys(problems.fields).length > 0) {
 			revealErrors(form, () => setSubmitted(true));
 			return;
 		}
 		// The form is noValidate, so the browser's own checks on fields inside repeater items run here.
 		if (!form.reportValidity()) return;
-		if (block?.fields && block.fields.length > 0) {
+		if (Array.isArray(block?.fields)) {
 			setInsertProblem(onInsert(formValues));
 		} else {
 			const url = typeof formValues.id === "string" ? formValues.id.trim() : "";
@@ -1378,7 +1372,9 @@ function PluginBlockModal({
 	};
 
 	const isEditing = !!initialValues;
-	const hasFields = block?.fields && block.fields.length > 0;
+	// A declared `fields` array means Block Kit mode, even when it is empty: a block
+	// that takes no configuration is not a URL embed. Only an absent `fields` is.
+	const hasFields = Array.isArray(block?.fields);
 
 	const dialogSize = hasFields ? "xl" : "sm";
 
@@ -1392,11 +1388,15 @@ function PluginBlockModal({
 					{isEditing ? t`Edit ${block?.label || ""}` : t`Insert ${block?.label || ""}`}
 				</LayerDialog.Title>
 				<LayerDialog.Description>
-					{hasFields ? t`Fill in what this block shows.` : t`Paste the address of what to embed.`}
+					{!hasFields
+						? t`Paste the address of what to embed.`
+						: block.fields!.length > 0
+							? t`Fill in what this block shows.`
+							: t`This block has nothing to fill in.`}
 				</LayerDialog.Description>
 				<LayerDialog.Body>
 					<form id={formId} noValidate onSubmit={handleSubmit}>
-						<div className="grid gap-5" data-field-invalid={formError ? true : undefined}>
+						<div className="grid gap-5">
 							{hasFields ? (
 								block.fields!.map((field) => {
 									const fieldError = fieldErrors[field.action_id];
@@ -1442,10 +1442,7 @@ function PluginBlockModal({
 								/>
 							)}
 						</div>
-						<DialogError
-							message={formError ?? (insertProblem ? t(insertProblem) : null)}
-							className="mt-4"
-						/>
+						<DialogError message={insertProblem ? t(insertProblem) : null} className="mt-4" />
 					</form>
 				</LayerDialog.Body>
 				<LayerDialog.Actions dismissLabel={t`Cancel`}>
@@ -1968,10 +1965,7 @@ export {
 	PortableTextIdentityExtension as _PortableTextIdentityExtension,
 	PortableTextSpanIdentity as _PortableTextSpanIdentity,
 };
-export {
-	buildPluginBlockFormValues as _buildPluginBlockFormValues,
-	hasPluginBlockFormData as _hasPluginBlockFormData,
-};
+export { buildPluginBlockFormValues as _buildPluginBlockFormValues };
 
 // =============================================================================
 // Editor Footer with Writing Metrics
