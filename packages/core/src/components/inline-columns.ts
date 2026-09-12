@@ -204,6 +204,7 @@ export const INLINE_COLUMNS_STYLES = `
 	@media (max-width: 768px) {
 		.emdash-inline-editor .emdash-columns:not(.emdash-columns--wrap) {
 			flex-direction: column;
+			align-items: stretch;
 		}
 		.emdash-inline-editor .emdash-columns:not(.emdash-columns--wrap, .emdash-columns--gap-none) {
 			gap: 1rem;
