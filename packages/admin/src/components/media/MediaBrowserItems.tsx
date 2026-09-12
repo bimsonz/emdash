@@ -61,6 +61,7 @@ export function MediaBrowserItem({
 	const isImage = item.mimeType.startsWith("image/");
 	const hasVisualPreview = Boolean(item.url) && (isImage || Boolean(item.provider));
 	const needsDimensions = hasVisualPreview && (!item.width || !item.height);
+	const dimensions = item.width && item.height ? `${item.width} × ${item.height}` : null;
 	const previewUrl = item.url ? getMediaPreviewUrl(item.url, item.contentHash) : "";
 	const imageUrl =
 		needsDimensions && onDimensionsLoaded
@@ -111,8 +112,9 @@ export function MediaBrowserItem({
 					<p dir="auto" className="truncate text-sm font-medium leading-5" title={item.filename}>
 						{item.filename}
 					</p>
-					<p className="truncate text-sm text-kumo-subtle">
+					<p className="truncate text-sm text-kumo-subtle tabular-nums">
 						{item.mimeType} · {formatFileSize(item.size)}
+						{dimensions ? ` · ${dimensions}` : null}
 					</p>
 				</div>
 				{selectable && selected ? (
@@ -153,6 +155,9 @@ export function MediaBrowserItem({
 				>
 					{item.filename}
 				</span>
+				{dimensions && (
+					<span className="shrink-0 text-xs text-kumo-subtle tabular-nums">{dimensions}</span>
+				)}
 				<Badge variant="secondary" className="h-5 min-w-11 justify-center rounded-md px-2 py-0">
 					<span className="text-[11px] leading-none text-kumo-default/75">
 						{formatFileFormat(item.mimeType)}
