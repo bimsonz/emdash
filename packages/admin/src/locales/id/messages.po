@@ -481,7 +481,7 @@ msgstr "{changedCount, plural, other {# perubahan dari revisi berikutnya}}"
 msgid "{characters, plural, one {# character} other {# characters}}"
 msgstr "{characters, plural, other {# karakter}}"
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:314
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:315
 msgid "{columnCount, plural, one {# column} other {# columns}}, {blockCount, plural, one {# block} other {# blocks}}"
 msgstr ""
 
@@ -1178,8 +1178,8 @@ msgstr "Tambahkan blok"
 msgid "Add byline"
 msgstr "Tambahkan byline"
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:366
 #: packages/admin/src/components/editor/NestingBlockNode.tsx:367
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:368
 msgid "Add column"
 msgstr ""
 
@@ -1413,7 +1413,7 @@ msgstr "Akses agen untuk {0} telah diperbarui"
 msgid "Agent-callable MCP tools"
 msgstr "Alat MCP yang dapat dipanggil agen"
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:335
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:336
 msgid "Align"
 msgstr ""
 
@@ -2089,7 +2089,7 @@ msgstr "Bio"
 msgid "Block {0}"
 msgstr "Blok {0}"
 
-#: packages/admin/src/components/editor/DragHandleWrapper.tsx:240
+#: packages/admin/src/components/editor/DragHandleWrapper.tsx:249
 msgid "Block actions - drag to reorder, click for menu"
 msgstr "Aksi blok - seret untuk mengurutkan, klik untuk menu"
 
@@ -2134,7 +2134,7 @@ msgstr "Boolean"
 msgid "Both reference fields bound to this relation share these limits, so the two sides cannot disagree about the same links."
 msgstr "Kedua kolom referensi yang tersambung ke relasi ini berbagi batasan ini, sehingga kedua sisi tidak dapat saling tidak setuju tentang tautan yang sama."
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:341
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:342
 msgid "Bottom"
 msgstr ""
 
@@ -2417,7 +2417,7 @@ msgid "Cells merged"
 msgstr "Sel digabung"
 
 #: packages/admin/src/components/editor/ImageDetailPanel.tsx:276
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:340
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:341
 #: packages/admin/src/components/PortableTextEditor.tsx:4577
 msgid "Center"
 msgstr "Tengah"
@@ -2826,8 +2826,8 @@ msgstr "Tindakan blok kode"
 msgid "Collapse block"
 msgstr "Ciutkan blok"
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:295
 #: packages/admin/src/components/editor/NestingBlockNode.tsx:296
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:297
 msgid "Collapse container"
 msgstr ""
 
@@ -2872,7 +2872,7 @@ msgstr "Koleksi dan kolom, semua konten dengan draf, revisi, posting terjadwal, 
 msgid "Collections created:"
 msgstr "Koleksi dibuat:"
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:370
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:371
 msgid "Column"
 msgstr ""
 
@@ -3812,7 +3812,7 @@ msgstr "Didefinisikan dalam kode"
 #: packages/admin/src/components/ContentTypeEditor.tsx:853
 #: packages/admin/src/components/ContentTypeList.tsx:256
 #: packages/admin/src/components/editor/BlockMenu.tsx:318
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:380
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:381
 #: packages/admin/src/components/editor/PluginBlockNode.tsx:367
 #: packages/admin/src/components/MediaDetailPanel.tsx:1816
 #: packages/admin/src/components/MediaDetailPanel.tsx:1920
@@ -3947,7 +3947,7 @@ msgstr "Hapus media?"
 msgid "Delete menu"
 msgstr "Hapus menu"
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:381
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:382
 msgid "Delete nesting container"
 msgstr ""
 
@@ -4444,7 +4444,7 @@ msgstr "Seret dan lepaskan atau klik untuk menelusuri (.xml)"
 msgid "Drag here to add"
 msgstr "Seret ke sini untuk menambah"
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:308
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:309
 msgid "Drag to move this container"
 msgstr ""
 
@@ -4968,7 +4968,7 @@ msgstr "entri di sisi yang ditautkan"
 msgid "entry on the linking side"
 msgstr "entri di sisi penautan"
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:353
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:354
 msgid "Equal"
 msgstr ""
 
@@ -5054,8 +5054,8 @@ msgstr "Keluar mode bebas gangguan (⌘⇧\\)"
 msgid "Expand block"
 msgstr "Luaskan blok"
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:295
 #: packages/admin/src/components/editor/NestingBlockNode.tsx:296
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:297
 msgid "Expand container"
 msgstr ""
 
@@ -6038,7 +6038,7 @@ msgstr "Perbaiki kolom yang tidak valid sebelum mengubah tanggal publikasi"
 msgid "Fix invalid fields before changing the schedule"
 msgstr "Perbaiki kolom yang tidak valid sebelum mengubah jadwal"
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:326
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:327
 msgid "Flex"
 msgstr ""
 
@@ -6164,7 +6164,7 @@ msgstr "Galeri"
 msgid "Gallery settings"
 msgstr "Pengaturan galeri"
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:329
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:330
 msgid "Gap"
 msgstr ""
 
@@ -6230,7 +6230,7 @@ msgstr "Verifikasi Google"
 msgid "GraphQL"
 msgstr "GraphQL"
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:326
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:327
 msgid "Grid"
 msgstr ""
 
@@ -6825,7 +6825,7 @@ msgstr "Sisipkan blok"
 msgid "Insert block after current block"
 msgstr "Sisipkan blok setelah blok saat ini"
 
-#: packages/admin/src/components/editor/DragHandleWrapper.tsx:222
+#: packages/admin/src/components/editor/DragHandleWrapper.tsx:231
 msgid "Insert block below"
 msgstr "Sisipkan blok di bawah"
 
@@ -7139,7 +7139,7 @@ msgstr "Lanskap"
 msgid "Language"
 msgstr "Bahasa"
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:332
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:333
 msgid "Large"
 msgstr ""
 
@@ -7190,7 +7190,7 @@ msgstr "Terakhir digunakan {0}"
 msgid "Later entries weren't loaded. The range has more entries than the calendar can show."
 msgstr "Entri selanjutnya tidak dimuat. Rentang ini memiliki lebih banyak entri daripada yang dapat ditampilkan kalender."
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:323
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:324
 #: packages/admin/src/components/PortableTextEditor.tsx:2049
 msgid "Layout"
 msgstr ""
@@ -7830,7 +7830,7 @@ msgstr "Pelacakan penggunaan media perlu perhatian"
 msgid "Media Write"
 msgstr "Tulis Media"
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:332
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:333
 msgid "Medium"
 msgstr ""
 
@@ -8217,11 +8217,11 @@ msgstr "Nama harus dimulai dengan huruf dan hanya berisi huruf kecil, angka, dan
 msgid "Name your section, then add its content in the editor."
 msgstr "Beri nama bagian Anda, lalu tambahkan kontennya di penyunting."
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:356
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:357
 msgid "Narrow first"
 msgstr ""
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:357
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:358
 msgid "Narrow last"
 msgstr ""
 
@@ -8245,7 +8245,7 @@ msgstr "Navigasi"
 msgid "Needs attention"
 msgstr "Perlu perhatian"
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:311
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:312
 #: packages/admin/src/components/PortableTextEditor.tsx:2046
 msgid "Nesting container"
 msgstr ""
@@ -8799,7 +8799,7 @@ msgid "Non-guest"
 msgstr "Non-tamu"
 
 #: packages/admin/src/components/editor/ImageDetailPanel.tsx:274
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:332
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:333
 #: packages/admin/src/components/PortableTextEditor.tsx:4575
 msgid "None"
 msgstr "Tidak ada"
@@ -10114,8 +10114,8 @@ msgstr "Hapus {label}"
 msgid "Remove assignment"
 msgstr "Hapus penetapan"
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:186
 #: packages/admin/src/components/editor/NestingBlockNode.tsx:187
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:188
 msgid "Remove column"
 msgstr ""
 
@@ -11807,7 +11807,7 @@ msgstr "Slug disalin ke papan klip"
 msgid "Slugs cannot be changed after the field is created."
 msgstr "Slug tidak dapat diubah setelah bidang dibuat."
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:332
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:333
 msgid "Small"
 msgstr ""
 
@@ -12036,7 +12036,7 @@ msgstr "Cadangan Tersimpan"
 msgid "Stored per locale — each translation of a byline gets its own value."
 msgstr "Disimpan per bahasa - setiap terjemahan dari byline memiliki nilainya sendiri."
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:342
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:343
 msgid "Stretch"
 msgstr ""
 
@@ -13166,7 +13166,7 @@ msgstr "Besok"
 msgid "Tooltip text"
 msgstr "Teks tooltip"
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:339
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:340
 msgid "Top"
 msgstr ""
 
@@ -14180,11 +14180,11 @@ msgstr "Kenapa ini penting?"
 msgid "Wide"
 msgstr "Lebar"
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:354
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:355
 msgid "Wide first"
 msgstr ""
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:355
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:356
 msgid "Wide last"
 msgstr ""
 
@@ -14236,7 +14236,7 @@ msgstr "Widget"
 msgid "Width"
 msgstr "Lebar"
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:348
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:349
 #: packages/admin/src/components/editor/TableControls.tsx:33
 msgid "Widths"
 msgstr "Lebar"

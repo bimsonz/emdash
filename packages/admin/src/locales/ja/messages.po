@@ -481,7 +481,7 @@ msgstr "{changedCount, plural, one {次の版との差分：#件} other {次の�
 msgid "{characters, plural, one {# character} other {# characters}}"
 msgstr "{characters, plural, one {#文字} other {#文字}}"
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:314
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:315
 msgid "{columnCount, plural, one {# column} other {# columns}}, {blockCount, plural, one {# block} other {# blocks}}"
 msgstr ""
 
@@ -1178,8 +1178,8 @@ msgstr ""
 msgid "Add byline"
 msgstr ""
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:366
 #: packages/admin/src/components/editor/NestingBlockNode.tsx:367
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:368
 msgid "Add column"
 msgstr ""
 
@@ -1413,7 +1413,7 @@ msgstr "{0}のエージェントアクセスを更新しました"
 msgid "Agent-callable MCP tools"
 msgstr "エージェントから呼び出し可能なMCPツール"
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:335
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:336
 msgid "Align"
 msgstr ""
 
@@ -2089,7 +2089,7 @@ msgstr "プロフィール"
 msgid "Block {0}"
 msgstr ""
 
-#: packages/admin/src/components/editor/DragHandleWrapper.tsx:240
+#: packages/admin/src/components/editor/DragHandleWrapper.tsx:249
 msgid "Block actions - drag to reorder, click for menu"
 msgstr "ブロック操作 - ドラッグして並べ替え、クリックしてメニューを表示"
 
@@ -2134,7 +2134,7 @@ msgstr "ブール値（true / false）"
 msgid "Both reference fields bound to this relation share these limits, so the two sides cannot disagree about the same links."
 msgstr ""
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:341
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:342
 msgid "Bottom"
 msgstr ""
 
@@ -2417,7 +2417,7 @@ msgid "Cells merged"
 msgstr ""
 
 #: packages/admin/src/components/editor/ImageDetailPanel.tsx:276
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:340
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:341
 #: packages/admin/src/components/PortableTextEditor.tsx:4577
 msgid "Center"
 msgstr "中央"
@@ -2826,8 +2826,8 @@ msgstr "コードブロックの操作"
 msgid "Collapse block"
 msgstr ""
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:295
 #: packages/admin/src/components/editor/NestingBlockNode.tsx:296
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:297
 msgid "Collapse container"
 msgstr ""
 
@@ -2872,7 +2872,7 @@ msgstr ""
 msgid "Collections created:"
 msgstr "作成したコンテンツタイプ："
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:370
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:371
 msgid "Column"
 msgstr ""
 
@@ -3812,7 +3812,7 @@ msgstr "コードで定義"
 #: packages/admin/src/components/ContentTypeEditor.tsx:853
 #: packages/admin/src/components/ContentTypeList.tsx:256
 #: packages/admin/src/components/editor/BlockMenu.tsx:318
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:380
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:381
 #: packages/admin/src/components/editor/PluginBlockNode.tsx:367
 #: packages/admin/src/components/MediaDetailPanel.tsx:1816
 #: packages/admin/src/components/MediaDetailPanel.tsx:1920
@@ -3947,7 +3947,7 @@ msgstr ""
 msgid "Delete menu"
 msgstr ""
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:381
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:382
 msgid "Delete nesting container"
 msgstr ""
 
@@ -4444,7 +4444,7 @@ msgstr "XMLファイルをドラッグ＆ドロップするか、クリックし
 msgid "Drag here to add"
 msgstr "ここにドラッグして追加"
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:308
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:309
 msgid "Drag to move this container"
 msgstr ""
 
@@ -4968,7 +4968,7 @@ msgstr ""
 msgid "entry on the linking side"
 msgstr ""
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:353
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:354
 msgid "Equal"
 msgstr ""
 
@@ -5054,8 +5054,8 @@ msgstr ""
 msgid "Expand block"
 msgstr ""
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:295
 #: packages/admin/src/components/editor/NestingBlockNode.tsx:296
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:297
 msgid "Expand container"
 msgstr ""
 
@@ -6038,7 +6038,7 @@ msgstr ""
 msgid "Fix invalid fields before changing the schedule"
 msgstr ""
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:326
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:327
 msgid "Flex"
 msgstr ""
 
@@ -6164,7 +6164,7 @@ msgstr "ギャラリー"
 msgid "Gallery settings"
 msgstr "ギャラリー設定"
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:329
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:330
 msgid "Gap"
 msgstr ""
 
@@ -6230,7 +6230,7 @@ msgstr "Google Search Console"
 msgid "GraphQL"
 msgstr "GraphQL"
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:326
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:327
 msgid "Grid"
 msgstr ""
 
@@ -6825,7 +6825,7 @@ msgstr "ブロックを挿入"
 msgid "Insert block after current block"
 msgstr "現在のブロックの後にブロックを挿入"
 
-#: packages/admin/src/components/editor/DragHandleWrapper.tsx:222
+#: packages/admin/src/components/editor/DragHandleWrapper.tsx:231
 msgid "Insert block below"
 msgstr "下にブロックを挿入"
 
@@ -7139,7 +7139,7 @@ msgstr "横長"
 msgid "Language"
 msgstr "言語"
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:332
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:333
 msgid "Large"
 msgstr ""
 
@@ -7190,7 +7190,7 @@ msgstr "最終使用日時：{0}"
 msgid "Later entries weren't loaded. The range has more entries than the calendar can show."
 msgstr ""
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:323
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:324
 #: packages/admin/src/components/PortableTextEditor.tsx:2049
 msgid "Layout"
 msgstr ""
@@ -7830,7 +7830,7 @@ msgstr "メディア使用状況の設定を確認してください"
 msgid "Media Write"
 msgstr "メディア書き込み"
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:332
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:333
 msgid "Medium"
 msgstr ""
 
@@ -8217,11 +8217,11 @@ msgstr "識別名は半角英小文字で始め、半角英小文字、数字、
 msgid "Name your section, then add its content in the editor."
 msgstr ""
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:356
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:357
 msgid "Narrow first"
 msgstr ""
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:357
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:358
 msgid "Narrow last"
 msgstr ""
 
@@ -8245,7 +8245,7 @@ msgstr "ナビゲーション"
 msgid "Needs attention"
 msgstr "対応が必要"
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:311
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:312
 #: packages/admin/src/components/PortableTextEditor.tsx:2046
 msgid "Nesting container"
 msgstr ""
@@ -8799,7 +8799,7 @@ msgid "Non-guest"
 msgstr ""
 
 #: packages/admin/src/components/editor/ImageDetailPanel.tsx:274
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:332
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:333
 #: packages/admin/src/components/PortableTextEditor.tsx:4575
 msgid "None"
 msgstr "なし"
@@ -10114,8 +10114,8 @@ msgstr "{label}を削除"
 msgid "Remove assignment"
 msgstr "割り当てを削除"
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:186
 #: packages/admin/src/components/editor/NestingBlockNode.tsx:187
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:188
 msgid "Remove column"
 msgstr ""
 
@@ -11807,7 +11807,7 @@ msgstr "識別名をクリップボードにコピーしました"
 msgid "Slugs cannot be changed after the field is created."
 msgstr "フィールドの作成後はスラッグを変更できません。"
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:332
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:333
 msgid "Small"
 msgstr ""
 
@@ -12036,7 +12036,7 @@ msgstr "保存済みのバックアップ"
 msgid "Stored per locale — each translation of a byline gets its own value."
 msgstr "言語ごとに保存され、執筆者の翻訳ごとに異なる値を設定できます。"
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:342
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:343
 msgid "Stretch"
 msgstr ""
 
@@ -13166,7 +13166,7 @@ msgstr ""
 msgid "Tooltip text"
 msgstr ""
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:339
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:340
 msgid "Top"
 msgstr ""
 
@@ -14180,11 +14180,11 @@ msgstr "代替テキストが重要な理由"
 msgid "Wide"
 msgstr "幅広"
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:354
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:355
 msgid "Wide first"
 msgstr ""
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:355
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:356
 msgid "Wide last"
 msgstr ""
 
@@ -14236,7 +14236,7 @@ msgstr "ウィジェット"
 msgid "Width"
 msgstr "幅"
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:348
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:349
 #: packages/admin/src/components/editor/TableControls.tsx:33
 msgid "Widths"
 msgstr ""
