@@ -208,7 +208,7 @@ msgstr ""
 #. placeholder {1}: state.columns
 #: packages/admin/src/components/editor/TableControls.tsx:210
 #: packages/admin/src/components/editor/TableControls.tsx:243
-#: packages/admin/src/components/PortableTextEditor.tsx:4430
+#: packages/admin/src/components/PortableTextEditor.tsx:4552
 msgid "{0, plural, one {# row} other {# rows}} × {1, plural, one {# column} other {# columns}} selected"
 msgstr ""
 
@@ -477,8 +477,12 @@ msgstr "{base} เป็น: {0}"
 msgid "{changedCount, plural, one {# change from next revision} other {# changes from next revision}}"
 msgstr "{changedCount, plural, one {# การเปลี่ยนแปลงจากรุ่นแก้ไขถัดไป} other {# การเปลี่ยนแปลงจากรุ่นแก้ไขถัดไป}}"
 
-#: packages/admin/src/components/PortableTextEditor.tsx:2965
+#: packages/admin/src/components/PortableTextEditor.tsx:3085
 msgid "{characters, plural, one {# character} other {# characters}}"
+msgstr ""
+
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:314
+msgid "{columnCount, plural, one {# column} other {# columns}}, {blockCount, plural, one {# block} other {# blocks}}"
 msgstr ""
 
 #: packages/admin/src/components/editor/TableControls.tsx:219
@@ -682,7 +686,7 @@ msgstr ""
 msgid "{policyRejected, plural, one {Open the affected entry, resolve the policy reason, and schedule it again. A successful schedule or publish clears this notice.} other {Open the affected entries, resolve the policy reasons, and schedule them again. A successful schedule or publish clears each notice.}}"
 msgstr ""
 
-#: packages/admin/src/components/media/MediaBrowserItems.tsx:304
+#: packages/admin/src/components/media/MediaBrowserItems.tsx:309
 msgid "{position} of {total}"
 msgstr ""
 
@@ -690,7 +694,7 @@ msgstr ""
 msgid "{previewRows} × {previewColumns} table"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:2966
+#: packages/admin/src/components/PortableTextEditor.tsx:3086
 msgid "{readingTime, plural, one {# min read} other {# min read}}"
 msgstr ""
 
@@ -719,7 +723,7 @@ msgstr ""
 msgid "{rows, plural, one {Row deleted} other {# rows deleted}}"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:3111
+#: packages/admin/src/components/PortableTextEditor.tsx:3231
 msgid "{rows} × {columns} table pasted"
 msgstr ""
 
@@ -783,7 +787,7 @@ msgstr "{unchangedCount, plural, one {แสดงรายการที่ไ
 msgid "{widgetType} in {areaName}"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:2964
+#: packages/admin/src/components/PortableTextEditor.tsx:3084
 msgid "{words, plural, one {# word} other {# words}}"
 msgstr ""
 
@@ -1128,7 +1132,7 @@ msgstr "เพิ่ม"
 #. placeholder {0}: option.byline.displayName
 #: packages/admin/src/components/BylineCreditsEditor.tsx:503
 #: packages/admin/src/components/ContentList.tsx:554
-#: packages/admin/src/components/PortableTextEditor.tsx:2575
+#: packages/admin/src/components/PortableTextEditor.tsx:2698
 #: packages/admin/src/components/TaxonomyManager.tsx:756
 #: packages/admin/src/components/TaxonomyManager.tsx:1330
 msgid "Add {0}"
@@ -1174,8 +1178,13 @@ msgstr ""
 msgid "Add byline"
 msgstr ""
 
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:366
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:367
+msgid "Add column"
+msgstr ""
+
 #: packages/admin/src/components/editor/TableControls.tsx:30
-#: packages/admin/src/components/PortableTextEditor.tsx:4443
+#: packages/admin/src/components/PortableTextEditor.tsx:4565
 msgid "Add column after"
 msgstr "เพิ่มคอลัมน์ถัดไป"
 
@@ -1237,7 +1246,7 @@ msgstr ""
 msgid "Add images to gallery"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:2575
+#: packages/admin/src/components/PortableTextEditor.tsx:2698
 msgid "Add item"
 msgstr "เพิ่มรายการ"
 
@@ -1245,8 +1254,8 @@ msgstr "เพิ่มรายการ"
 msgid "Add Item"
 msgstr "เพิ่มรายการ"
 
-#: packages/admin/src/components/PortableTextEditor.tsx:4355
-#: packages/admin/src/components/PortableTextEditor.tsx:4857
+#: packages/admin/src/components/PortableTextEditor.tsx:4477
+#: packages/admin/src/components/PortableTextEditor.tsx:4979
 msgid "Add link"
 msgstr "เพิ่มลิงก์"
 
@@ -1290,7 +1299,7 @@ msgid "Add row above"
 msgstr ""
 
 #: packages/admin/src/components/editor/TableControls.tsx:29
-#: packages/admin/src/components/PortableTextEditor.tsx:4436
+#: packages/admin/src/components/PortableTextEditor.tsx:4558
 msgid "Add row below"
 msgstr ""
 
@@ -1404,21 +1413,25 @@ msgstr ""
 msgid "Agent-callable MCP tools"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:5403
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:335
+msgid "Align"
+msgstr ""
+
+#: packages/admin/src/components/PortableTextEditor.tsx:5525
 msgid "Align Center"
 msgstr "จัดกึ่งกลาง"
 
-#: packages/admin/src/components/PortableTextEditor.tsx:5395
+#: packages/admin/src/components/PortableTextEditor.tsx:5517
 msgid "Align Left"
 msgstr "จัดชิดซ้าย"
 
-#: packages/admin/src/components/PortableTextEditor.tsx:5411
+#: packages/admin/src/components/PortableTextEditor.tsx:5533
 msgid "Align Right"
 msgstr "จัดชิดขวา"
 
 #: packages/admin/src/components/editor/ImageDetailPanel.tsx:483
 #: packages/admin/src/components/editor/ImageDetailPanel.tsx:722
-#: packages/admin/src/components/PortableTextEditor.tsx:4838
+#: packages/admin/src/components/PortableTextEditor.tsx:4960
 msgid "Alignment"
 msgstr ""
 
@@ -1537,8 +1550,8 @@ msgstr ""
 #: packages/admin/src/components/editor/ImageDetailPanel.tsx:514
 #: packages/admin/src/components/editor/ImageDetailPanel.tsx:518
 #: packages/admin/src/components/MediaLibrary.tsx:1208
-#: packages/admin/src/components/PortableTextEditor.tsx:4773
-#: packages/admin/src/components/PortableTextEditor.tsx:4835
+#: packages/admin/src/components/PortableTextEditor.tsx:4895
+#: packages/admin/src/components/PortableTextEditor.tsx:4957
 msgid "Alt text"
 msgstr "ข้อความ Alt"
 
@@ -1687,7 +1700,7 @@ msgid "Application Password"
 msgstr "Application Password"
 
 #: packages/admin/src/components/editor/ImageDetailPanel.tsx:607
-#: packages/admin/src/components/PortableTextEditor.tsx:5490
+#: packages/admin/src/components/PortableTextEditor.tsx:5612
 msgid "Apply"
 msgstr "ใช้"
 
@@ -1695,9 +1708,9 @@ msgstr "ใช้"
 msgid "Apply changes"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:4281
-#: packages/admin/src/components/PortableTextEditor.tsx:4282
-#: packages/admin/src/components/PortableTextEditor.tsx:4810
+#: packages/admin/src/components/PortableTextEditor.tsx:4403
+#: packages/admin/src/components/PortableTextEditor.tsx:4404
+#: packages/admin/src/components/PortableTextEditor.tsx:4932
 msgid "Apply link"
 msgstr "ใช้ลิงก์"
 
@@ -2076,7 +2089,7 @@ msgstr "ประวัติย่อ"
 msgid "Block {0}"
 msgstr ""
 
-#: packages/admin/src/components/editor/DragHandleWrapper.tsx:188
+#: packages/admin/src/components/editor/DragHandleWrapper.tsx:240
 msgid "Block actions - drag to reorder, click for menu"
 msgstr "การกระทำของบล็อก - ลากเพื่อจัดเรียงใหม่ คลิกเพื่อเปิดเมนู"
 
@@ -2106,8 +2119,8 @@ msgstr ""
 msgid "Blocks"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:4305
-#: packages/admin/src/components/PortableTextEditor.tsx:5271
+#: packages/admin/src/components/PortableTextEditor.tsx:4427
+#: packages/admin/src/components/PortableTextEditor.tsx:5393
 msgid "Bold"
 msgstr "ตัวหนา"
 
@@ -2119,6 +2132,10 @@ msgstr "บูลีน"
 
 #: packages/admin/src/components/RelationForm.tsx:347
 msgid "Both reference fields bound to this relation share these limits, so the two sides cannot disagree about the same links."
+msgstr ""
+
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:341
+msgid "Bottom"
 msgstr ""
 
 #: packages/admin/src/components/SeoPanel.tsx:195
@@ -2163,8 +2180,8 @@ msgid "Build provenance verified"
 msgstr ""
 
 #: packages/admin/src/components/editor/BlockMenu.tsx:127
-#: packages/admin/src/components/PortableTextEditor.tsx:1867
-#: packages/admin/src/components/PortableTextEditor.tsx:5320
+#: packages/admin/src/components/PortableTextEditor.tsx:1971
+#: packages/admin/src/components/PortableTextEditor.tsx:5442
 msgid "Bullet List"
 msgstr "รายการแบบจุด"
 
@@ -2279,7 +2296,7 @@ msgstr "สามารถดูเนื้อหาได้"
 #: packages/admin/src/components/ContentSettingsPanel.tsx:1313
 #: packages/admin/src/components/editor/ImageDetailPanel.tsx:604
 #: packages/admin/src/components/editor/ImageDetailPanel.tsx:817
-#: packages/admin/src/components/editor/PluginBlockNode.tsx:406
+#: packages/admin/src/components/editor/PluginBlockNode.tsx:395
 #: packages/admin/src/components/EditorDraftPatchPreview.tsx:78
 #: packages/admin/src/components/FieldEditor.tsx:1315
 #: packages/admin/src/components/MediaDetailPanel.tsx:1847
@@ -2289,9 +2306,9 @@ msgstr "สามารถดูเนื้อหาได้"
 #: packages/admin/src/components/MenuEditor.tsx:629
 #: packages/admin/src/components/MenuList.tsx:182
 #: packages/admin/src/components/PluginManager.tsx:802
-#: packages/admin/src/components/PortableTextEditor.tsx:4785
-#: packages/admin/src/components/PortableTextEditor.tsx:4807
-#: packages/admin/src/components/PortableTextEditor.tsx:5474
+#: packages/admin/src/components/PortableTextEditor.tsx:4907
+#: packages/admin/src/components/PortableTextEditor.tsx:4929
+#: packages/admin/src/components/PortableTextEditor.tsx:5596
 #: packages/admin/src/components/PublishingDateTimeEditor.tsx:367
 #: packages/admin/src/components/Redirects.tsx:185
 #: packages/admin/src/components/RelationDialog.tsx:60
@@ -2310,7 +2327,7 @@ msgstr "สามารถดูเนื้อหาได้"
 msgid "Cancel"
 msgstr "ยกเลิก"
 
-#: packages/admin/src/components/editor/PluginBlockNode.tsx:405
+#: packages/admin/src/components/editor/PluginBlockNode.tsx:394
 msgid "Cancel (Esc)"
 msgstr "ยกเลิก (Esc)"
 
@@ -2400,7 +2417,8 @@ msgid "Cells merged"
 msgstr ""
 
 #: packages/admin/src/components/editor/ImageDetailPanel.tsx:276
-#: packages/admin/src/components/PortableTextEditor.tsx:4455
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:340
+#: packages/admin/src/components/PortableTextEditor.tsx:4577
 msgid "Center"
 msgstr ""
 
@@ -2730,9 +2748,9 @@ msgstr ""
 #: packages/admin/src/components/MenuEditor.tsx:588
 #: packages/admin/src/components/MenuEditor.tsx:592
 #: packages/admin/src/components/MenuList.tsx:145
-#: packages/admin/src/components/PortableTextEditor.tsx:2350
-#: packages/admin/src/components/PortableTextEditor.tsx:2356
-#: packages/admin/src/components/PortableTextEditor.tsx:2360
+#: packages/admin/src/components/PortableTextEditor.tsx:2473
+#: packages/admin/src/components/PortableTextEditor.tsx:2479
+#: packages/admin/src/components/PortableTextEditor.tsx:2483
 #: packages/admin/src/components/PublishingDateTimeEditor.tsx:347
 #: packages/admin/src/components/Redirects.tsx:117
 #: packages/admin/src/components/Redirects.tsx:123
@@ -2789,14 +2807,14 @@ msgstr ""
 
 #: packages/admin/src/components/ContentTypeList.tsx:388
 #: packages/admin/src/components/editor/IframeBlockNode.tsx:40
-#: packages/admin/src/components/PortableTextEditor.tsx:4347
+#: packages/admin/src/components/PortableTextEditor.tsx:4469
 #: packages/admin/src/components/Redirects.tsx:487
 msgid "Code"
 msgstr "โค้ด"
 
 #: packages/admin/src/components/editor/BlockMenu.tsx:119
-#: packages/admin/src/components/PortableTextEditor.tsx:1897
-#: packages/admin/src/components/PortableTextEditor.tsx:5362
+#: packages/admin/src/components/PortableTextEditor.tsx:2001
+#: packages/admin/src/components/PortableTextEditor.tsx:5484
 msgid "Code Block"
 msgstr "บล็อกโค้ด"
 
@@ -2806,6 +2824,11 @@ msgstr ""
 
 #: packages/admin/src/components/BlocksField.tsx:347
 msgid "Collapse block"
+msgstr ""
+
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:295
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:296
+msgid "Collapse container"
 msgstr ""
 
 #: packages/admin/src/components/PluginManager.tsx:558
@@ -2849,8 +2872,12 @@ msgstr ""
 msgid "Collections created:"
 msgstr "คอลเลกชันที่สร้าง:"
 
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:370
+msgid "Column"
+msgstr ""
+
 #: packages/admin/src/components/editor/TableControls.tsx:30
-#: packages/admin/src/components/PortableTextEditor.tsx:4441
+#: packages/admin/src/components/PortableTextEditor.tsx:4563
 msgid "Column added after"
 msgstr ""
 
@@ -2866,7 +2893,7 @@ msgstr ""
 msgid "Column width increased"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:3111
+#: packages/admin/src/components/PortableTextEditor.tsx:3231
 msgid "Column width resized"
 msgstr ""
 
@@ -2995,7 +3022,7 @@ msgstr ""
 #: packages/admin/src/components/comments/CommentDetail.tsx:103
 #: packages/admin/src/components/comments/CommentInbox.tsx:331
 #: packages/admin/src/components/Dashboard.tsx:479
-#: packages/admin/src/components/PortableTextEditor.tsx:3247
+#: packages/admin/src/components/PortableTextEditor.tsx:3367
 #: packages/admin/src/components/SectionEditor.tsx:215
 #: packages/admin/src/components/Sidebar.tsx:598
 #: packages/admin/src/components/Widgets.tsx:901
@@ -3117,7 +3144,7 @@ msgstr "ดำเนินการต่อ →"
 msgid "Continue Import"
 msgstr "ดำเนินการนำเข้าต่อ"
 
-#: packages/admin/src/components/PortableTextEditor.tsx:5337
+#: packages/admin/src/components/PortableTextEditor.tsx:5459
 msgid "Continue numbering"
 msgstr ""
 
@@ -3188,8 +3215,8 @@ msgstr "คัดลอกโทเค็นนี้ตอนนี้ — จ�
 msgid "Copy token"
 msgstr "คัดลอกโทเค็น"
 
-#: packages/admin/src/components/editor/PluginBlockNode.tsx:322
-#: packages/admin/src/components/editor/PluginBlockNode.tsx:323
+#: packages/admin/src/components/editor/PluginBlockNode.tsx:311
+#: packages/admin/src/components/editor/PluginBlockNode.tsx:312
 #: packages/admin/src/components/MediaDetailPanel.tsx:1367
 msgid "Copy URL"
 msgstr "คัดลอก URL"
@@ -3218,7 +3245,7 @@ msgstr "ไม่สามารถคัดลอกโดยอัตโนม
 msgid "Could not create {singularLower}"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:4027
+#: packages/admin/src/components/PortableTextEditor.tsx:4149
 msgid "Could not insert section"
 msgstr ""
 
@@ -3389,7 +3416,7 @@ msgstr ""
 msgid "Create a block type before adding a blocks field."
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:1868
+#: packages/admin/src/components/PortableTextEditor.tsx:1972
 msgid "Create a bullet list"
 msgstr "สร้างรายการแบบจุด"
 
@@ -3402,7 +3429,7 @@ msgstr "สร้าง {0} ใหม่"
 msgid "Create a new {singularLabel}"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:1878
+#: packages/admin/src/components/PortableTextEditor.tsx:1982
 msgid "Create a numbered list"
 msgstr "สร้างรายการแบบลำดับเลข"
 
@@ -3785,7 +3812,8 @@ msgstr "กำหนดไว้ในโค้ด"
 #: packages/admin/src/components/ContentTypeEditor.tsx:853
 #: packages/admin/src/components/ContentTypeList.tsx:256
 #: packages/admin/src/components/editor/BlockMenu.tsx:318
-#: packages/admin/src/components/editor/PluginBlockNode.tsx:378
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:380
+#: packages/admin/src/components/editor/PluginBlockNode.tsx:367
 #: packages/admin/src/components/MediaDetailPanel.tsx:1816
 #: packages/admin/src/components/MediaDetailPanel.tsx:1920
 #: packages/admin/src/components/MenuEditor.tsx:555
@@ -3888,7 +3916,7 @@ msgstr "ลบความคิดเห็นหรือไม่?"
 msgid "Delete Content Type?"
 msgstr "ลบประเภทเนื้อหาหรือไม่?"
 
-#: packages/admin/src/components/editor/PluginBlockNode.tsx:379
+#: packages/admin/src/components/editor/PluginBlockNode.tsx:368
 msgid "Delete embed"
 msgstr "ลบสื่อฝัง"
 
@@ -3907,7 +3935,7 @@ msgstr ""
 msgid "Delete gallery"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:4869
+#: packages/admin/src/components/PortableTextEditor.tsx:4991
 msgid "Delete image"
 msgstr "ลบรูปภาพ"
 
@@ -3917,6 +3945,10 @@ msgstr ""
 
 #: packages/admin/src/components/MenuList.tsx:231
 msgid "Delete menu"
+msgstr ""
+
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:381
+msgid "Delete nesting container"
 msgstr ""
 
 #: packages/admin/src/components/comments/CommentInbox.tsx:550
@@ -4046,7 +4078,7 @@ msgid "Deny"
 msgstr "ปฏิเสธ"
 
 #: packages/admin/src/components/editor/ImageDetailPanel.tsx:521
-#: packages/admin/src/components/PortableTextEditor.tsx:4774
+#: packages/admin/src/components/PortableTextEditor.tsx:4896
 msgid "Describe the image"
 msgstr ""
 
@@ -4210,11 +4242,11 @@ msgstr ""
 msgid "Dismiss import suggestion"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:4048
+#: packages/admin/src/components/PortableTextEditor.tsx:4170
 msgid "Dismiss section error"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:4015
+#: packages/admin/src/components/PortableTextEditor.tsx:4137
 msgid "Dismiss table paste error"
 msgstr ""
 
@@ -4259,7 +4291,7 @@ msgstr "โหมดไร้สิ่งรบกวน (⌘⇧\\)"
 msgid "Distribute columns evenly"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:1923
+#: packages/admin/src/components/PortableTextEditor.tsx:2027
 msgid "Divider"
 msgstr "เส้นแบ่ง"
 
@@ -4412,7 +4444,11 @@ msgstr "ลากแล้ววางหรือคลิกเพื่อเ
 msgid "Drag here to add"
 msgstr "ลากมาที่นี่เพื่อเพิ่ม"
 
-#: packages/admin/src/components/PortableTextEditor.tsx:2751
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:308
+msgid "Drag to move this container"
+msgstr ""
+
+#: packages/admin/src/components/PortableTextEditor.tsx:2874
 msgid "Drag to reorder"
 msgstr "ลากเพื่อจัดเรียงใหม่"
 
@@ -4509,8 +4545,8 @@ msgstr ""
 msgid "Each path segment can contain at most one placeholder, e.g. {0}"
 msgstr ""
 
-#: packages/admin/src/components/editor/PluginBlockNode.tsx:367
-#: packages/admin/src/components/editor/PluginBlockNode.tsx:368
+#: packages/admin/src/components/editor/PluginBlockNode.tsx:356
+#: packages/admin/src/components/editor/PluginBlockNode.tsx:357
 #: packages/admin/src/components/MenuCard.tsx:59
 #: packages/admin/src/components/MenuEditor.tsx:550
 #: packages/admin/src/components/Sections.tsx:439
@@ -4523,7 +4559,7 @@ msgstr "แก้ไข"
 #. placeholder {0}: collection.label
 #. placeholder {0}: domain.domain
 #: packages/admin/src/components/ContentTypeList.tsx:364
-#: packages/admin/src/components/PortableTextEditor.tsx:2347
+#: packages/admin/src/components/PortableTextEditor.tsx:2470
 #: packages/admin/src/components/RelationFormPanel.tsx:83
 #: packages/admin/src/components/RelationList.tsx:221
 #: packages/admin/src/components/RelationsPanel.tsx:201
@@ -4604,8 +4640,8 @@ msgstr ""
 msgid "Edit image {0}"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:4355
-#: packages/admin/src/components/PortableTextEditor.tsx:4857
+#: packages/admin/src/components/PortableTextEditor.tsx:4477
+#: packages/admin/src/components/PortableTextEditor.tsx:4979
 msgid "Edit link"
 msgstr "แก้ไขลิงก์"
 
@@ -4652,8 +4688,8 @@ msgstr "แก้ไขการเปลี่ยนเส้นทาง {0}"
 msgid "Edit role"
 msgstr ""
 
-#: packages/admin/src/components/editor/PluginBlockNode.tsx:367
-#: packages/admin/src/components/editor/PluginBlockNode.tsx:368
+#: packages/admin/src/components/editor/PluginBlockNode.tsx:356
+#: packages/admin/src/components/editor/PluginBlockNode.tsx:357
 msgid "Edit URL"
 msgstr "แก้ไข URL"
 
@@ -4738,11 +4774,11 @@ msgid "Email verified!"
 msgstr "ยืนยันอีเมลแล้ว!"
 
 #. placeholder {0}: block.label
-#: packages/admin/src/components/PortableTextEditor.tsx:3261
+#: packages/admin/src/components/PortableTextEditor.tsx:3381
 msgid "Embed a {0}"
 msgstr "ฝัง {0}"
 
-#: packages/admin/src/components/PortableTextEditor.tsx:1916
+#: packages/admin/src/components/PortableTextEditor.tsx:2020
 msgid "Embed a page from another site"
 msgstr ""
 
@@ -4754,7 +4790,7 @@ msgstr ""
 msgid "Embedded content"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:3264
+#: packages/admin/src/components/PortableTextEditor.tsx:3384
 msgid "Embeds"
 msgstr "การฝัง"
 
@@ -4890,8 +4926,8 @@ msgstr "ป้อนชื่อ"
 msgid "Enter the code from your terminal"
 msgstr "ป้อนรหัสจากเทอร์มินัลของคุณ"
 
-#: packages/admin/src/components/editor/PluginBlockNode.tsx:123
-#: packages/admin/src/components/editor/PluginBlockNode.tsx:132
+#: packages/admin/src/components/editor/PluginBlockNode.tsx:122
+#: packages/admin/src/components/editor/PluginBlockNode.tsx:131
 msgid "Enter URL..."
 msgstr "ป้อน URL..."
 
@@ -4927,6 +4963,10 @@ msgstr ""
 
 #: packages/admin/src/components/RelationForm.tsx:258
 msgid "entry on the linking side"
+msgstr ""
+
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:353
+msgid "Equal"
 msgstr ""
 
 #: packages/admin/src/components/MenuEditor.tsx:156
@@ -5009,6 +5049,11 @@ msgstr ""
 
 #: packages/admin/src/components/BlocksField.tsx:347
 msgid "Expand block"
+msgstr ""
+
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:295
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:296
+msgid "Expand container"
 msgstr ""
 
 #: packages/admin/src/components/PluginManager.tsx:558
@@ -5990,6 +6035,10 @@ msgstr ""
 msgid "Fix invalid fields before changing the schedule"
 msgstr ""
 
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:326
+msgid "Flex"
+msgstr ""
+
 #: packages/admin/src/components/MediaDetailPanel.tsx:1634
 #: packages/admin/src/components/MediaDetailPanel.tsx:1645
 msgid "Focal point"
@@ -6103,13 +6152,17 @@ msgid "Full admin access"
 msgstr "สิทธิ์เข้าถึงระดับผู้ดูแลระบบเต็มรูปแบบ"
 
 #: packages/admin/src/components/editor/GalleryDetailPanel.tsx:235
-#: packages/admin/src/components/PortableTextEditor.tsx:3228
+#: packages/admin/src/components/PortableTextEditor.tsx:3348
 msgid "Gallery"
 msgstr ""
 
 #: packages/admin/src/components/editor/GalleryNode.tsx:242
 #: packages/admin/src/components/editor/GalleryNode.tsx:243
 msgid "Gallery settings"
+msgstr ""
+
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:329
+msgid "Gap"
 msgstr ""
 
 #: packages/admin/src/components/Settings.tsx:54
@@ -6174,6 +6227,14 @@ msgstr "การยืนยัน Google"
 msgid "GraphQL"
 msgstr ""
 
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:326
+msgid "Grid"
+msgstr ""
+
+#: packages/admin/src/components/PortableTextEditor.tsx:2047
+msgid "Grid or flex layout holding other blocks"
+msgstr ""
+
 #: packages/admin/src/components/MediaLibrary.tsx:945
 #: packages/admin/src/components/MediaPickerModal.tsx:1232
 msgid "Grid view"
@@ -6233,37 +6294,37 @@ msgstr ""
 
 #: packages/admin/src/components/editor/BlockMenu.tsx:63
 #: packages/admin/src/components/editor/HeadingDropdownMenu.tsx:33
-#: packages/admin/src/components/PortableTextEditor.tsx:1807
+#: packages/admin/src/components/PortableTextEditor.tsx:1911
 msgid "Heading 1"
 msgstr "หัวข้อ 1"
 
 #: packages/admin/src/components/editor/BlockMenu.tsx:71
 #: packages/admin/src/components/editor/HeadingDropdownMenu.tsx:34
-#: packages/admin/src/components/PortableTextEditor.tsx:1817
+#: packages/admin/src/components/PortableTextEditor.tsx:1921
 msgid "Heading 2"
 msgstr "หัวข้อ 2"
 
 #: packages/admin/src/components/editor/BlockMenu.tsx:79
 #: packages/admin/src/components/editor/HeadingDropdownMenu.tsx:35
-#: packages/admin/src/components/PortableTextEditor.tsx:1827
+#: packages/admin/src/components/PortableTextEditor.tsx:1931
 msgid "Heading 3"
 msgstr "หัวข้อ 3"
 
 #: packages/admin/src/components/editor/BlockMenu.tsx:87
 #: packages/admin/src/components/editor/HeadingDropdownMenu.tsx:36
-#: packages/admin/src/components/PortableTextEditor.tsx:1837
+#: packages/admin/src/components/PortableTextEditor.tsx:1941
 msgid "Heading 4"
 msgstr ""
 
 #: packages/admin/src/components/editor/BlockMenu.tsx:95
 #: packages/admin/src/components/editor/HeadingDropdownMenu.tsx:37
-#: packages/admin/src/components/PortableTextEditor.tsx:1847
+#: packages/admin/src/components/PortableTextEditor.tsx:1951
 msgid "Heading 5"
 msgstr ""
 
 #: packages/admin/src/components/editor/BlockMenu.tsx:103
 #: packages/admin/src/components/editor/HeadingDropdownMenu.tsx:38
-#: packages/admin/src/components/PortableTextEditor.tsx:1857
+#: packages/admin/src/components/PortableTextEditor.tsx:1961
 msgid "Heading 6"
 msgstr ""
 
@@ -6369,7 +6430,7 @@ msgstr "วิธีสร้าง Application Password"
 
 #: packages/admin/src/components/editor/codeBlockLanguages.ts:38
 #: packages/admin/src/components/editor/HtmlBlockNode.tsx:51
-#: packages/admin/src/components/PortableTextEditor.tsx:1907
+#: packages/admin/src/components/PortableTextEditor.tsx:2011
 msgid "HTML"
 msgstr "HTML"
 
@@ -6439,7 +6500,7 @@ msgstr "หากมีบัญชีสำหรับ <0>{email}</0> เร�
 msgid "If you didn't request this, you can safely ignore this email."
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:1915
+#: packages/admin/src/components/PortableTextEditor.tsx:2019
 msgid "Iframe"
 msgstr ""
 
@@ -6449,7 +6510,7 @@ msgstr ""
 
 #: packages/admin/src/components/FieldEditor.tsx:437
 #: packages/admin/src/components/FieldEditor.tsx:1240
-#: packages/admin/src/components/PortableTextEditor.tsx:3213
+#: packages/admin/src/components/PortableTextEditor.tsx:3333
 msgid "Image"
 msgstr "รูปภาพ"
 
@@ -6468,7 +6529,7 @@ msgstr ""
 msgid "Image actions"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:4741
+#: packages/admin/src/components/PortableTextEditor.tsx:4863
 msgid "Image controls"
 msgstr ""
 
@@ -6476,8 +6537,8 @@ msgstr ""
 msgid "Image from media library"
 msgstr "รูปภาพจากคลังมีเดีย"
 
-#: packages/admin/src/components/PortableTextEditor.tsx:5429
-#: packages/admin/src/components/PortableTextEditor.tsx:5444
+#: packages/admin/src/components/PortableTextEditor.tsx:5551
+#: packages/admin/src/components/PortableTextEditor.tsx:5566
 msgid "Image link"
 msgstr ""
 
@@ -6492,7 +6553,7 @@ msgid "Image replaced."
 msgstr ""
 
 #: packages/admin/src/components/editor/ImageDetailPanel.tsx:390
-#: packages/admin/src/components/PortableTextEditor.tsx:4862
+#: packages/admin/src/components/PortableTextEditor.tsx:4984
 msgid "Image settings"
 msgstr "ตั้งค่ารูปภาพ"
 
@@ -6715,70 +6776,70 @@ msgstr ""
 msgid "Inline blocks use your site's styles. Your site removes scripts, style tags and style attributes, and empties iframes other than YouTube and Vimeo."
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:5299
+#: packages/admin/src/components/PortableTextEditor.tsx:5421
 msgid "Inline Code"
 msgstr "โค้ดในบรรทัด"
 
 #. placeholder {0}: block?.label || ""
-#: packages/admin/src/components/PortableTextEditor.tsx:2347
+#: packages/admin/src/components/PortableTextEditor.tsx:2470
 msgid "Insert {0}"
 msgstr "แทรก {0}"
 
-#: packages/admin/src/components/PortableTextEditor.tsx:1888
+#: packages/admin/src/components/PortableTextEditor.tsx:1992
 msgid "Insert a blockquote"
 msgstr "แทรกข้อความอ้างอิง"
 
-#: packages/admin/src/components/PortableTextEditor.tsx:1898
+#: packages/admin/src/components/PortableTextEditor.tsx:2002
 msgid "Insert a code block"
 msgstr "แทรกบล็อกโค้ด"
 
-#: packages/admin/src/components/PortableTextEditor.tsx:1924
+#: packages/admin/src/components/PortableTextEditor.tsx:2028
 msgid "Insert a horizontal rule"
 msgstr "แทรกเส้นคั่นแนวนอน"
 
-#: packages/admin/src/components/PortableTextEditor.tsx:3244
+#: packages/admin/src/components/PortableTextEditor.tsx:3364
 msgid "Insert a reusable section"
 msgstr "แทรกส่วนที่นำกลับมาใช้ใหม่ได้"
 
-#: packages/admin/src/components/PortableTextEditor.tsx:1934
+#: packages/admin/src/components/PortableTextEditor.tsx:2038
 msgid "Insert a table"
 msgstr "แทรกตาราง"
 
-#: packages/admin/src/components/PortableTextEditor.tsx:3214
+#: packages/admin/src/components/PortableTextEditor.tsx:3334
 msgid "Insert an image"
 msgstr "แทรกรูปภาพ"
 
-#: packages/admin/src/components/PortableTextEditor.tsx:3229
+#: packages/admin/src/components/PortableTextEditor.tsx:3349
 msgid "Insert an image gallery"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:2178
+#: packages/admin/src/components/PortableTextEditor.tsx:2305
 msgid "Insert block"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:5251
-#: packages/admin/src/components/PortableTextEditor.tsx:5261
+#: packages/admin/src/components/PortableTextEditor.tsx:5373
+#: packages/admin/src/components/PortableTextEditor.tsx:5383
 msgid "Insert block after current block"
 msgstr ""
 
-#: packages/admin/src/components/editor/DragHandleWrapper.tsx:170
+#: packages/admin/src/components/editor/DragHandleWrapper.tsx:222
 msgid "Insert block below"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:5376
+#: packages/admin/src/components/PortableTextEditor.tsx:5498
 msgid "Insert HTML"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:4126
+#: packages/admin/src/components/PortableTextEditor.tsx:4248
 msgid "Insert image"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:5369
+#: packages/admin/src/components/PortableTextEditor.tsx:5491
 msgid "Insert Image"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:5429
-#: packages/admin/src/components/PortableTextEditor.tsx:5444
+#: packages/admin/src/components/PortableTextEditor.tsx:5551
+#: packages/admin/src/components/PortableTextEditor.tsx:5566
 msgid "Insert Link"
 msgstr "แทรกลิงก์"
 
@@ -6794,7 +6855,7 @@ msgstr ""
 msgid "Insert paragraph before"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:1908
+#: packages/admin/src/components/PortableTextEditor.tsx:2012
 msgid "Insert raw HTML"
 msgstr "แทรกโค้ด HTML"
 
@@ -6922,13 +6983,13 @@ msgstr ""
 msgid "It was started somewhere else, so its plan can no longer be changed. Its progress will appear here."
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:4312
-#: packages/admin/src/components/PortableTextEditor.tsx:5278
+#: packages/admin/src/components/PortableTextEditor.tsx:4434
+#: packages/admin/src/components/PortableTextEditor.tsx:5400
 msgid "Italic"
 msgstr "ตัวเอียง"
 
 #. placeholder {0}: index + 1
-#: packages/admin/src/components/PortableTextEditor.tsx:2737
+#: packages/admin/src/components/PortableTextEditor.tsx:2860
 #: packages/admin/src/components/RepeaterField.tsx:247
 msgid "Item {0}"
 msgstr "รายการ {0}"
@@ -7075,7 +7136,11 @@ msgstr ""
 msgid "Language"
 msgstr "ภาษา"
 
-#: packages/admin/src/components/PortableTextEditor.tsx:1808
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:332
+msgid "Large"
+msgstr ""
+
+#: packages/admin/src/components/PortableTextEditor.tsx:1912
 msgid "Large section heading"
 msgstr "หัวข้อส่วนขนาดใหญ่"
 
@@ -7122,6 +7187,11 @@ msgstr "ใช้งานล่าสุด {0}"
 msgid "Later entries weren't loaded. The range has more entries than the calendar can show."
 msgstr ""
 
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:323
+#: packages/admin/src/components/PortableTextEditor.tsx:2049
+msgid "Layout"
+msgstr ""
+
 #: packages/admin/src/components/PluginManager.tsx:81
 msgid "Learn how to install plugins in the <0>documentation<1/></0>."
 msgstr ""
@@ -7135,7 +7205,7 @@ msgid "Leave unassigned"
 msgstr "เว้นว่างไว้โดยไม่กำหนด"
 
 #: packages/admin/src/components/editor/ImageDetailPanel.tsx:275
-#: packages/admin/src/components/PortableTextEditor.tsx:4454
+#: packages/admin/src/components/PortableTextEditor.tsx:4576
 msgid "Left"
 msgstr ""
 
@@ -7156,7 +7226,7 @@ msgstr "สัญญาอนุญาต"
 msgid "Limit"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:5455
+#: packages/admin/src/components/PortableTextEditor.tsx:5577
 msgid "Link"
 msgstr ""
 
@@ -7321,7 +7391,7 @@ msgstr "กำลังโหลดการกำหนดค่า..."
 msgid "Loading content..."
 msgstr "กำลังโหลดเนื้อหา..."
 
-#: packages/admin/src/components/PortableTextEditor.tsx:3978
+#: packages/admin/src/components/PortableTextEditor.tsx:4100
 msgid "Loading editor..."
 msgstr "กำลังโหลดตัวแก้ไข..."
 
@@ -7429,7 +7499,7 @@ msgstr "กำลังโหลดวิดเจ็ต..."
 #: packages/admin/src/components/MediaDetailPanel.tsx:1741
 #: packages/admin/src/components/MediaLibrary.tsx:1352
 #: packages/admin/src/components/MediaUsedIn.tsx:245
-#: packages/admin/src/components/PortableTextEditor.tsx:2864
+#: packages/admin/src/components/PortableTextEditor.tsx:2987
 #: packages/admin/src/components/Redirects.tsx:569
 #: packages/admin/src/components/RegistryBrowse.tsx:179
 #: packages/admin/src/components/settings/AllowedDomainsSettings.tsx:169
@@ -7663,8 +7733,8 @@ msgstr ""
 msgid "MDX"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:3217
-#: packages/admin/src/components/PortableTextEditor.tsx:3232
+#: packages/admin/src/components/PortableTextEditor.tsx:3337
+#: packages/admin/src/components/PortableTextEditor.tsx:3352
 #: packages/admin/src/components/Settings.tsx:72
 #: packages/admin/src/components/settings/transfer/labels.ts:17
 #: packages/admin/src/components/settings/transfer/labels.ts:84
@@ -7757,7 +7827,11 @@ msgstr ""
 msgid "Media Write"
 msgstr "เขียนมีเดีย"
 
-#: packages/admin/src/components/PortableTextEditor.tsx:1818
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:332
+msgid "Medium"
+msgstr ""
+
+#: packages/admin/src/components/PortableTextEditor.tsx:1922
 msgid "Medium section heading"
 msgstr "หัวข้อส่วนขนาดกลาง"
 
@@ -7872,7 +7946,7 @@ msgstr "ค่าต่ำสุด"
 msgid "Minimum blocks"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:1848
+#: packages/admin/src/components/PortableTextEditor.tsx:1952
 msgid "Minor section heading"
 msgstr ""
 
@@ -7976,12 +8050,12 @@ msgid "Move {0} down — unavailable, its parent has no translation in this loca
 msgstr ""
 
 #. placeholder {0}: item.filename
-#: packages/admin/src/components/media/MediaBrowserItems.tsx:313
+#: packages/admin/src/components/media/MediaBrowserItems.tsx:318
 msgid "Move {0} earlier"
 msgstr ""
 
 #. placeholder {0}: item.filename
-#: packages/admin/src/components/media/MediaBrowserItems.tsx:322
+#: packages/admin/src/components/media/MediaBrowserItems.tsx:327
 msgid "Move {0} later"
 msgstr ""
 
@@ -8140,6 +8214,14 @@ msgstr "ชื่อต้องขึ้นต้นด้วยตัวอั
 msgid "Name your section, then add its content in the editor."
 msgstr ""
 
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:356
+msgid "Narrow first"
+msgstr ""
+
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:357
+msgid "Narrow last"
+msgstr ""
+
 #: packages/admin/src/components/TaxonomySidebar.tsx:594
 msgid "Navigate"
 msgstr ""
@@ -8158,6 +8240,11 @@ msgstr "การนำทาง"
 #: packages/admin/src/components/settings/MediaUsageSettings.tsx:505
 #: packages/admin/src/components/settings/MediaUsageSettings.tsx:507
 msgid "Needs attention"
+msgstr ""
+
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:311
+#: packages/admin/src/components/PortableTextEditor.tsx:2046
+msgid "Nesting container"
 msgstr ""
 
 #: packages/admin/src/components/users/UserDetail.tsx:231
@@ -8407,7 +8494,7 @@ msgstr "ยังไม่มีประเภทเนื้อหา"
 msgid "No custom fields yet"
 msgstr "ยังไม่มีฟิลด์ที่กำหนดเอง"
 
-#: packages/admin/src/components/PortableTextEditor.tsx:4831
+#: packages/admin/src/components/PortableTextEditor.tsx:4953
 msgid "No description yet"
 msgstr ""
 
@@ -8488,7 +8575,7 @@ msgstr "ไม่มีรุ่นที่สามารถติดตั้
 msgid "No invite token provided"
 msgstr "ไม่ได้ระบุโทเค็นคำเชิญ"
 
-#: packages/admin/src/components/PortableTextEditor.tsx:2660
+#: packages/admin/src/components/PortableTextEditor.tsx:2783
 #: packages/admin/src/components/RepeaterField.tsx:167
 #: packages/admin/src/components/settings/BackupSettings.tsx:298
 msgid "No items yet"
@@ -8635,7 +8722,7 @@ msgstr ""
 msgid "No relations yet."
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:2207
+#: packages/admin/src/components/PortableTextEditor.tsx:2334
 #: packages/admin/src/components/RepeaterField.tsx:398
 msgid "No results"
 msgstr "ไม่มีผลลัพธ์"
@@ -8709,7 +8796,8 @@ msgid "Non-guest"
 msgstr ""
 
 #: packages/admin/src/components/editor/ImageDetailPanel.tsx:274
-#: packages/admin/src/components/PortableTextEditor.tsx:4453
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:332
+#: packages/admin/src/components/PortableTextEditor.tsx:4575
 msgid "None"
 msgstr ""
 
@@ -8775,8 +8863,8 @@ msgid "Number of posts to show per page on list views"
 msgstr "จำนวนโพสต์ที่จะแสดงต่อหน้าในมุมมองรายการ"
 
 #: packages/admin/src/components/editor/BlockMenu.tsx:135
-#: packages/admin/src/components/PortableTextEditor.tsx:1877
-#: packages/admin/src/components/PortableTextEditor.tsx:5328
+#: packages/admin/src/components/PortableTextEditor.tsx:1981
+#: packages/admin/src/components/PortableTextEditor.tsx:5450
 msgid "Numbered List"
 msgstr "รายการแบบมีลำดับเลข"
 
@@ -8849,7 +8937,7 @@ msgid "Open {0} in a new tab"
 msgstr ""
 
 #. placeholder {0}: folder.name
-#: packages/admin/src/components/media/MediaBrowserItems.tsx:183
+#: packages/admin/src/components/media/MediaBrowserItems.tsx:188
 #: packages/admin/src/components/MediaLibrary.tsx:1458
 #: packages/admin/src/components/MediaLibrary.tsx:1529
 msgid "Open folder {0}"
@@ -8870,8 +8958,8 @@ msgstr ""
 #: packages/admin/src/components/editor/ImageDetailPanel.tsx:779
 #: packages/admin/src/components/editor/ImageDetailPanel.tsx:794
 #: packages/admin/src/components/editor/ImageDetailPanel.tsx:795
-#: packages/admin/src/components/editor/PluginBlockNode.tsx:333
-#: packages/admin/src/components/editor/PluginBlockNode.tsx:334
+#: packages/admin/src/components/editor/PluginBlockNode.tsx:322
+#: packages/admin/src/components/editor/PluginBlockNode.tsx:323
 msgid "Open in new tab"
 msgstr "เปิดในแท็บใหม่"
 
@@ -9700,8 +9788,8 @@ msgid "Quick create names the relationship after this field and this collection,
 msgstr ""
 
 #: packages/admin/src/components/editor/BlockMenu.tsx:111
-#: packages/admin/src/components/PortableTextEditor.tsx:1887
-#: packages/admin/src/components/PortableTextEditor.tsx:5354
+#: packages/admin/src/components/PortableTextEditor.tsx:1991
+#: packages/admin/src/components/PortableTextEditor.tsx:5476
 msgid "Quote"
 msgstr "คำพูดอ้างอิง"
 
@@ -9869,7 +9957,7 @@ msgstr "การเปลี่ยนเส้นทาง"
 msgid "Redirects that loop will be imported turned off"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:5513
+#: packages/admin/src/components/PortableTextEditor.tsx:5635
 msgid "Redo"
 msgstr "ทำซ้ำ"
 
@@ -9985,8 +10073,8 @@ msgstr ""
 #: packages/admin/src/components/ImageFieldRenderer.tsx:315
 #: packages/admin/src/components/ImageFieldRenderer.tsx:368
 #: packages/admin/src/components/ImageFieldRenderer.tsx:439
-#: packages/admin/src/components/media/MediaBrowserItems.tsx:221
-#: packages/admin/src/components/PortableTextEditor.tsx:5486
+#: packages/admin/src/components/media/MediaBrowserItems.tsx:226
+#: packages/admin/src/components/PortableTextEditor.tsx:5608
 #: packages/admin/src/components/settings/GeneralSettings.tsx:325
 #: packages/admin/src/components/settings/GeneralSettings.tsx:385
 #: packages/admin/src/components/settings/PasskeyItem.tsx:160
@@ -9999,7 +10087,7 @@ msgstr "นำออก"
 #. placeholder {0}: option.term.label
 #. placeholder {0}: passkey.name
 #: packages/admin/src/components/ContentEditor.tsx:2764
-#: packages/admin/src/components/media/MediaBrowserItems.tsx:220
+#: packages/admin/src/components/media/MediaBrowserItems.tsx:225
 #: packages/admin/src/components/MediaUploadDialog.tsx:144
 #: packages/admin/src/components/settings/PasskeyItem.tsx:161
 #: packages/admin/src/components/TaxonomySidebar.tsx:458
@@ -10007,7 +10095,7 @@ msgid "Remove {0}"
 msgstr "นำออก {0}"
 
 #. placeholder {0}: item.filename
-#: packages/admin/src/components/media/MediaBrowserItems.tsx:330
+#: packages/admin/src/components/media/MediaBrowserItems.tsx:335
 msgid "Remove {0} from selection"
 msgstr ""
 
@@ -10021,6 +10109,11 @@ msgstr "นำออก {label}"
 
 #: packages/admin/src/components/TaxonomySidebar.tsx:866
 msgid "Remove assignment"
+msgstr ""
+
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:186
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:187
+msgid "Remove column"
 msgstr ""
 
 #: packages/admin/src/components/ImageFieldRenderer.tsx:437
@@ -10055,14 +10148,14 @@ msgid "Remove image?"
 msgstr ""
 
 #. placeholder {0}: index + 1
-#: packages/admin/src/components/PortableTextEditor.tsx:2776
+#: packages/admin/src/components/PortableTextEditor.tsx:2899
 #: packages/admin/src/components/RepeaterField.tsx:283
 msgid "Remove item {0}"
 msgstr "นำรายการ {0} ออก"
 
-#: packages/admin/src/components/PortableTextEditor.tsx:4293
-#: packages/admin/src/components/PortableTextEditor.tsx:4294
-#: packages/admin/src/components/PortableTextEditor.tsx:4803
+#: packages/admin/src/components/PortableTextEditor.tsx:4415
+#: packages/admin/src/components/PortableTextEditor.tsx:4416
+#: packages/admin/src/components/PortableTextEditor.tsx:4925
 msgid "Remove link"
 msgstr "นำลิงก์ออก"
 
@@ -10151,8 +10244,8 @@ msgstr "กลุ่มฟิลด์ที่ทำซ้ำได้"
 #: packages/admin/src/components/ImageFieldRenderer.tsx:412
 #: packages/admin/src/components/ImageFieldRenderer.tsx:583
 #: packages/admin/src/components/ImageFieldRenderer.tsx:586
-#: packages/admin/src/components/PortableTextEditor.tsx:4825
-#: packages/admin/src/components/PortableTextEditor.tsx:4893
+#: packages/admin/src/components/PortableTextEditor.tsx:4947
+#: packages/admin/src/components/PortableTextEditor.tsx:5015
 msgid "Replace"
 msgstr ""
 
@@ -10173,7 +10266,7 @@ msgstr ""
 #: packages/admin/src/components/editor/ImageDetailPanel.tsx:371
 #: packages/admin/src/components/MediaDetailPanel.tsx:1827
 #: packages/admin/src/components/MediaDetailPanel.tsx:1955
-#: packages/admin/src/components/PortableTextEditor.tsx:4892
+#: packages/admin/src/components/PortableTextEditor.tsx:5014
 msgid "Replace image"
 msgstr ""
 
@@ -10333,7 +10426,7 @@ msgstr ""
 msgid "Resolving publisher handle..."
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:5344
+#: packages/admin/src/components/PortableTextEditor.tsx:5466
 msgid "Restart numbering"
 msgstr ""
 
@@ -10380,7 +10473,7 @@ msgstr ""
 #: packages/admin/src/components/ContentEditor.tsx:2778
 #: packages/admin/src/components/ContentPickerModal.tsx:278
 #: packages/admin/src/components/MarketplaceBrowse.tsx:143
-#: packages/admin/src/components/media/MediaBrowserItems.tsx:218
+#: packages/admin/src/components/media/MediaBrowserItems.tsx:223
 #: packages/admin/src/components/MediaDetailPanel.tsx:1541
 #: packages/admin/src/components/MediaLibrary.tsx:1021
 #: packages/admin/src/components/MediaLibrary.tsx:1574
@@ -10401,7 +10494,7 @@ msgstr "ลองใหม่"
 
 #. placeholder {0}: job.file.name
 #. placeholder {0}: row.file.name
-#: packages/admin/src/components/media/MediaBrowserItems.tsx:217
+#: packages/admin/src/components/media/MediaBrowserItems.tsx:222
 #: packages/admin/src/components/MediaUploadDialog.tsx:130
 msgid "Retry {0}"
 msgstr ""
@@ -10537,7 +10630,7 @@ msgid "Rich text editor"
 msgstr "ตัวแก้ไข Rich Text"
 
 #: packages/admin/src/components/editor/ImageDetailPanel.tsx:277
-#: packages/admin/src/components/PortableTextEditor.tsx:4456
+#: packages/admin/src/components/PortableTextEditor.tsx:4578
 msgid "Right"
 msgstr ""
 
@@ -10591,7 +10684,7 @@ msgid "Row added above"
 msgstr ""
 
 #: packages/admin/src/components/editor/TableControls.tsx:29
-#: packages/admin/src/components/PortableTextEditor.tsx:4434
+#: packages/admin/src/components/PortableTextEditor.tsx:4556
 msgid "Row added below"
 msgstr ""
 
@@ -10629,7 +10722,7 @@ msgid "Sample content"
 msgstr ""
 
 #: packages/admin/src/components/editor/ImageDetailPanel.tsx:820
-#: packages/admin/src/components/editor/PluginBlockNode.tsx:417
+#: packages/admin/src/components/editor/PluginBlockNode.tsx:406
 #: packages/admin/src/components/MediaDetailPanel.tsx:1878
 #: packages/admin/src/components/MediaFolderDialog.tsx:171
 #: packages/admin/src/components/MenuEditor.tsx:632
@@ -10640,11 +10733,11 @@ msgstr ""
 msgid "Save"
 msgstr "บันทึก"
 
-#: packages/admin/src/components/editor/PluginBlockNode.tsx:416
+#: packages/admin/src/components/editor/PluginBlockNode.tsx:405
 msgid "Save (Enter)"
 msgstr "บันทึก (Enter)"
 
-#: packages/admin/src/components/PortableTextEditor.tsx:4788
+#: packages/admin/src/components/PortableTextEditor.tsx:4910
 msgid "Save alt text"
 msgstr "บันทึกข้อความแสดงแทน"
 
@@ -11041,7 +11134,7 @@ msgstr "ค้นหาได้"
 msgid "Searching…"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:3243
+#: packages/admin/src/components/PortableTextEditor.tsx:3363
 msgid "Section"
 msgstr "ส่วน"
 
@@ -11229,13 +11322,13 @@ msgstr "เลือก Favicon"
 msgid "Select file"
 msgstr "เลือกไฟล์"
 
-#: packages/admin/src/components/PortableTextEditor.tsx:4140
+#: packages/admin/src/components/PortableTextEditor.tsx:4262
 msgid "Select gallery images"
 msgstr ""
 
 #: packages/admin/src/components/ImageFieldRenderer.tsx:558
 #: packages/admin/src/components/MediaPickerModal.tsx:228
-#: packages/admin/src/components/PortableTextEditor.tsx:4125
+#: packages/admin/src/components/PortableTextEditor.tsx:4247
 msgid "Select image"
 msgstr "เลือกรูปภาพ"
 
@@ -11276,7 +11369,7 @@ msgid "Select which content types to import."
 msgstr "เลือกประเภทเนื้อหาที่จะนำเข้า"
 
 #: packages/admin/src/components/BlockKitFieldWidget.tsx:108
-#: packages/admin/src/components/PortableTextEditor.tsx:2871
+#: packages/admin/src/components/PortableTextEditor.tsx:2994
 #: packages/admin/src/components/RepeaterField.tsx:396
 msgid "Select..."
 msgstr "เลือก..."
@@ -11285,7 +11378,7 @@ msgstr "เลือก..."
 msgid "Selected {label}"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:2198
+#: packages/admin/src/components/PortableTextEditor.tsx:2325
 msgid "Selected {selectedItemTitle}"
 msgstr ""
 
@@ -11711,15 +11804,19 @@ msgstr "คัดลอก Slug ไปยังคลิปบอร์ดแล
 msgid "Slugs cannot be changed after the field is created."
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:1828
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:332
+msgid "Small"
+msgstr ""
+
+#: packages/admin/src/components/PortableTextEditor.tsx:1932
 msgid "Small section heading"
 msgstr "หัวข้อส่วนขนาดเล็ก"
 
-#: packages/admin/src/components/PortableTextEditor.tsx:1838
+#: packages/admin/src/components/PortableTextEditor.tsx:1942
 msgid "Smaller section heading"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:1858
+#: packages/admin/src/components/PortableTextEditor.tsx:1962
 msgid "Smallest section heading"
 msgstr ""
 
@@ -11870,8 +11967,8 @@ msgid "Start with the template’s example posts and pages. Recommended for new 
 msgstr ""
 
 #: packages/admin/src/components/ContentEditor.tsx:2258
-#: packages/admin/src/components/PortableTextEditor.tsx:3046
-#: packages/admin/src/components/PortableTextEditor.tsx:3047
+#: packages/admin/src/components/PortableTextEditor.tsx:3166
+#: packages/admin/src/components/PortableTextEditor.tsx:3167
 msgid "Start writing, or type '/' for commands"
 msgstr ""
 
@@ -11936,8 +12033,12 @@ msgstr ""
 msgid "Stored per locale — each translation of a byline gets its own value."
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:4326
-#: packages/admin/src/components/PortableTextEditor.tsx:5292
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:342
+msgid "Stretch"
+msgstr ""
+
+#: packages/admin/src/components/PortableTextEditor.tsx:4448
+#: packages/admin/src/components/PortableTextEditor.tsx:5414
 msgid "Strikethrough"
 msgstr "ขีดทับ"
 
@@ -11958,11 +12059,11 @@ msgstr "ฟิลด์ย่อย"
 msgid "Subscriber"
 msgstr "ผู้ติดตาม"
 
-#: packages/admin/src/components/PortableTextEditor.tsx:4333
+#: packages/admin/src/components/PortableTextEditor.tsx:4455
 msgid "Subscript"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:4340
+#: packages/admin/src/components/PortableTextEditor.tsx:4462
 msgid "Superscript"
 msgstr ""
 
@@ -12000,15 +12101,15 @@ msgstr "ฟิลด์ของระบบ"
 
 #: packages/admin/src/components/editor/TableControls.tsx:35
 #: packages/admin/src/components/editor/TableControls.tsx:388
-#: packages/admin/src/components/PortableTextEditor.tsx:1933
+#: packages/admin/src/components/PortableTextEditor.tsx:2037
 msgid "Table"
 msgstr "ตาราง"
 
-#: packages/admin/src/components/PortableTextEditor.tsx:3992
+#: packages/admin/src/components/PortableTextEditor.tsx:4114
 msgid "Table cells accept text, links, and formatting only."
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:4425
+#: packages/admin/src/components/PortableTextEditor.tsx:4547
 msgid "Table controls"
 msgstr ""
 
@@ -12017,7 +12118,7 @@ msgid "Table deleted"
 msgstr ""
 
 #: packages/admin/src/components/editor/TableControls.tsx:421
-#: packages/admin/src/components/PortableTextEditor.tsx:3875
+#: packages/admin/src/components/PortableTextEditor.tsx:3997
 msgid "Table inserted"
 msgstr ""
 
@@ -12025,7 +12126,7 @@ msgstr ""
 msgid "Table size"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:3989
+#: packages/admin/src/components/PortableTextEditor.tsx:4111
 msgid "Tables cannot be pasted inside lists or quotes. Paste the table into its own paragraph and try again."
 msgstr ""
 
@@ -12149,7 +12250,7 @@ msgstr ""
 msgid "test@example.com"
 msgstr "test@example.com"
 
-#: packages/admin/src/components/PortableTextEditor.tsx:5243
+#: packages/admin/src/components/PortableTextEditor.tsx:5365
 msgid "Text formatting"
 msgstr "การจัดรูปแบบข้อความ"
 
@@ -12606,7 +12707,7 @@ msgstr ""
 msgid "This collection is defined in code. Some settings cannot be changed here. Edit your live.config.ts file to modify the schema."
 msgstr "คอลเลกชันนี้กำหนดไว้ในโค้ด การตั้งค่าบางอย่างไม่สามารถเปลี่ยนแปลงได้ที่นี่ แก้ไขไฟล์ live.config.ts ของคุณเพื่อปรับเปลี่ยนสคีมา"
 
-#: packages/admin/src/components/PortableTextEditor.tsx:3964
+#: packages/admin/src/components/PortableTextEditor.tsx:4086
 msgid "This content cannot be edited safely"
 msgstr ""
 
@@ -12659,11 +12760,11 @@ msgstr ""
 msgid "This field cannot be edited by this version of EmDash."
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:3947
+#: packages/admin/src/components/PortableTextEditor.tsx:4069
 msgid "This field contains table content that the editor cannot preserve. Update it through the API before editing or saving this content."
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:3966
+#: packages/admin/src/components/PortableTextEditor.tsx:4088
 msgid "This field contains unsupported Portable Text marks: <0>{markList}</0>. Remove them through the API before editing or saving this content."
 msgstr ""
 
@@ -12788,7 +12889,7 @@ msgstr ""
 msgid "This passkey is already registered on this device."
 msgstr "Passkey นี้ลงทะเบียนบนอุปกรณ์นี้แล้ว"
 
-#: packages/admin/src/components/PortableTextEditor.tsx:3985
+#: packages/admin/src/components/PortableTextEditor.tsx:4107
 msgid "This paste is too large. Paste fewer cells or less text at a time."
 msgstr ""
 
@@ -12861,12 +12962,12 @@ msgstr ""
 msgid "This saved timezone isn't recognized. Choose a suggestion for reliable date display."
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:4030
+#: packages/admin/src/components/PortableTextEditor.tsx:4152
 msgid "This section contains table content that the editor cannot preserve. Update the section before inserting it."
 msgstr ""
 
 #. placeholder {0}: sectionInsertErrorMarks.join(", ")
-#: packages/admin/src/components/PortableTextEditor.tsx:4032
+#: packages/admin/src/components/PortableTextEditor.tsx:4154
 msgid "This section contains unsupported Portable Text marks: <0>{0}</0>. Update the section before inserting it."
 msgstr ""
 
@@ -12919,15 +13020,15 @@ msgstr ""
 msgid "This site was set up with starter content. It has no entries of its own, and the import deletes it before adding the package’s content."
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:3987
+#: packages/admin/src/components/PortableTextEditor.tsx:4109
 msgid "This spreadsheet data has invalid quoted cells. Fix the quotes or remove the tab separators and try again."
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:3945
+#: packages/admin/src/components/PortableTextEditor.tsx:4067
 msgid "This table cannot be edited safely"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:3991
+#: packages/admin/src/components/PortableTextEditor.tsx:4113
 msgid "This table has unsupported cell formatting, merged cells, or column widths. Paste it as plain text or simplify the table and try again."
 msgstr ""
 
@@ -13060,6 +13161,10 @@ msgstr ""
 
 #: packages/admin/src/components/editor/ImageDetailPanel.tsx:535
 msgid "Tooltip text"
+msgstr ""
+
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:339
+msgid "Top"
 msgstr ""
 
 #: packages/admin/src/components/ContentTypeEditor.tsx:98
@@ -13282,12 +13387,12 @@ msgstr "ไม่สามารถเชื่อมต่อกับมาร
 msgid "Unassigned"
 msgstr "ยังไม่ได้กำหนด"
 
-#: packages/admin/src/components/PortableTextEditor.tsx:4319
-#: packages/admin/src/components/PortableTextEditor.tsx:5285
+#: packages/admin/src/components/PortableTextEditor.tsx:4441
+#: packages/admin/src/components/PortableTextEditor.tsx:5407
 msgid "Underline"
 msgstr "ขีดเส้นใต้"
 
-#: packages/admin/src/components/PortableTextEditor.tsx:5506
+#: packages/admin/src/components/PortableTextEditor.tsx:5628
 msgid "Undo"
 msgstr "เลิกทำ"
 
@@ -13508,7 +13613,7 @@ msgstr "อัปโหลดและจัดการมีเดีย"
 msgid "Upload Export File"
 msgstr "อัปโหลดไฟล์ส่งออก"
 
-#: packages/admin/src/components/media/MediaBrowserItems.tsx:209
+#: packages/admin/src/components/media/MediaBrowserItems.tsx:214
 #: packages/admin/src/components/MediaUploadDialog.tsx:76
 msgid "Upload failed"
 msgstr ""
@@ -13564,7 +13669,7 @@ msgstr ""
 msgid "Uploaded:"
 msgstr "อัปโหลดแล้ว:"
 
-#: packages/admin/src/components/media/MediaBrowserItems.tsx:209
+#: packages/admin/src/components/media/MediaBrowserItems.tsx:214
 #: packages/admin/src/components/MediaUploadDialog.tsx:60
 #: packages/admin/src/components/WordPressImport.tsx:2147
 msgid "Uploading"
@@ -14072,6 +14177,14 @@ msgstr ""
 msgid "Wide"
 msgstr ""
 
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:354
+msgid "Wide first"
+msgstr ""
+
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:355
+msgid "Wide last"
+msgstr ""
+
 #: packages/admin/src/components/Widgets.tsx:804
 #: packages/admin/src/components/Widgets.tsx:819
 msgid "widget"
@@ -14120,6 +14233,7 @@ msgstr "วิดเจ็ต"
 msgid "Width"
 msgstr "ความกว้าง"
 
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:348
 #: packages/admin/src/components/editor/TableControls.tsx:33
 msgid "Widths"
 msgstr ""
