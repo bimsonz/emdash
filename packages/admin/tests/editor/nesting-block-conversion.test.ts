@@ -20,6 +20,47 @@ interface NestingPT {
 	children?: Array<{ _type: string; children?: unknown[] }>;
 }
 
+const embedded = [
+	{
+		_type: "table",
+		_key: "t1",
+		hasHeaderRow: true,
+		rows: [
+			{
+				_type: "tableRow",
+				_key: "r1",
+				cells: [
+					{
+						_type: "tableCell",
+						_key: "h1",
+						content: [{ _type: "span", _key: "s1", text: "Merged" }],
+						isHeader: true,
+						colspan: 2,
+						textAlign: "right",
+					},
+				],
+			},
+		],
+	},
+	{
+		_type: "iframe",
+		_key: "f1",
+		src: "https://www.youtube.com/embed/abc",
+		title: "Video",
+		width: 560,
+		height: 315,
+		allowFullscreen: true,
+	},
+	{
+		_type: "htmlBlock",
+		_key: "h2",
+		html: "<div id=widget></div>",
+		css: "#widget { color: red; }",
+		js: "document.title = 'x';",
+		isolated: true,
+	},
+];
+
 function column(text: string) {
 	return {
 		type: "nestingColumn",
@@ -109,5 +150,52 @@ describe("nesting block round-trip (admin editor seam)", () => {
 		] as never);
 
 		expect(doc.content?.[0]).toMatchObject({ attrs: { widths: "equal" } });
+	});
+
+	it("round-trips tables, iframes and isolated HTML inside a column", () => {
+		const original = {
+			_type: "nestingBlock",
+			_key: "n1",
+			layout: "grid",
+			gap: "md",
+			align: "start",
+			widths: "equal",
+			children: [{ _type: "nestingColumn", _key: "c1", children: embedded }],
+		};
+
+		const doc = portableTextToProsemirror([original] as never) as unknown as {
+			content: Array<{ content: Array<{ content: Array<{ type: string }> }> }>;
+		};
+
+		expect(doc.content[0]!.content[0]!.content.map((n) => n.type)).toEqual([
+			"table",
+			"iframeBlock",
+			"htmlBlock",
+		]);
+		expect(
+			(prosemirrorToPortableText(doc as never) as unknown as NestingPT[])[0]!.children![0]!
+				.children,
+		).toStrictEqual(embedded);
+	});
+
+	it("keeps a plugin's own iframe type a plugin block inside a column", () => {
+		const doc = portableTextToProsemirror(
+			[
+				{
+					_type: "nestingBlock",
+					_key: "n1",
+					children: [
+						{
+							_type: "nestingColumn",
+							_key: "c1",
+							children: [{ _type: "iframe", _key: "p1", src: "https://example.com" }],
+						},
+					],
+				},
+			] as never,
+			new Set(["iframe"]),
+		) as unknown as { content: Array<{ content: Array<{ content: Array<{ type: string }> }> }> };
+
+		expect(doc.content[0]!.content[0]!.content[0]!.type).toBe("pluginBlock");
 	});
 });

@@ -8,6 +8,47 @@ import type {
 	PortableTextTextBlock,
 } from "../../../src/content/converters/types.js";
 
+const embedded = [
+	{
+		_type: "table",
+		_key: "t1",
+		hasHeaderRow: true,
+		rows: [
+			{
+				_type: "tableRow",
+				_key: "r1",
+				cells: [
+					{
+						_type: "tableCell",
+						_key: "h1",
+						content: [{ _type: "span", _key: "s1", text: "Merged" }],
+						isHeader: true,
+						colspan: 2,
+						textAlign: "right",
+					},
+				],
+			},
+		],
+	},
+	{
+		_type: "iframe",
+		_key: "f1",
+		src: "https://www.youtube.com/embed/abc",
+		title: "Video",
+		width: 560,
+		height: 315,
+		allowFullscreen: true,
+	},
+	{
+		_type: "htmlBlock",
+		_key: "h2",
+		html: "<div id=widget></div>",
+		css: "#widget { color: red; }",
+		js: "document.title = 'x';",
+		isolated: true,
+	},
+];
+
 function paragraph(key: string, text: string): PortableTextTextBlock {
 	return {
 		_type: "block",
@@ -121,5 +162,22 @@ describe("Nesting block round-trip (core converters)", () => {
 		const pm = portableTextToProsemirror([empty]);
 		expect(pm.content[0].content).toHaveLength(1);
 		expect(pm.content[0].content?.[0].type).toBe("nestingColumn");
+	});
+
+	it("round-trips tables, iframes and isolated HTML inside a column", () => {
+		const nesting = {
+			_type: "nestingBlock",
+			_key: "n1",
+			layout: "grid",
+			columns: 1,
+			gap: "md",
+			align: "start",
+			widths: "equal",
+			children: [{ _type: "nestingColumn", _key: "c1", children: embedded }],
+		} as unknown as PortableTextNestingBlock;
+
+		const pm = portableTextToProsemirror([nesting], { preserveIdentity: true });
+
+		expect(prosemirrorToPortableText(pm)).toStrictEqual([nesting]);
 	});
 });

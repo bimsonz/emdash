@@ -826,6 +826,7 @@ function convertNestingColumn(
 	const content = convertBlocks(blocks, preserveIdentity, context);
 	return {
 		type: "nestingColumn",
+		attrs: identityAttrs(undefined, column._key, preserveIdentity),
 		content: content.length > 0 ? content : [{ type: "paragraph" }],
 	};
 }
