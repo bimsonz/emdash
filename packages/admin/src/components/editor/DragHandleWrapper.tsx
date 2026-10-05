@@ -46,6 +46,11 @@ export function _dragHandleOffset(insideColumn: boolean): number {
 	return insideColumn ? -(NESTING_GUTTER_PX - 4) : 4;
 }
 
+/** In a column the buttons stack, so the handle fits the one-button gutter. */
+export function _dragHandleLayout(insideColumn: boolean): string {
+	return insideColumn ? "flex-col" : "rtl:flex-row-reverse";
+}
+
 /**
  * Resolved from the document rather than the hovered element, which is virtual and
  * carries only a rect. `pos` is the position before the row, so its parent is the
@@ -165,11 +170,13 @@ export function DragHandleWrapper({ editor, onInsertBlock }: DragHandleWrapperPr
 
 	// Set in onNodeChange, read by the offset middleware that runs straight after it.
 	const insideColumnRef = React.useRef(false);
+	const [insideColumn, setInsideColumn] = React.useState(false);
 
 	// Handle node change from drag handle
 	const handleNodeChange = React.useCallback(
 		(data: { node: PMNode | null; editor: Editor; pos: number }) => {
 			insideColumnRef.current = data.node ? _isInsideNestingColumn(data.editor, data.pos) : false;
+			setInsideColumn(insideColumnRef.current);
 			if (data.node) {
 				setHoveredNode({ node: data.node, pos: data.pos });
 			} else {
@@ -199,7 +206,9 @@ export function DragHandleWrapper({ editor, onInsertBlock }: DragHandleWrapperPr
 				computePositionConfig={computePositionConfig}
 				nested={_nestedDragOptions}
 			>
-				<div className="flex translate-y-0.5 items-center gap-0 rtl:flex-row-reverse">
+				<div
+					className={cn("flex translate-y-0.5 items-center gap-0", _dragHandleLayout(insideColumn))}
+				>
 					<Button
 						type="button"
 						variant="ghost"
