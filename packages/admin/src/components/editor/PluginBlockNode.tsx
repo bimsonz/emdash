@@ -268,14 +268,15 @@ function PluginBlockNodeView({
 		>
 			<div className="relative group">
 				{/* Main block content */}
-				<div className="rounded-lg border bg-kumo-base">
+				<div className="@container rounded-lg border bg-kumo-base">
 					{/* Wraps because the action buttons hold their width while hidden, leaving
-					    the label almost none in a narrow column. */}
-					<div className="flex flex-wrap items-center gap-3 px-4 py-3">
+					    the label almost none in a narrow column. Below 10rem the icon goes and the
+					    padding tightens, so a sidebar column still fits a word per line. */}
+					<div className="flex flex-wrap items-center gap-3 px-2 py-3 @[10rem]:px-4">
 						{/* Icon */}
 						<div
 							className={cn(
-								"flex-shrink-0 w-10 h-10 rounded-lg bg-kumo-tint flex items-center justify-center",
+								"hidden flex-shrink-0 w-10 h-10 rounded-lg bg-kumo-tint items-center justify-center @[10rem]:flex",
 								color,
 							)}
 						>
