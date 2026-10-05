@@ -1579,7 +1579,7 @@ function convertPTBlock(
 					attrs: attrStr(c._key)
 						? attrsWithPortableTextKey(undefined, c._key as string)
 						: undefined,
-					content: portableTextToProsemirror(colBlocks).content,
+					content: portableTextToProsemirror(colBlocks, pluginTypes).content,
 				};
 			});
 
