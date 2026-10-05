@@ -46,10 +46,11 @@ const MIN_COLUMNS = 1;
 const MAX_COLUMNS = 6;
 
 /**
- * Gutter reserved inside each row of a column for its drag handle. Must agree with
- * `_dragHandleOffset` or the handle lands on the row's content.
+ * Gutter reserved inside each row of a column for its drag handle, which stacks its two
+ * buttons there so the gutter is one button wide. Must agree with `_dragHandleOffset` or the
+ * handle lands on the row's content.
  */
-export const NESTING_GUTTER_PX = 52;
+export const NESTING_GUTTER_PX = 28;
 
 /** CSS gap value per named size. */
 const GAP_TO_CSS: Record<NestingGap, string> = {

@@ -9,6 +9,7 @@ import StarterKit from "@tiptap/starter-kit";
 import { describe, expect, it } from "vitest";
 
 import {
+	_dragHandleLayout,
 	_dragHandleOffset,
 	_getDragHandlePlacement,
 	_nestedDragOptions,
@@ -175,6 +176,13 @@ describe("rows are the draggable unit", () => {
 		expect(_dragHandleOffset(false)).toBe(4);
 		expect(_dragHandleOffset(true)).toBe(-(NESTING_GUTTER_PX - 4));
 		expect(_dragHandleOffset(true) + NESTING_GUTTER_PX).toBe(4);
+	});
+
+	it("stacks the handle's buttons in a column, so it fits the one-button gutter", () => {
+		expect(_dragHandleLayout(true)).toContain("flex-col");
+		expect(_dragHandleLayout(false)).not.toContain("flex-col");
+		// One 24px button plus the 4px the offset leaves at the row's edge.
+		expect(NESTING_GUTTER_PX).toBe(24 + 4);
 	});
 });
 
