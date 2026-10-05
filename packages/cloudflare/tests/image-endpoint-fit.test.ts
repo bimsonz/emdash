@@ -1,25 +1,34 @@
 import type { APIContext } from "astro";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-const adapterGET = vi.fn(() => new Response("adapter", { status: 200 }));
-vi.mock("@astrojs/cloudflare/image-transform-endpoint", () => ({ GET: adapterGET }));
-
-/** Records the transform the endpoint hands to the Images binding. */
-const transform = vi.fn();
-const output = vi.fn(() => ({
-	response: () => new Response("bytes", { headers: { "Content-Type": "image/webp" } }),
-}));
-
-const images = {
-	input: () => ({
-		transform: (options: unknown) => {
-			transform(options);
-			return { output };
+const { adapterGET, transform, images } = vi.hoisted(() => {
+	/** Records the transform the endpoint hands to the Images binding. */
+	const recordTransform = vi.fn();
+	const output = vi.fn(() => ({
+		response: () => new Response("bytes", { headers: { "Content-Type": "image/webp" } }),
+	}));
+	return {
+		adapterGET: vi.fn(() => new Response("adapter", { status: 200 })),
+		transform: recordTransform,
+		images: {
+			input: () => ({
+				transform: (options: unknown) => {
+					recordTransform(options);
+					return { output };
+				},
+			}),
 		},
-	}),
-};
+	};
+});
 
+vi.mock("@astrojs/cloudflare/image-transform-endpoint", () => ({ GET: adapterGET }));
 vi.mock("cloudflare:workers", () => ({ env: { IMAGES: images } }));
+// The endpoint reads Astro's image config and EmDash's virtual config (#4911): the stock service,
+// with signing off.
+vi.mock("astro:assets", () => ({
+	imageConfig: { service: { entrypoint: "@astrojs/cloudflare/image-service-workerd" } },
+}));
+vi.mock("virtual:emdash/config", () => ({ default: {} }));
 
 const { GET } = await import("../src/image-endpoint.js");
 
@@ -35,11 +44,17 @@ const storage = {
 	}),
 };
 
-/** Request the endpoint the way Astro's image service does. */
+/**
+ * Request the endpoint the way Astro's image service does: `href` first, encoded as
+ * `URLSearchParams` writes it, which is the form the endpoint does not redirect (#4911).
+ */
 function request(params: string): Promise<Response> {
-	const href = encodeURIComponent("/_emdash/api/media/file/01J5ABC.webp");
+	const search = new URLSearchParams([
+		["href", "/_emdash/api/media/file/01J5ABC.webp"],
+		...new URLSearchParams(params),
+	]);
 	const ctx = {
-		request: new Request(`https://example.com/_image?href=${href}&${params}`),
+		request: new Request(`https://example.com/_image?${search}`),
 		locals: { emdash: { storage } },
 	} as unknown as APIContext;
 	return GET(ctx) as Promise<Response>;
