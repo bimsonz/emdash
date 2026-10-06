@@ -27,7 +27,7 @@ import { pluginBlockComponents } from "virtual:emdash/block-components";
 import { emdashComponents } from "./index.js";
 import InlineEditor from "./InlineEditor.astro";
 import { groupBlockquoteRuns } from "./portable-text-blockquote-group.js";
-import { remapNestingBlocks } from "./portable-text-nesting.js";
+import { attachNestingRender, remapNestingBlocks } from "./portable-text-nesting.js";
 
 export interface Props extends Omit<PortableTextProps, "value"> {
 	value: PortableTextProps["value"];
@@ -63,6 +63,7 @@ if (!editMeta) {
 		grouped as Array<Record<string, unknown>>,
 		listNestingMode,
 	) as typeof value;
+	attachNestingRender(renderValue as unknown[], { components: mergedComponents, listNestingMode });
 }
 ---
 

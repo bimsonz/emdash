@@ -3,9 +3,9 @@
  * Portable Text nesting block component
  *
  * Renders a `nestingBlock`: a grid or flex layout container made of explicit
- * columns. Each column's blocks recurse through the bare `astro-portabletext`
- * renderer with the EmDash component set passed in, so nested content
- * (including further nesting blocks) renders with the same components.
+ * columns. Each column's blocks render with the components of the
+ * `<PortableText>` that rendered this block, site and plugin overrides
+ * included, so a block renders the same inside a column as outside one.
  *
  * `children` (columns) and each column's `children` (blocks) are remapped to
  * `content` by remapNestingBlocks before render. See portable-text-nesting.ts.
@@ -14,6 +14,11 @@
 import { PortableText } from "astro-portabletext";
 
 import { emdashComponents } from "./index.js";
+import {
+	attachNestingRender,
+	nestingRenderOf,
+	type NestingRender,
+} from "./portable-text-nesting.js";
 import { nestingTemplateColumns, normalizeNestingAttrs } from "../content/converters/nesting.js";
 import type { NestingWidths } from "../content/converters/types.js";
 
@@ -62,6 +67,16 @@ if (!columns.length) {
 	return null;
 }
 
+const render: NestingRender = nestingRenderOf(node) ?? {
+	components: emdashComponents,
+	listNestingMode: "html",
+};
+const columnBlocks = columns.map((column) => {
+	const blocks = Array.isArray(column?.content) ? column.content : [];
+	attachNestingRender(blocks, render);
+	return blocks;
+});
+
 const widths = normalizeNestingAttrs({ widths: node?.widths }).widths;
 const style = [
 	`--nesting-gap: ${GAP_TO_CSS[gap]}`,
@@ -73,11 +88,12 @@ const style = [
 
 <div class="emdash-nesting" data-layout={layout} style={style}>
 	{
-		columns.map((column) => (
+		columnBlocks.map((blocks) => (
 			<div class="emdash-nesting-col">
 				<PortableText
-					value={(Array.isArray(column?.content) ? column.content : []) as never}
-					components={emdashComponents}
+					value={blocks as never}
+					components={render.components as never}
+					listNestingMode={render.listNestingMode as never}
 				/>
 			</div>
 		))
