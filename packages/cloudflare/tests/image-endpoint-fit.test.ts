@@ -122,6 +122,21 @@ describe("Cloudflare image endpoint: fit and position", () => {
 		expect(options).toMatchObject({ width: 64, height: 64 });
 	});
 
+	it("crops around a focal point given as percentages", async () => {
+		// EmDashImage writes a media item's focal point this way, so a cover crop keeps the
+		// subject the editor marked instead of the middle of the picture.
+		await request(`w=640&h=274&fit=cover&position=${encodeURIComponent("25% 70.5%")}`);
+		expect(lastTransform()).toMatchObject({
+			fit: "crop",
+			gravity: { x: 0.25, y: 0.705, mode: "remainder" },
+		});
+	});
+
+	it("drops a percentage point outside the picture", async () => {
+		await request(`w=640&h=274&fit=cover&position=${encodeURIComponent("120% 50%")}`);
+		expect(lastTransform().gravity).toBeUndefined();
+	});
+
 	it("leaves fit unset when the request carries none", async () => {
 		await request("w=800&f=webp");
 		expect(lastTransform().fit).toBeUndefined();
