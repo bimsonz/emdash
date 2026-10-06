@@ -253,4 +253,43 @@ describe("redirect cache", () => {
 
 		await expect(destinationOf(source)).resolves.toBe("/newest");
 	});
+
+	describe("verify", () => {
+		it("reloads before answering when the cached rules are stale", async () => {
+			const source = new FakeSource(ruleSet("v1", "/new"));
+			await destinationOf(source);
+			source.current = ruleSet("v2", "/newer");
+
+			// Within the TTL a plain load serves what it has...
+			expect(await destinationOf(source)).toBe("/new");
+			// ...and a verified load does not.
+			const verified = await loadCachedRedirects(source, { verify: true });
+
+			expect(verified.exact.get("/old")?.destination).toBe("/newer");
+			expect(source.loads).toBe(2);
+		});
+
+		it("costs one version check and no load when the rules are current", async () => {
+			const source = new FakeSource(ruleSet("v1", "/new"));
+			await destinationOf(source);
+
+			const verified = await loadCachedRedirects(source, { verify: true });
+
+			expect(verified.exact.get("/old")?.destination).toBe("/new");
+			expect(source.checks).toBe(1);
+			expect(source.loads).toBe(1);
+		});
+
+		it("serves the cached rules when the check itself fails", async () => {
+			const error = vi.spyOn(console, "error").mockImplementation(() => {});
+			const source = new FakeSource(ruleSet("v1", "/new"));
+			await destinationOf(source);
+			source.checkError = new Error("db down");
+
+			const verified = await loadCachedRedirects(source, { verify: true });
+
+			expect(verified.exact.get("/old")?.destination).toBe("/new");
+			error.mockRestore();
+		});
+	});
 });
