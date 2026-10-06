@@ -486,7 +486,7 @@ msgstr "{characters, plural, one {# caràcter} other {# caràcters}}"
 msgid "{collectionLabel} pagination"
 msgstr "paginació de {collectionLabel}"
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:314
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:315
 msgid "{columnCount, plural, one {# column} other {# columns}}, {blockCount, plural, one {# block} other {# blocks}}"
 msgstr ""
 
@@ -856,19 +856,19 @@ msgstr "<0>{name}</0> està editant aquesta entrada. Obre-la en només lectura o
 msgid "<0>{name}</0> now holds this entry, so your changes are no longer being saved. Take it back to carry on."
 msgstr "<0>{name}</0> ara té el control d'aquesta entrada, així que ja no es desen els teus canvis. Recupera-la per continuar."
 
-#: packages/admin/src/components/editor/DragHandleWrapper.tsx:283
+#: packages/admin/src/components/editor/DragHandleWrapper.tsx:290
 msgid "<0>Alt-click</0> to add above"
 msgstr ""
 
-#: packages/admin/src/components/editor/DragHandleWrapper.tsx:279
+#: packages/admin/src/components/editor/DragHandleWrapper.tsx:286
 msgid "<0>Click</0> to add below"
 msgstr ""
 
-#: packages/admin/src/components/editor/DragHandleWrapper.tsx:325
+#: packages/admin/src/components/editor/DragHandleWrapper.tsx:332
 msgid "<0>Click</0> to open menu"
 msgstr ""
 
-#: packages/admin/src/components/editor/DragHandleWrapper.tsx:321
+#: packages/admin/src/components/editor/DragHandleWrapper.tsx:328
 msgid "<0>Drag</0> to move"
 msgstr ""
 
@@ -1240,8 +1240,8 @@ msgstr "Afegeix un bloc"
 msgid "Add byline"
 msgstr "Afegeix una signatura"
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:366
 #: packages/admin/src/components/editor/NestingBlockNode.tsx:367
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:368
 msgid "Add column"
 msgstr ""
 
@@ -1483,7 +1483,7 @@ msgid "Agent-callable MCP tools"
 msgstr "Eines MCP invocables per agents"
 
 #: packages/admin/src/components/editor/BlockMenu.tsx:164
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:335
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:336
 #: packages/admin/src/components/PortableTextEditor.tsx:5254
 msgid "Align"
 msgstr ""
@@ -2181,7 +2181,7 @@ msgstr "Bloc {0}"
 msgid "Block actions"
 msgstr ""
 
-#: packages/admin/src/components/editor/DragHandleWrapper.tsx:343
+#: packages/admin/src/components/editor/DragHandleWrapper.tsx:350
 msgid "Block actions - drag to reorder, click for menu"
 msgstr "Accions del bloc: arrossega per reordenar, fes clic per al menú"
 
@@ -2226,7 +2226,7 @@ msgstr "Booleà"
 msgid "Both reference fields bound to this relation share these limits, so the two sides cannot disagree about the same links."
 msgstr "Els dos camps de referència vinculats a aquesta relació comparteixen aquests límits, de manera que les dues bandes no es poden contradir sobre els mateixos enllaços."
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:341
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:342
 msgid "Bottom"
 msgstr ""
 
@@ -2388,7 +2388,7 @@ msgstr "Pot veure el contingut"
 #: packages/admin/src/components/ContentSettingsPanel.tsx:1352
 #: packages/admin/src/components/editor/ImageDetailPanel.tsx:604
 #: packages/admin/src/components/editor/ImageDetailPanel.tsx:817
-#: packages/admin/src/components/editor/PluginBlockNode.tsx:392
+#: packages/admin/src/components/editor/PluginBlockNode.tsx:393
 #: packages/admin/src/components/EditorDraftPatchPreview.tsx:78
 #: packages/admin/src/components/FieldEditor.tsx:1379
 #: packages/admin/src/components/MediaDetailPanel.tsx:1847
@@ -2420,7 +2420,7 @@ msgstr "Pot veure el contingut"
 msgid "Cancel"
 msgstr "Cancel·la"
 
-#: packages/admin/src/components/editor/PluginBlockNode.tsx:391
+#: packages/admin/src/components/editor/PluginBlockNode.tsx:392
 msgid "Cancel (Esc)"
 msgstr "Cancel·la (Esc)"
 
@@ -2511,7 +2511,7 @@ msgstr "Cel·les combinades"
 
 #: packages/admin/src/components/editor/BlockMenu.tsx:53
 #: packages/admin/src/components/editor/ImageDetailPanel.tsx:276
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:340
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:341
 #: packages/admin/src/components/PortableTextEditor.tsx:5258
 #: packages/admin/src/components/PortableTextEditor.tsx:5376
 msgid "Center"
@@ -2937,8 +2937,8 @@ msgstr "Accions del bloc de codi"
 msgid "Collapse block"
 msgstr "Replega el bloc"
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:295
 #: packages/admin/src/components/editor/NestingBlockNode.tsx:296
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:297
 msgid "Collapse container"
 msgstr ""
 
@@ -2983,7 +2983,7 @@ msgstr "Col·leccions i camps, tot el contingut amb esborranys, versions, entrad
 msgid "Collections created:"
 msgstr "Col·leccions creades:"
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:370
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:371
 msgid "Column"
 msgstr ""
 
@@ -3330,8 +3330,8 @@ msgstr "Copia aquest token ara — no es tornarà a mostrar."
 msgid "Copy token"
 msgstr "Copia el token"
 
-#: packages/admin/src/components/editor/PluginBlockNode.tsx:308
 #: packages/admin/src/components/editor/PluginBlockNode.tsx:309
+#: packages/admin/src/components/editor/PluginBlockNode.tsx:310
 #: packages/admin/src/components/MediaDetailPanel.tsx:1367
 msgid "Copy URL"
 msgstr "Copia l'URL"
@@ -3927,8 +3927,8 @@ msgstr "Definit al codi"
 #: packages/admin/src/components/ContentTypeEditor.tsx:863
 #: packages/admin/src/components/ContentTypeList.tsx:256
 #: packages/admin/src/components/editor/BlockMenu.tsx:217
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:380
-#: packages/admin/src/components/editor/PluginBlockNode.tsx:364
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:381
+#: packages/admin/src/components/editor/PluginBlockNode.tsx:365
 #: packages/admin/src/components/MediaDetailPanel.tsx:1816
 #: packages/admin/src/components/MediaDetailPanel.tsx:1920
 #: packages/admin/src/components/MenuEditor.tsx:555
@@ -4031,7 +4031,7 @@ msgstr "Vols eliminar el comentari?"
 msgid "Delete Content Type?"
 msgstr "Vols eliminar el tipus de contingut?"
 
-#: packages/admin/src/components/editor/PluginBlockNode.tsx:365
+#: packages/admin/src/components/editor/PluginBlockNode.tsx:366
 msgid "Delete embed"
 msgstr "Elimina la incrustació"
 
@@ -4062,7 +4062,7 @@ msgstr "Vols eliminar el multimèdia?"
 msgid "Delete menu"
 msgstr "Elimina el menú"
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:381
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:382
 msgid "Delete nesting container"
 msgstr ""
 
@@ -4579,7 +4579,7 @@ msgstr "Arrossega i deixa anar o fes clic per explorar (.xml)"
 msgid "Drag here to add"
 msgstr "Arrossega aquí per afegir"
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:308
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:309
 msgid "Drag to move this container"
 msgstr ""
 
@@ -4676,8 +4676,8 @@ msgstr "Cada {linkingSideName} enllaça amb"
 msgid "Each path segment can contain at most one placeholder, e.g. {0}"
 msgstr "Cada segment de ruta pot contenir com a màxim un marcador de posició, p. ex. {0}"
 
-#: packages/admin/src/components/editor/PluginBlockNode.tsx:353
 #: packages/admin/src/components/editor/PluginBlockNode.tsx:354
+#: packages/admin/src/components/editor/PluginBlockNode.tsx:355
 #: packages/admin/src/components/MenuCard.tsx:59
 #: packages/admin/src/components/MenuEditor.tsx:550
 #: packages/admin/src/components/Sections.tsx:439
@@ -4821,8 +4821,8 @@ msgstr "Edita la redirecció {0}"
 msgid "Edit role"
 msgstr "Edita el rol"
 
-#: packages/admin/src/components/editor/PluginBlockNode.tsx:353
 #: packages/admin/src/components/editor/PluginBlockNode.tsx:354
+#: packages/admin/src/components/editor/PluginBlockNode.tsx:355
 msgid "Edit URL"
 msgstr "Edita l'URL"
 
@@ -5122,7 +5122,7 @@ msgstr "entrada de la banda enllaçada"
 msgid "entry on the linking side"
 msgstr "entrada de la banda que enllaça"
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:353
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:354
 msgid "Equal"
 msgstr ""
 
@@ -5217,8 +5217,8 @@ msgstr "Surt del mode sense distraccions (⌘⇧\\)"
 msgid "Expand block"
 msgstr "Desplega el bloc"
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:295
 #: packages/admin/src/components/editor/NestingBlockNode.tsx:296
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:297
 msgid "Expand container"
 msgstr ""
 
@@ -6227,7 +6227,7 @@ msgstr "Corregeix els camps no vàlids abans de canviar la data de publicació"
 msgid "Fix invalid fields before changing the schedule"
 msgstr "Corregeix els camps no vàlids abans de canviar la programació"
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:326
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:327
 msgid "Flex"
 msgstr ""
 
@@ -6358,7 +6358,7 @@ msgstr "Galeria"
 msgid "Gallery settings"
 msgstr "Configuració de la galeria"
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:329
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:330
 msgid "Gap"
 msgstr ""
 
@@ -6428,7 +6428,7 @@ msgstr "Verificació de Google"
 msgid "GraphQL"
 msgstr "GraphQL"
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:326
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:327
 msgid "Grid"
 msgstr ""
 
@@ -7035,7 +7035,7 @@ msgstr "Insereix un bloc"
 msgid "Insert block after current block"
 msgstr "Insereix un bloc després del bloc actual"
 
-#: packages/admin/src/components/editor/DragHandleWrapper.tsx:311
+#: packages/admin/src/components/editor/DragHandleWrapper.tsx:318
 msgid "Insert block below"
 msgstr "Insereix un bloc a sota"
 
@@ -7341,7 +7341,7 @@ msgstr "Horitzontal"
 msgid "Language"
 msgstr "Idioma"
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:332
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:333
 msgid "Large"
 msgstr ""
 
@@ -7392,7 +7392,7 @@ msgstr "Últim ús {0}"
 msgid "Later entries weren't loaded. The range has more entries than the calendar can show."
 msgstr "No s'han carregat les entrades posteriors. L'interval té més entrades de les que pot mostrar el calendari."
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:323
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:324
 #: packages/admin/src/components/PortableTextEditor.tsx:2163
 msgid "Layout"
 msgstr ""
@@ -8059,7 +8059,7 @@ msgstr "El seguiment de l'ús del multimèdia necessita atenció"
 msgid "Media Write"
 msgstr "Escriptura de fitxers multimèdia"
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:332
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:333
 msgid "Medium"
 msgstr ""
 
@@ -8452,11 +8452,11 @@ msgstr "El nom ha de començar per una lletra i contenir només lletres minúscu
 msgid "Name your section, then add its content in the editor."
 msgstr "Posa nom a la teva secció i afegeix-ne el contingut a l'editor."
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:356
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:357
 msgid "Narrow first"
 msgstr ""
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:357
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:358
 msgid "Narrow last"
 msgstr ""
 
@@ -8480,7 +8480,7 @@ msgstr "Navegació"
 msgid "Needs attention"
 msgstr "Necessita atenció"
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:311
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:312
 #: packages/admin/src/components/PortableTextEditor.tsx:2160
 msgid "Nesting container"
 msgstr ""
@@ -9048,7 +9048,7 @@ msgid "Non-guest"
 msgstr "No convidat"
 
 #: packages/admin/src/components/editor/ImageDetailPanel.tsx:274
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:332
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:333
 #: packages/admin/src/components/PortableTextEditor.tsx:5374
 msgid "None"
 msgstr "Cap"
@@ -9211,8 +9211,8 @@ msgstr "Obre a l'editor"
 #: packages/admin/src/components/editor/ImageDetailPanel.tsx:779
 #: packages/admin/src/components/editor/ImageDetailPanel.tsx:794
 #: packages/admin/src/components/editor/ImageDetailPanel.tsx:795
-#: packages/admin/src/components/editor/PluginBlockNode.tsx:319
 #: packages/admin/src/components/editor/PluginBlockNode.tsx:320
+#: packages/admin/src/components/editor/PluginBlockNode.tsx:321
 msgid "Open in new tab"
 msgstr "Obre en una pestanya nova"
 
@@ -10410,8 +10410,8 @@ msgstr "Treu {label}"
 msgid "Remove assignment"
 msgstr "Treu l'assignació"
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:186
 #: packages/admin/src/components/editor/NestingBlockNode.tsx:187
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:188
 msgid "Remove column"
 msgstr ""
 
@@ -11029,7 +11029,7 @@ msgid "Sample content"
 msgstr "Contingut d'exemple"
 
 #: packages/admin/src/components/editor/ImageDetailPanel.tsx:820
-#: packages/admin/src/components/editor/PluginBlockNode.tsx:403
+#: packages/admin/src/components/editor/PluginBlockNode.tsx:404
 #: packages/admin/src/components/MediaDetailPanel.tsx:1878
 #: packages/admin/src/components/MediaFolderDialog.tsx:171
 #: packages/admin/src/components/MenuEditor.tsx:632
@@ -11040,7 +11040,7 @@ msgstr "Contingut d'exemple"
 msgid "Save"
 msgstr "Desa"
 
-#: packages/admin/src/components/editor/PluginBlockNode.tsx:402
+#: packages/admin/src/components/editor/PluginBlockNode.tsx:403
 msgid "Save (Enter)"
 msgstr "Desa (Retorn)"
 
@@ -12148,7 +12148,7 @@ msgstr "Slug copiat al porta-retalls"
 msgid "Slugs cannot be changed after the field is created."
 msgstr "Els slugs no es poden canviar després de crear el camp."
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:332
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:333
 msgid "Small"
 msgstr ""
 
@@ -12380,7 +12380,7 @@ msgstr "Còpies de seguretat emmagatzemades"
 msgid "Stored per locale — each translation of a byline gets its own value."
 msgstr "S'emmagatzema per idioma — cada traducció d'una signatura té el seu propi valor."
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:342
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:343
 msgid "Stretch"
 msgstr ""
 
@@ -13527,7 +13527,7 @@ msgstr "Demà"
 msgid "Tooltip text"
 msgstr "Text de l'informació emergent"
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:339
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:340
 msgid "Top"
 msgstr ""
 
@@ -14588,11 +14588,11 @@ msgstr "Per què és important això?"
 msgid "Wide"
 msgstr "Ample"
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:354
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:355
 msgid "Wide first"
 msgstr ""
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:355
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:356
 msgid "Wide last"
 msgstr ""
 
@@ -14644,7 +14644,7 @@ msgstr "Ginys"
 msgid "Width"
 msgstr "Amplada"
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:348
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:349
 #: packages/admin/src/components/editor/TableControls.tsx:29
 msgid "Widths"
 msgstr "Amplades"

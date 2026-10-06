@@ -486,7 +486,7 @@ msgstr ""
 msgid "{collectionLabel} pagination"
 msgstr ""
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:314
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:315
 msgid "{columnCount, plural, one {# column} other {# columns}}, {blockCount, plural, one {# block} other {# blocks}}"
 msgstr ""
 
@@ -856,19 +856,19 @@ msgstr ""
 msgid "<0>{name}</0> now holds this entry, so your changes are no longer being saved. Take it back to carry on."
 msgstr ""
 
-#: packages/admin/src/components/editor/DragHandleWrapper.tsx:283
+#: packages/admin/src/components/editor/DragHandleWrapper.tsx:290
 msgid "<0>Alt-click</0> to add above"
 msgstr ""
 
-#: packages/admin/src/components/editor/DragHandleWrapper.tsx:279
+#: packages/admin/src/components/editor/DragHandleWrapper.tsx:286
 msgid "<0>Click</0> to add below"
 msgstr ""
 
-#: packages/admin/src/components/editor/DragHandleWrapper.tsx:325
+#: packages/admin/src/components/editor/DragHandleWrapper.tsx:332
 msgid "<0>Click</0> to open menu"
 msgstr ""
 
-#: packages/admin/src/components/editor/DragHandleWrapper.tsx:321
+#: packages/admin/src/components/editor/DragHandleWrapper.tsx:328
 msgid "<0>Drag</0> to move"
 msgstr ""
 
@@ -1240,8 +1240,8 @@ msgstr ""
 msgid "Add byline"
 msgstr ""
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:366
 #: packages/admin/src/components/editor/NestingBlockNode.tsx:367
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:368
 msgid "Add column"
 msgstr ""
 
@@ -1483,7 +1483,7 @@ msgid "Agent-callable MCP tools"
 msgstr ""
 
 #: packages/admin/src/components/editor/BlockMenu.tsx:164
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:335
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:336
 #: packages/admin/src/components/PortableTextEditor.tsx:5254
 msgid "Align"
 msgstr ""
@@ -2181,7 +2181,7 @@ msgstr ""
 msgid "Block actions"
 msgstr ""
 
-#: packages/admin/src/components/editor/DragHandleWrapper.tsx:343
+#: packages/admin/src/components/editor/DragHandleWrapper.tsx:350
 msgid "Block actions - drag to reorder, click for menu"
 msgstr ""
 
@@ -2226,7 +2226,7 @@ msgstr "Boolean"
 msgid "Both reference fields bound to this relation share these limits, so the two sides cannot disagree about the same links."
 msgstr ""
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:341
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:342
 msgid "Bottom"
 msgstr ""
 
@@ -2388,7 +2388,7 @@ msgstr "Może przeglądać treści"
 #: packages/admin/src/components/ContentSettingsPanel.tsx:1352
 #: packages/admin/src/components/editor/ImageDetailPanel.tsx:604
 #: packages/admin/src/components/editor/ImageDetailPanel.tsx:817
-#: packages/admin/src/components/editor/PluginBlockNode.tsx:392
+#: packages/admin/src/components/editor/PluginBlockNode.tsx:393
 #: packages/admin/src/components/EditorDraftPatchPreview.tsx:78
 #: packages/admin/src/components/FieldEditor.tsx:1379
 #: packages/admin/src/components/MediaDetailPanel.tsx:1847
@@ -2420,7 +2420,7 @@ msgstr "Może przeglądać treści"
 msgid "Cancel"
 msgstr "Anuluj"
 
-#: packages/admin/src/components/editor/PluginBlockNode.tsx:391
+#: packages/admin/src/components/editor/PluginBlockNode.tsx:392
 msgid "Cancel (Esc)"
 msgstr ""
 
@@ -2511,7 +2511,7 @@ msgstr ""
 
 #: packages/admin/src/components/editor/BlockMenu.tsx:53
 #: packages/admin/src/components/editor/ImageDetailPanel.tsx:276
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:340
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:341
 #: packages/admin/src/components/PortableTextEditor.tsx:5258
 #: packages/admin/src/components/PortableTextEditor.tsx:5376
 msgid "Center"
@@ -2937,8 +2937,8 @@ msgstr ""
 msgid "Collapse block"
 msgstr ""
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:295
 #: packages/admin/src/components/editor/NestingBlockNode.tsx:296
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:297
 msgid "Collapse container"
 msgstr ""
 
@@ -2983,7 +2983,7 @@ msgstr ""
 msgid "Collections created:"
 msgstr "Utworzone kolekcje:"
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:370
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:371
 msgid "Column"
 msgstr ""
 
@@ -3330,8 +3330,8 @@ msgstr "Skopiuj ten token teraz — nie będzie wyświetlony ponownie."
 msgid "Copy token"
 msgstr "Skopiuj token"
 
-#: packages/admin/src/components/editor/PluginBlockNode.tsx:308
 #: packages/admin/src/components/editor/PluginBlockNode.tsx:309
+#: packages/admin/src/components/editor/PluginBlockNode.tsx:310
 #: packages/admin/src/components/MediaDetailPanel.tsx:1367
 msgid "Copy URL"
 msgstr ""
@@ -3927,8 +3927,8 @@ msgstr "Zdefiniowane w kodzie"
 #: packages/admin/src/components/ContentTypeEditor.tsx:863
 #: packages/admin/src/components/ContentTypeList.tsx:256
 #: packages/admin/src/components/editor/BlockMenu.tsx:217
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:380
-#: packages/admin/src/components/editor/PluginBlockNode.tsx:364
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:381
+#: packages/admin/src/components/editor/PluginBlockNode.tsx:365
 #: packages/admin/src/components/MediaDetailPanel.tsx:1816
 #: packages/admin/src/components/MediaDetailPanel.tsx:1920
 #: packages/admin/src/components/MenuEditor.tsx:555
@@ -4031,7 +4031,7 @@ msgstr "Usunąć komentarz?"
 msgid "Delete Content Type?"
 msgstr "Usunąć typ treści?"
 
-#: packages/admin/src/components/editor/PluginBlockNode.tsx:365
+#: packages/admin/src/components/editor/PluginBlockNode.tsx:366
 msgid "Delete embed"
 msgstr ""
 
@@ -4062,7 +4062,7 @@ msgstr ""
 msgid "Delete menu"
 msgstr ""
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:381
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:382
 msgid "Delete nesting container"
 msgstr ""
 
@@ -4579,7 +4579,7 @@ msgstr "Przeciągnij i upuść lub kliknij, aby wybrać plik (.xml)"
 msgid "Drag here to add"
 msgstr ""
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:308
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:309
 msgid "Drag to move this container"
 msgstr ""
 
@@ -4676,8 +4676,8 @@ msgstr ""
 msgid "Each path segment can contain at most one placeholder, e.g. {0}"
 msgstr ""
 
-#: packages/admin/src/components/editor/PluginBlockNode.tsx:353
 #: packages/admin/src/components/editor/PluginBlockNode.tsx:354
+#: packages/admin/src/components/editor/PluginBlockNode.tsx:355
 #: packages/admin/src/components/MenuCard.tsx:59
 #: packages/admin/src/components/MenuEditor.tsx:550
 #: packages/admin/src/components/Sections.tsx:439
@@ -4821,8 +4821,8 @@ msgstr "Edytuj przekierowanie {0}"
 msgid "Edit role"
 msgstr ""
 
-#: packages/admin/src/components/editor/PluginBlockNode.tsx:353
 #: packages/admin/src/components/editor/PluginBlockNode.tsx:354
+#: packages/admin/src/components/editor/PluginBlockNode.tsx:355
 msgid "Edit URL"
 msgstr ""
 
@@ -5119,7 +5119,7 @@ msgstr ""
 msgid "entry on the linking side"
 msgstr ""
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:353
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:354
 msgid "Equal"
 msgstr ""
 
@@ -5214,8 +5214,8 @@ msgstr ""
 msgid "Expand block"
 msgstr ""
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:295
 #: packages/admin/src/components/editor/NestingBlockNode.tsx:296
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:297
 msgid "Expand container"
 msgstr ""
 
@@ -6224,7 +6224,7 @@ msgstr ""
 msgid "Fix invalid fields before changing the schedule"
 msgstr ""
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:326
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:327
 msgid "Flex"
 msgstr ""
 
@@ -6355,7 +6355,7 @@ msgstr ""
 msgid "Gallery settings"
 msgstr ""
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:329
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:330
 msgid "Gap"
 msgstr ""
 
@@ -6425,7 +6425,7 @@ msgstr "Weryfikacja Google"
 msgid "GraphQL"
 msgstr ""
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:326
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:327
 msgid "Grid"
 msgstr ""
 
@@ -7032,7 +7032,7 @@ msgstr ""
 msgid "Insert block after current block"
 msgstr ""
 
-#: packages/admin/src/components/editor/DragHandleWrapper.tsx:311
+#: packages/admin/src/components/editor/DragHandleWrapper.tsx:318
 msgid "Insert block below"
 msgstr ""
 
@@ -7338,7 +7338,7 @@ msgstr ""
 msgid "Language"
 msgstr "Język"
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:332
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:333
 msgid "Large"
 msgstr ""
 
@@ -7389,7 +7389,7 @@ msgstr "Ostatnio użyty {0}"
 msgid "Later entries weren't loaded. The range has more entries than the calendar can show."
 msgstr ""
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:323
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:324
 #: packages/admin/src/components/PortableTextEditor.tsx:2163
 msgid "Layout"
 msgstr ""
@@ -8056,7 +8056,7 @@ msgstr ""
 msgid "Media Write"
 msgstr "Zapis mediów"
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:332
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:333
 msgid "Medium"
 msgstr ""
 
@@ -8449,11 +8449,11 @@ msgstr "Nazwa musi zaczynać się od litery i zawierać tylko małe litery, cyfr
 msgid "Name your section, then add its content in the editor."
 msgstr ""
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:356
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:357
 msgid "Narrow first"
 msgstr ""
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:357
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:358
 msgid "Narrow last"
 msgstr ""
 
@@ -8477,7 +8477,7 @@ msgstr "Nawigacja"
 msgid "Needs attention"
 msgstr ""
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:311
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:312
 #: packages/admin/src/components/PortableTextEditor.tsx:2160
 msgid "Nesting container"
 msgstr ""
@@ -9045,7 +9045,7 @@ msgid "Non-guest"
 msgstr ""
 
 #: packages/admin/src/components/editor/ImageDetailPanel.tsx:274
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:332
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:333
 #: packages/admin/src/components/PortableTextEditor.tsx:5374
 msgid "None"
 msgstr ""
@@ -9208,8 +9208,8 @@ msgstr ""
 #: packages/admin/src/components/editor/ImageDetailPanel.tsx:779
 #: packages/admin/src/components/editor/ImageDetailPanel.tsx:794
 #: packages/admin/src/components/editor/ImageDetailPanel.tsx:795
-#: packages/admin/src/components/editor/PluginBlockNode.tsx:319
 #: packages/admin/src/components/editor/PluginBlockNode.tsx:320
+#: packages/admin/src/components/editor/PluginBlockNode.tsx:321
 msgid "Open in new tab"
 msgstr "Otwórz w nowej karcie"
 
@@ -10404,8 +10404,8 @@ msgstr "Usuń {label}"
 msgid "Remove assignment"
 msgstr ""
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:186
 #: packages/admin/src/components/editor/NestingBlockNode.tsx:187
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:188
 msgid "Remove column"
 msgstr ""
 
@@ -11023,7 +11023,7 @@ msgid "Sample content"
 msgstr ""
 
 #: packages/admin/src/components/editor/ImageDetailPanel.tsx:820
-#: packages/admin/src/components/editor/PluginBlockNode.tsx:403
+#: packages/admin/src/components/editor/PluginBlockNode.tsx:404
 #: packages/admin/src/components/MediaDetailPanel.tsx:1878
 #: packages/admin/src/components/MediaFolderDialog.tsx:171
 #: packages/admin/src/components/MenuEditor.tsx:632
@@ -11034,7 +11034,7 @@ msgstr ""
 msgid "Save"
 msgstr "Zapisz"
 
-#: packages/admin/src/components/editor/PluginBlockNode.tsx:402
+#: packages/admin/src/components/editor/PluginBlockNode.tsx:403
 msgid "Save (Enter)"
 msgstr ""
 
@@ -12142,7 +12142,7 @@ msgstr "Slug skopiowany do schowka"
 msgid "Slugs cannot be changed after the field is created."
 msgstr ""
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:332
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:333
 msgid "Small"
 msgstr ""
 
@@ -12374,7 +12374,7 @@ msgstr ""
 msgid "Stored per locale — each translation of a byline gets its own value."
 msgstr ""
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:342
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:343
 msgid "Stretch"
 msgstr ""
 
@@ -13521,7 +13521,7 @@ msgstr ""
 msgid "Tooltip text"
 msgstr ""
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:339
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:340
 msgid "Top"
 msgstr ""
 
@@ -14582,11 +14582,11 @@ msgstr ""
 msgid "Wide"
 msgstr ""
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:354
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:355
 msgid "Wide first"
 msgstr ""
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:355
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:356
 msgid "Wide last"
 msgstr ""
 
@@ -14638,7 +14638,7 @@ msgstr "Widgety"
 msgid "Width"
 msgstr "Szerokość"
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:348
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:349
 #: packages/admin/src/components/editor/TableControls.tsx:29
 msgid "Widths"
 msgstr ""

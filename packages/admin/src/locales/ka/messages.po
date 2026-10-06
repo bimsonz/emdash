@@ -486,7 +486,7 @@ msgstr "{characters, plural, one {# სიმბოლო} other {# სიმბ
 msgid "{collectionLabel} pagination"
 msgstr ""
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:314
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:315
 msgid "{columnCount, plural, one {# column} other {# columns}}, {blockCount, plural, one {# block} other {# blocks}}"
 msgstr ""
 
@@ -856,19 +856,19 @@ msgstr "<0>{name}</0> ამ ჩანაწერს რედაქტირ�
 msgid "<0>{name}</0> now holds this entry, so your changes are no longer being saved. Take it back to carry on."
 msgstr "<0>{name}</0> ახლა ფლობს ამ ჩანაწერს, ამიტომ ცვლილებები აღარ ინახება. გასაგრძელებლად დაიბრუნეთ."
 
-#: packages/admin/src/components/editor/DragHandleWrapper.tsx:283
+#: packages/admin/src/components/editor/DragHandleWrapper.tsx:290
 msgid "<0>Alt-click</0> to add above"
 msgstr ""
 
-#: packages/admin/src/components/editor/DragHandleWrapper.tsx:279
+#: packages/admin/src/components/editor/DragHandleWrapper.tsx:286
 msgid "<0>Click</0> to add below"
 msgstr ""
 
-#: packages/admin/src/components/editor/DragHandleWrapper.tsx:325
+#: packages/admin/src/components/editor/DragHandleWrapper.tsx:332
 msgid "<0>Click</0> to open menu"
 msgstr ""
 
-#: packages/admin/src/components/editor/DragHandleWrapper.tsx:321
+#: packages/admin/src/components/editor/DragHandleWrapper.tsx:328
 msgid "<0>Drag</0> to move"
 msgstr ""
 
@@ -1240,8 +1240,8 @@ msgstr ""
 msgid "Add byline"
 msgstr "ბაილაინის დამატება"
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:366
 #: packages/admin/src/components/editor/NestingBlockNode.tsx:367
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:368
 msgid "Add column"
 msgstr ""
 
@@ -1483,7 +1483,7 @@ msgid "Agent-callable MCP tools"
 msgstr "აგენტის მიერ გამოძახებადი MCP ინსტრუმენტები"
 
 #: packages/admin/src/components/editor/BlockMenu.tsx:164
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:335
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:336
 #: packages/admin/src/components/PortableTextEditor.tsx:5254
 msgid "Align"
 msgstr ""
@@ -2181,7 +2181,7 @@ msgstr ""
 msgid "Block actions"
 msgstr ""
 
-#: packages/admin/src/components/editor/DragHandleWrapper.tsx:343
+#: packages/admin/src/components/editor/DragHandleWrapper.tsx:350
 msgid "Block actions - drag to reorder, click for menu"
 msgstr "ბლოკის ქმედებები — გადალაგებისთვის გადათრიეთ, მენიუსთვის დააწკაპუნეთ"
 
@@ -2226,7 +2226,7 @@ msgstr "ლოგიკური"
 msgid "Both reference fields bound to this relation share these limits, so the two sides cannot disagree about the same links."
 msgstr ""
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:341
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:342
 msgid "Bottom"
 msgstr ""
 
@@ -2388,7 +2388,7 @@ msgstr "შეუძლია შიგთავსის ნახვა"
 #: packages/admin/src/components/ContentSettingsPanel.tsx:1352
 #: packages/admin/src/components/editor/ImageDetailPanel.tsx:604
 #: packages/admin/src/components/editor/ImageDetailPanel.tsx:817
-#: packages/admin/src/components/editor/PluginBlockNode.tsx:392
+#: packages/admin/src/components/editor/PluginBlockNode.tsx:393
 #: packages/admin/src/components/EditorDraftPatchPreview.tsx:78
 #: packages/admin/src/components/FieldEditor.tsx:1379
 #: packages/admin/src/components/MediaDetailPanel.tsx:1847
@@ -2420,7 +2420,7 @@ msgstr "შეუძლია შიგთავსის ნახვა"
 msgid "Cancel"
 msgstr "გაუქმება"
 
-#: packages/admin/src/components/editor/PluginBlockNode.tsx:391
+#: packages/admin/src/components/editor/PluginBlockNode.tsx:392
 msgid "Cancel (Esc)"
 msgstr "გაუქმება (Esc)"
 
@@ -2511,7 +2511,7 @@ msgstr "უჯრები გაერთიანდა"
 
 #: packages/admin/src/components/editor/BlockMenu.tsx:53
 #: packages/admin/src/components/editor/ImageDetailPanel.tsx:276
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:340
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:341
 #: packages/admin/src/components/PortableTextEditor.tsx:5258
 #: packages/admin/src/components/PortableTextEditor.tsx:5376
 msgid "Center"
@@ -2937,8 +2937,8 @@ msgstr "კოდის ბლოკის ქმედებები"
 msgid "Collapse block"
 msgstr ""
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:295
 #: packages/admin/src/components/editor/NestingBlockNode.tsx:296
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:297
 msgid "Collapse container"
 msgstr ""
 
@@ -2983,7 +2983,7 @@ msgstr ""
 msgid "Collections created:"
 msgstr "შექმნილი კოლექციები:"
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:370
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:371
 msgid "Column"
 msgstr ""
 
@@ -3330,8 +3330,8 @@ msgstr "დააკოპირეთ ეს ტოკენი ახლავ
 msgid "Copy token"
 msgstr "ტოკენის კოპირება"
 
-#: packages/admin/src/components/editor/PluginBlockNode.tsx:308
 #: packages/admin/src/components/editor/PluginBlockNode.tsx:309
+#: packages/admin/src/components/editor/PluginBlockNode.tsx:310
 #: packages/admin/src/components/MediaDetailPanel.tsx:1367
 msgid "Copy URL"
 msgstr "URL-ის კოპირება"
@@ -3927,8 +3927,8 @@ msgstr "კოდში განსაზღვრული"
 #: packages/admin/src/components/ContentTypeEditor.tsx:863
 #: packages/admin/src/components/ContentTypeList.tsx:256
 #: packages/admin/src/components/editor/BlockMenu.tsx:217
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:380
-#: packages/admin/src/components/editor/PluginBlockNode.tsx:364
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:381
+#: packages/admin/src/components/editor/PluginBlockNode.tsx:365
 #: packages/admin/src/components/MediaDetailPanel.tsx:1816
 #: packages/admin/src/components/MediaDetailPanel.tsx:1920
 #: packages/admin/src/components/MenuEditor.tsx:555
@@ -4031,7 +4031,7 @@ msgstr "წავშალოთ კომენტარი?"
 msgid "Delete Content Type?"
 msgstr "წავშალოთ შიგთავსის ტიპი?"
 
-#: packages/admin/src/components/editor/PluginBlockNode.tsx:365
+#: packages/admin/src/components/editor/PluginBlockNode.tsx:366
 msgid "Delete embed"
 msgstr "ჩაშენებულის წაშლა"
 
@@ -4062,7 +4062,7 @@ msgstr "წავშალოთ მედია?"
 msgid "Delete menu"
 msgstr ""
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:381
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:382
 msgid "Delete nesting container"
 msgstr ""
 
@@ -4579,7 +4579,7 @@ msgstr "გადმოიტანეთ და ჩააგდეთ ან �
 msgid "Drag here to add"
 msgstr "დასამატებლად გადმოიტანეთ აქ"
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:308
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:309
 msgid "Drag to move this container"
 msgstr ""
 
@@ -4676,8 +4676,8 @@ msgstr ""
 msgid "Each path segment can contain at most one placeholder, e.g. {0}"
 msgstr ""
 
-#: packages/admin/src/components/editor/PluginBlockNode.tsx:353
 #: packages/admin/src/components/editor/PluginBlockNode.tsx:354
+#: packages/admin/src/components/editor/PluginBlockNode.tsx:355
 #: packages/admin/src/components/MenuCard.tsx:59
 #: packages/admin/src/components/MenuEditor.tsx:550
 #: packages/admin/src/components/Sections.tsx:439
@@ -4821,8 +4821,8 @@ msgstr "გადამისამართების რედაქტი�
 msgid "Edit role"
 msgstr "როლის რედაქტირება"
 
-#: packages/admin/src/components/editor/PluginBlockNode.tsx:353
 #: packages/admin/src/components/editor/PluginBlockNode.tsx:354
+#: packages/admin/src/components/editor/PluginBlockNode.tsx:355
 msgid "Edit URL"
 msgstr "URL-ის რედაქტირება"
 
@@ -5122,7 +5122,7 @@ msgstr ""
 msgid "entry on the linking side"
 msgstr ""
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:353
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:354
 msgid "Equal"
 msgstr ""
 
@@ -5217,8 +5217,8 @@ msgstr "ყურადღებისგან თავისუფალი �
 msgid "Expand block"
 msgstr ""
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:295
 #: packages/admin/src/components/editor/NestingBlockNode.tsx:296
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:297
 msgid "Expand container"
 msgstr ""
 
@@ -6227,7 +6227,7 @@ msgstr "გამოქვეყნების თარიღის შეც�
 msgid "Fix invalid fields before changing the schedule"
 msgstr "დაგეგმვის შეცვლამდე გაასწორეთ არასწორი ველები"
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:326
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:327
 msgid "Flex"
 msgstr ""
 
@@ -6358,7 +6358,7 @@ msgstr "გალერეა"
 msgid "Gallery settings"
 msgstr "გალერეის პარამეტრები"
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:329
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:330
 msgid "Gap"
 msgstr ""
 
@@ -6428,7 +6428,7 @@ msgstr "Google-ის დადასტურება"
 msgid "GraphQL"
 msgstr "GraphQL"
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:326
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:327
 msgid "Grid"
 msgstr ""
 
@@ -7035,7 +7035,7 @@ msgstr "ბლოკის ჩასმა"
 msgid "Insert block after current block"
 msgstr "ბლოკის ჩასმა მიმდინარე ბლოკის შემდეგ"
 
-#: packages/admin/src/components/editor/DragHandleWrapper.tsx:311
+#: packages/admin/src/components/editor/DragHandleWrapper.tsx:318
 msgid "Insert block below"
 msgstr "ბლოკის ჩასმა ქვემოთ"
 
@@ -7341,7 +7341,7 @@ msgstr "ლანდშაფტური"
 msgid "Language"
 msgstr "ენა"
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:332
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:333
 msgid "Large"
 msgstr ""
 
@@ -7392,7 +7392,7 @@ msgstr "ბოლოს გამოყენებულია {0}"
 msgid "Later entries weren't loaded. The range has more entries than the calendar can show."
 msgstr ""
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:323
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:324
 #: packages/admin/src/components/PortableTextEditor.tsx:2163
 msgid "Layout"
 msgstr ""
@@ -8059,7 +8059,7 @@ msgstr "მედიის გამოყენების თვალყუ�
 msgid "Media Write"
 msgstr "მედიის ჩაწერა"
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:332
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:333
 msgid "Medium"
 msgstr ""
 
@@ -8452,11 +8452,11 @@ msgstr "სახელი უნდა იწყებოდეს ასოთ
 msgid "Name your section, then add its content in the editor."
 msgstr ""
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:356
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:357
 msgid "Narrow first"
 msgstr ""
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:357
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:358
 msgid "Narrow last"
 msgstr ""
 
@@ -8480,7 +8480,7 @@ msgstr "ნავიგაცია"
 msgid "Needs attention"
 msgstr "საჭიროებს ყურადღებას"
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:311
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:312
 #: packages/admin/src/components/PortableTextEditor.tsx:2160
 msgid "Nesting container"
 msgstr ""
@@ -9048,7 +9048,7 @@ msgid "Non-guest"
 msgstr ""
 
 #: packages/admin/src/components/editor/ImageDetailPanel.tsx:274
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:332
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:333
 #: packages/admin/src/components/PortableTextEditor.tsx:5374
 msgid "None"
 msgstr "არცერთი"
@@ -9211,8 +9211,8 @@ msgstr ""
 #: packages/admin/src/components/editor/ImageDetailPanel.tsx:779
 #: packages/admin/src/components/editor/ImageDetailPanel.tsx:794
 #: packages/admin/src/components/editor/ImageDetailPanel.tsx:795
-#: packages/admin/src/components/editor/PluginBlockNode.tsx:319
 #: packages/admin/src/components/editor/PluginBlockNode.tsx:320
+#: packages/admin/src/components/editor/PluginBlockNode.tsx:321
 msgid "Open in new tab"
 msgstr "ახალ ჩანართში გახსნა"
 
@@ -10410,8 +10410,8 @@ msgstr "{label}-ის მოცილება"
 msgid "Remove assignment"
 msgstr "მინიჭების მოცილება"
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:186
 #: packages/admin/src/components/editor/NestingBlockNode.tsx:187
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:188
 msgid "Remove column"
 msgstr ""
 
@@ -11029,7 +11029,7 @@ msgid "Sample content"
 msgstr ""
 
 #: packages/admin/src/components/editor/ImageDetailPanel.tsx:820
-#: packages/admin/src/components/editor/PluginBlockNode.tsx:403
+#: packages/admin/src/components/editor/PluginBlockNode.tsx:404
 #: packages/admin/src/components/MediaDetailPanel.tsx:1878
 #: packages/admin/src/components/MediaFolderDialog.tsx:171
 #: packages/admin/src/components/MenuEditor.tsx:632
@@ -11040,7 +11040,7 @@ msgstr ""
 msgid "Save"
 msgstr "შენახვა"
 
-#: packages/admin/src/components/editor/PluginBlockNode.tsx:402
+#: packages/admin/src/components/editor/PluginBlockNode.tsx:403
 msgid "Save (Enter)"
 msgstr "შენახვა (Enter)"
 
@@ -12148,7 +12148,7 @@ msgstr "სლაგი დაკოპირდა ბუფერში"
 msgid "Slugs cannot be changed after the field is created."
 msgstr "სლაგები ველის შექმნის შემდეგ ვერ შეიცვლება."
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:332
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:333
 msgid "Small"
 msgstr ""
 
@@ -12380,7 +12380,7 @@ msgstr "შენახული სარეზერვო ასლები"
 msgid "Stored per locale — each translation of a byline gets its own value."
 msgstr "ინახება ლოკალის მიხედვით — ბაილაინის თითოეულ თარგმანს საკუთარი მნიშვნელობა აქვს."
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:342
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:343
 msgid "Stretch"
 msgstr ""
 
@@ -13527,7 +13527,7 @@ msgstr ""
 msgid "Tooltip text"
 msgstr "მინიშნების ტექსტი"
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:339
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:340
 msgid "Top"
 msgstr ""
 
@@ -14588,11 +14588,11 @@ msgstr "რატომ არის ეს მნიშვნელოვან
 msgid "Wide"
 msgstr "ფართო"
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:354
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:355
 msgid "Wide first"
 msgstr ""
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:355
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:356
 msgid "Wide last"
 msgstr ""
 
@@ -14644,7 +14644,7 @@ msgstr "ვიჯეტები"
 msgid "Width"
 msgstr "სიგანე"
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:348
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:349
 #: packages/admin/src/components/editor/TableControls.tsx:29
 msgid "Widths"
 msgstr "სიგანეები"

@@ -487,7 +487,7 @@ msgstr "{characters, plural, one {תו אחד} two {שני תווים} other {# 
 msgid "{collectionLabel} pagination"
 msgstr "חלוקת {collectionLabel} לעמודים"
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:314
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:315
 msgid "{columnCount, plural, one {# column} other {# columns}}, {blockCount, plural, one {# block} other {# blocks}}"
 msgstr ""
 
@@ -857,19 +857,19 @@ msgstr "<0>{name}</0> עורך/ת את הפריט הזה. פתחו אותו לק
 msgid "<0>{name}</0> now holds this entry, so your changes are no longer being saved. Take it back to carry on."
 msgstr "<0>{name}</0> מחזיק/ה כעת בפריט הזה, ולכן השינויים שלכם אינם נשמרים עוד. קחו אותו בחזרה כדי להמשיך."
 
-#: packages/admin/src/components/editor/DragHandleWrapper.tsx:283
+#: packages/admin/src/components/editor/DragHandleWrapper.tsx:290
 msgid "<0>Alt-click</0> to add above"
 msgstr ""
 
-#: packages/admin/src/components/editor/DragHandleWrapper.tsx:279
+#: packages/admin/src/components/editor/DragHandleWrapper.tsx:286
 msgid "<0>Click</0> to add below"
 msgstr ""
 
-#: packages/admin/src/components/editor/DragHandleWrapper.tsx:325
+#: packages/admin/src/components/editor/DragHandleWrapper.tsx:332
 msgid "<0>Click</0> to open menu"
 msgstr ""
 
-#: packages/admin/src/components/editor/DragHandleWrapper.tsx:321
+#: packages/admin/src/components/editor/DragHandleWrapper.tsx:328
 msgid "<0>Drag</0> to move"
 msgstr ""
 
@@ -1241,8 +1241,8 @@ msgstr "הוספת בלוק"
 msgid "Add byline"
 msgstr "הוספת קרדיט"
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:366
 #: packages/admin/src/components/editor/NestingBlockNode.tsx:367
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:368
 msgid "Add column"
 msgstr ""
 
@@ -1484,7 +1484,7 @@ msgid "Agent-callable MCP tools"
 msgstr "כלי MCP שניתן לקרוא להם מסוכן"
 
 #: packages/admin/src/components/editor/BlockMenu.tsx:164
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:335
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:336
 #: packages/admin/src/components/PortableTextEditor.tsx:5254
 msgid "Align"
 msgstr ""
@@ -2182,7 +2182,7 @@ msgstr "בלוק {0}"
 msgid "Block actions"
 msgstr ""
 
-#: packages/admin/src/components/editor/DragHandleWrapper.tsx:343
+#: packages/admin/src/components/editor/DragHandleWrapper.tsx:350
 msgid "Block actions - drag to reorder, click for menu"
 msgstr "פעולות בלוק - גררו לשינוי סדר, לחצו לתפריט"
 
@@ -2227,7 +2227,7 @@ msgstr "בוליאני"
 msgid "Both reference fields bound to this relation share these limits, so the two sides cannot disagree about the same links."
 msgstr "שני שדות הקישור שמשויכים לקשר הזה חולקים את המגבלות האלה, כך ששני הצדדים לא יכולים לחלוק על אותם קישורים."
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:341
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:342
 msgid "Bottom"
 msgstr ""
 
@@ -2389,7 +2389,7 @@ msgstr "יכול/ה להציג תוכן"
 #: packages/admin/src/components/ContentSettingsPanel.tsx:1352
 #: packages/admin/src/components/editor/ImageDetailPanel.tsx:604
 #: packages/admin/src/components/editor/ImageDetailPanel.tsx:817
-#: packages/admin/src/components/editor/PluginBlockNode.tsx:392
+#: packages/admin/src/components/editor/PluginBlockNode.tsx:393
 #: packages/admin/src/components/EditorDraftPatchPreview.tsx:78
 #: packages/admin/src/components/FieldEditor.tsx:1379
 #: packages/admin/src/components/MediaDetailPanel.tsx:1847
@@ -2421,7 +2421,7 @@ msgstr "יכול/ה להציג תוכן"
 msgid "Cancel"
 msgstr "ביטול"
 
-#: packages/admin/src/components/editor/PluginBlockNode.tsx:391
+#: packages/admin/src/components/editor/PluginBlockNode.tsx:392
 msgid "Cancel (Esc)"
 msgstr "ביטול (Esc)"
 
@@ -2512,7 +2512,7 @@ msgstr "התאים מוזגו"
 
 #: packages/admin/src/components/editor/BlockMenu.tsx:53
 #: packages/admin/src/components/editor/ImageDetailPanel.tsx:276
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:340
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:341
 #: packages/admin/src/components/PortableTextEditor.tsx:5258
 #: packages/admin/src/components/PortableTextEditor.tsx:5376
 msgid "Center"
@@ -2938,8 +2938,8 @@ msgstr "פעולות בלוק קוד"
 msgid "Collapse block"
 msgstr "כיווץ הבלוק"
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:295
 #: packages/admin/src/components/editor/NestingBlockNode.tsx:296
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:297
 msgid "Collapse container"
 msgstr ""
 
@@ -2984,7 +2984,7 @@ msgstr "אוספים ושדות, כל התוכן כולל טיוטות, גרסא
 msgid "Collections created:"
 msgstr "אוספים שנוצרו:"
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:370
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:371
 msgid "Column"
 msgstr ""
 
@@ -3331,8 +3331,8 @@ msgstr "העתיקו את האסימון הזה כעת — הוא לא יוצג 
 msgid "Copy token"
 msgstr "העתקת אסימון"
 
-#: packages/admin/src/components/editor/PluginBlockNode.tsx:308
 #: packages/admin/src/components/editor/PluginBlockNode.tsx:309
+#: packages/admin/src/components/editor/PluginBlockNode.tsx:310
 #: packages/admin/src/components/MediaDetailPanel.tsx:1367
 msgid "Copy URL"
 msgstr "העתקת URL"
@@ -3928,8 +3928,8 @@ msgstr "מוגדר בקוד"
 #: packages/admin/src/components/ContentTypeEditor.tsx:863
 #: packages/admin/src/components/ContentTypeList.tsx:256
 #: packages/admin/src/components/editor/BlockMenu.tsx:217
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:380
-#: packages/admin/src/components/editor/PluginBlockNode.tsx:364
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:381
+#: packages/admin/src/components/editor/PluginBlockNode.tsx:365
 #: packages/admin/src/components/MediaDetailPanel.tsx:1816
 #: packages/admin/src/components/MediaDetailPanel.tsx:1920
 #: packages/admin/src/components/MenuEditor.tsx:555
@@ -4032,7 +4032,7 @@ msgstr "למחוק תגובה?"
 msgid "Delete Content Type?"
 msgstr "למחוק סוג תוכן?"
 
-#: packages/admin/src/components/editor/PluginBlockNode.tsx:365
+#: packages/admin/src/components/editor/PluginBlockNode.tsx:366
 msgid "Delete embed"
 msgstr "מחיקת הטמעה"
 
@@ -4063,7 +4063,7 @@ msgstr "למחוק מדיה?"
 msgid "Delete menu"
 msgstr "מחיקת תפריט"
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:381
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:382
 msgid "Delete nesting container"
 msgstr ""
 
@@ -4580,7 +4580,7 @@ msgstr "גררו ושחררו או לחצו לעיון (.xml)"
 msgid "Drag here to add"
 msgstr "גררו לכאן להוספה"
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:308
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:309
 msgid "Drag to move this container"
 msgstr ""
 
@@ -4677,8 +4677,8 @@ msgstr "כל {linkingSideName} מקשר/ת אל"
 msgid "Each path segment can contain at most one placeholder, e.g. {0}"
 msgstr "כל מקטע בנתיב יכול להכיל מציין מיקום אחד לכל היותר, למשל {0}"
 
-#: packages/admin/src/components/editor/PluginBlockNode.tsx:353
 #: packages/admin/src/components/editor/PluginBlockNode.tsx:354
+#: packages/admin/src/components/editor/PluginBlockNode.tsx:355
 #: packages/admin/src/components/MenuCard.tsx:59
 #: packages/admin/src/components/MenuEditor.tsx:550
 #: packages/admin/src/components/Sections.tsx:439
@@ -4822,8 +4822,8 @@ msgstr "עריכת הפניה {0}"
 msgid "Edit role"
 msgstr "עריכת תפקיד"
 
-#: packages/admin/src/components/editor/PluginBlockNode.tsx:353
 #: packages/admin/src/components/editor/PluginBlockNode.tsx:354
+#: packages/admin/src/components/editor/PluginBlockNode.tsx:355
 msgid "Edit URL"
 msgstr "עריכת URL"
 
@@ -5123,7 +5123,7 @@ msgstr "פריט בצד המקושר"
 msgid "entry on the linking side"
 msgstr "פריט בצד המקשר"
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:353
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:354
 msgid "Equal"
 msgstr ""
 
@@ -5218,8 +5218,8 @@ msgstr "יציאה ממצב ללא הסחות דעת (⌘⇧\\)"
 msgid "Expand block"
 msgstr "הרחבת הבלוק"
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:295
 #: packages/admin/src/components/editor/NestingBlockNode.tsx:296
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:297
 msgid "Expand container"
 msgstr ""
 
@@ -6228,7 +6228,7 @@ msgstr "תקנו שדות לא תקינים לפני שינוי תאריך הפ�
 msgid "Fix invalid fields before changing the schedule"
 msgstr "תקנו שדות לא תקינים לפני שינוי התזמון"
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:326
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:327
 msgid "Flex"
 msgstr ""
 
@@ -6359,7 +6359,7 @@ msgstr "גלריה"
 msgid "Gallery settings"
 msgstr "הגדרות גלריה"
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:329
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:330
 msgid "Gap"
 msgstr ""
 
@@ -6429,7 +6429,7 @@ msgstr "אימות Google"
 msgid "GraphQL"
 msgstr "ממשק GraphQL"
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:326
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:327
 msgid "Grid"
 msgstr ""
 
@@ -7036,7 +7036,7 @@ msgstr "הוספת בלוק"
 msgid "Insert block after current block"
 msgstr "הוספת בלוק אחרי הבלוק הנוכחי"
 
-#: packages/admin/src/components/editor/DragHandleWrapper.tsx:311
+#: packages/admin/src/components/editor/DragHandleWrapper.tsx:318
 msgid "Insert block below"
 msgstr "הוספת בלוק מתחת"
 
@@ -7342,7 +7342,7 @@ msgstr "לרוחב"
 msgid "Language"
 msgstr "שפה"
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:332
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:333
 msgid "Large"
 msgstr ""
 
@@ -7393,7 +7393,7 @@ msgstr "נעשה בו שימוש לאחרונה {0}"
 msgid "Later entries weren't loaded. The range has more entries than the calendar can show."
 msgstr "פריטים מאוחרים יותר לא נטענו. בטווח יש יותר פריטים ממה שלוח השנה יכול להציג."
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:323
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:324
 #: packages/admin/src/components/PortableTextEditor.tsx:2163
 msgid "Layout"
 msgstr ""
@@ -8060,7 +8060,7 @@ msgstr "מעקב השימוש במדיה דורש תשומת לב"
 msgid "Media Write"
 msgstr "כתיבת מדיה"
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:332
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:333
 msgid "Medium"
 msgstr ""
 
@@ -8453,11 +8453,11 @@ msgstr "השם חייב להתחיל באות ולהכיל אותיות קטנו
 msgid "Name your section, then add its content in the editor."
 msgstr "תנו שם למקטע, ואז הוסיפו את התוכן שלו בעורך."
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:356
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:357
 msgid "Narrow first"
 msgstr ""
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:357
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:358
 msgid "Narrow last"
 msgstr ""
 
@@ -8481,7 +8481,7 @@ msgstr "ניווט"
 msgid "Needs attention"
 msgstr "דורש תשומת לב"
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:311
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:312
 #: packages/admin/src/components/PortableTextEditor.tsx:2160
 msgid "Nesting container"
 msgstr ""
@@ -9049,7 +9049,7 @@ msgid "Non-guest"
 msgstr "לא אורחים"
 
 #: packages/admin/src/components/editor/ImageDetailPanel.tsx:274
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:332
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:333
 #: packages/admin/src/components/PortableTextEditor.tsx:5374
 msgid "None"
 msgstr "ללא"
@@ -9212,8 +9212,8 @@ msgstr "פתיחה בעורך"
 #: packages/admin/src/components/editor/ImageDetailPanel.tsx:779
 #: packages/admin/src/components/editor/ImageDetailPanel.tsx:794
 #: packages/admin/src/components/editor/ImageDetailPanel.tsx:795
-#: packages/admin/src/components/editor/PluginBlockNode.tsx:319
 #: packages/admin/src/components/editor/PluginBlockNode.tsx:320
+#: packages/admin/src/components/editor/PluginBlockNode.tsx:321
 msgid "Open in new tab"
 msgstr "פתיחה בלשונית חדשה"
 
@@ -10411,8 +10411,8 @@ msgstr "הסרת {label}"
 msgid "Remove assignment"
 msgstr "הסרת שיוך"
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:186
 #: packages/admin/src/components/editor/NestingBlockNode.tsx:187
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:188
 msgid "Remove column"
 msgstr ""
 
@@ -11030,7 +11030,7 @@ msgid "Sample content"
 msgstr "תוכן לדוגמה"
 
 #: packages/admin/src/components/editor/ImageDetailPanel.tsx:820
-#: packages/admin/src/components/editor/PluginBlockNode.tsx:403
+#: packages/admin/src/components/editor/PluginBlockNode.tsx:404
 #: packages/admin/src/components/MediaDetailPanel.tsx:1878
 #: packages/admin/src/components/MediaFolderDialog.tsx:171
 #: packages/admin/src/components/MenuEditor.tsx:632
@@ -11041,7 +11041,7 @@ msgstr "תוכן לדוגמה"
 msgid "Save"
 msgstr "שמירה"
 
-#: packages/admin/src/components/editor/PluginBlockNode.tsx:402
+#: packages/admin/src/components/editor/PluginBlockNode.tsx:403
 msgid "Save (Enter)"
 msgstr "שמירה (Enter)"
 
@@ -12149,7 +12149,7 @@ msgstr "ה-slug הועתק ללוח"
 msgid "Slugs cannot be changed after the field is created."
 msgstr "לא ניתן לשנות slugs לאחר יצירת השדה."
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:332
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:333
 msgid "Small"
 msgstr ""
 
@@ -12381,7 +12381,7 @@ msgstr "גיבויים שמורים"
 msgid "Stored per locale — each translation of a byline gets its own value."
 msgstr "נשמר לפי שפה — כל תרגום של קרדיט מקבל ערך משלו."
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:342
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:343
 msgid "Stretch"
 msgstr ""
 
@@ -13528,7 +13528,7 @@ msgstr "מחר"
 msgid "Tooltip text"
 msgstr "טקסט חלונית מידע"
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:339
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:340
 msgid "Top"
 msgstr ""
 
@@ -14589,11 +14589,11 @@ msgstr "מדוע זה חשוב?"
 msgid "Wide"
 msgstr "רחב"
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:354
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:355
 msgid "Wide first"
 msgstr ""
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:355
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:356
 msgid "Wide last"
 msgstr ""
 
@@ -14645,7 +14645,7 @@ msgstr "וידג׳טים"
 msgid "Width"
 msgstr "רוחב"
 
-#: packages/admin/src/components/editor/NestingBlockNode.tsx:348
+#: packages/admin/src/components/editor/NestingBlockNode.tsx:349
 #: packages/admin/src/components/editor/TableControls.tsx:29
 msgid "Widths"
 msgstr "רוחבים"
