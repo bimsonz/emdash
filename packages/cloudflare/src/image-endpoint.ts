@@ -70,8 +70,24 @@ const GRAVITY_BY_POSITION = new Map<string, ImageTransform["gravity"]>([
 	["west", "left"],
 ]);
 
+/**
+ * A point as two percentages, `"25% 70%"`: how `EmDashImage` writes a media item's focal point
+ * (`focalPointToObjectPosition`), and what Astro forwards as `position`.
+ */
+const PERCENT_POINT = /^(\d+(?:\.\d+)?)%\s+(\d+(?:\.\d+)?)%$/;
+
 function toBindingGravity(position: string): ImageTransform["gravity"] | undefined {
-	return GRAVITY_BY_POSITION.get(position.trim().toLowerCase());
+	const normalized = position.trim().toLowerCase();
+	const point = PERCENT_POINT.exec(normalized);
+	if (point) {
+		const x = Number(point[1]) / 100;
+		const y = Number(point[2]) / 100;
+		if (x > 1 || y > 1) return undefined;
+		// `remainder` lines the point up the way CSS `object-position` does: the image's x% sits at
+		// the box's x%. So a crop made here frames the picture as the same `object-position` would.
+		return { x, y, mode: "remainder" };
+	}
+	return GRAVITY_BY_POSITION.get(normalized);
 }
 
 /** Resolve the Images binding by the name the Cloudflare adapter configured. */
