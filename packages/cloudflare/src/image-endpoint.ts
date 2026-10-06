@@ -36,14 +36,21 @@ const FORMAT_MIME: Record<ImageTransformFormat, ImageOutputOptions["format"]> = 
 
 /**
  * Maps Astro `fit` values to the Cloudflare Images binding's fit vocabulary.
- * Astro's sharp service never enlarges, so the cropping and fitting values map
- * to the binding's non-enlarging fits. Unmapped values (e.g. `outside`) become `undefined`,
- * leaving the binding's default behaviour unchanged.
+ * Astro's sharp service never enlarges, so the fitting values map to the
+ * binding's non-enlarging fits. Unmapped values (e.g. `outside`) become
+ * `undefined`, leaving the binding's default behaviour unchanged.
+ *
+ * `cover` is the exception: it maps to the binding's `cover`, not its
+ * non-enlarging `crop`. `crop` only crops a picture larger than the box in
+ * both dimensions and otherwise scales it down whole, so a 335x171 picture
+ * asked for a 335x143 crop came back 335x171, the wrong shape. `cover`
+ * crops it. The cost is that a box larger than the picture is filled by
+ * enlarging it; a caller that sizes its requests to the picture never asks.
  */
 const FIT_TO_BINDING: Record<ImageTransformFit, ImageTransform["fit"] | undefined> = {
 	fill: "squeeze",
 	contain: "scale-down",
-	cover: "crop",
+	cover: "cover",
 	"scale-down": "scale-down",
 	inside: "scale-down",
 	outside: undefined,

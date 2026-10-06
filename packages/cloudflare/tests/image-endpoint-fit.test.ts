@@ -62,13 +62,20 @@ describe("Cloudflare image endpoint: fit and position", () => {
 	it("crops for fit=cover instead of scaling down inside the box", async () => {
 		await request("w=32&h=32&f=webp&fit=cover&position=center");
 
-		expect(lastTransform()).toMatchObject({ width: 32, height: 32, fit: "crop" });
+		expect(lastTransform()).toMatchObject({ width: 32, height: 32, fit: "cover" });
 	});
 
-	it("never asks the binding to enlarge, matching Astro's sharp service", async () => {
-		for (const fit of ["cover", "contain", "inside", "scale-down"]) {
+	it("maps cover to the binding's cover, which crops a picture no larger than the box", async () => {
+		// The binding's `crop` scales a picture down whole unless it is larger than the box in both
+		// dimensions: a 335x171 picture asked for 335x143 came back 335x171. `cover` crops it.
+		await request("w=335&h=143&fit=cover");
+		expect(lastTransform().fit).toBe("cover");
+	});
+
+	it("never asks the binding to enlarge for the fitting values, matching Astro's sharp service", async () => {
+		for (const fit of ["contain", "inside", "scale-down"]) {
 			await request(`w=64&h=64&fit=${fit}`);
-			expect(["crop", "scale-down"]).toContain(lastTransform().fit);
+			expect(lastTransform().fit).toBe("scale-down");
 		}
 	});
 
@@ -127,7 +134,7 @@ describe("Cloudflare image endpoint: fit and position", () => {
 		// subject the editor marked instead of the middle of the picture.
 		await request(`w=640&h=274&fit=cover&position=${encodeURIComponent("25% 70.5%")}`);
 		expect(lastTransform()).toMatchObject({
-			fit: "crop",
+			fit: "cover",
 			gravity: { x: 0.25, y: 0.705, mode: "remainder" },
 		});
 	});
