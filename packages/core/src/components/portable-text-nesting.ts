@@ -47,3 +47,28 @@ function remapNestingColumns(columns: unknown[]): unknown[] {
 		return { ...rest, content: remapNestingBlocks(childrenOf(column)) };
 	});
 }
+
+/**
+ * How a nesting block's columns render: with the components and list mode of the
+ * `<PortableText>` that rendered the block. Attached to each nesting block as a
+ * non-enumerable property, because a type component receives only its node.
+ */
+export const NESTING_RENDER = Symbol.for("emdash.nesting-render");
+
+export interface NestingRender {
+	components: unknown;
+	listNestingMode: unknown;
+}
+
+/** Attach `render` to the nesting blocks in `blocks` (one level; columns attach their own). */
+export function attachNestingRender(blocks: unknown[], render: NestingRender): void {
+	for (const block of blocks) {
+		if (typeOf(block) !== "nestingBlock" || !isObject(block)) continue;
+		Object.defineProperty(block, NESTING_RENDER, { value: render });
+	}
+}
+
+export function nestingRenderOf(node: unknown): NestingRender | undefined {
+	if (!isObject(node)) return undefined;
+	return (node as { [NESTING_RENDER]?: NestingRender })[NESTING_RENDER];
+}
