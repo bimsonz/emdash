@@ -84,7 +84,14 @@ export const onRequest = defineMiddleware(async (context, next) => {
 		// One query loads the published rules into the cache; warm requests
 		// issue zero queries, and an expired cache checks the published version
 		// in the background. Empty-redirect sites cache an empty Map + array.
-		const cached = await loadCachedRedirects(createRedirectSource(db));
+		//
+		// With the route cache on, whatever this request renders may be stored and served to every
+		// visitor, so it must not be rendered under stale rules: confirm they are current first.
+		// Requests reach here only on a cache miss, so this is one version read per render.
+		const routeCache: APIContext["cache"] | undefined = context.cache;
+		const cached = await loadCachedRedirects(createRedirectSource(db), {
+			verify: routeCache?.enabled === true,
+		});
 
 		// 1. Exact match (O(1) Map lookup)
 		let exact = cached.exact.get(pathname);
@@ -135,7 +142,6 @@ export const onRequest = defineMiddleware(async (context, next) => {
 		// the fix. Astro has no cache handle for URLs that match no route, but a
 		// page answering a content miss with Astro.rewrite("/404") has one.
 		if (response.status === 404) {
-			const routeCache: APIContext["cache"] | undefined = context.cache;
 			routeCache?.set(false);
 		}
 

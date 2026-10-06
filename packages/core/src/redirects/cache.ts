@@ -147,9 +147,39 @@ function revalidateInBackground(source: RedirectSource, cached: CachedRedirects)
 	});
 }
 
-export async function loadCachedRedirects(source: RedirectSource): Promise<CachedRedirects> {
+export interface LoadCachedRedirectsOptions {
+	/**
+	 * Confirm the cached rules are current before using them, instead of revalidating in the
+	 * background. One version read; a full load only when the rules changed.
+	 *
+	 * For a response a shared cache will store: a render that used another isolate's stale rules
+	 * would be served to every visitor for as long as the cache keeps it, long after this isolate
+	 * caught up.
+	 */
+	verify?: boolean;
+}
+
+export async function loadCachedRedirects(
+	source: RedirectSource,
+	options: LoadCachedRedirectsOptions = {},
+): Promise<CachedRedirects> {
 	for (let attempt = 0; attempt < REDIRECT_CACHE_MAX_REFRESH_ATTEMPTS; attempt++) {
 		const cached = cacheState.redirects;
+		if (cached && options.verify) {
+			let current = false;
+			try {
+				current = cached.version !== null && (await source.isCurrent(cached.version));
+			} catch (error) {
+				console.error("[emdash:redirects] checking redirects are current failed:", error);
+				return cached;
+			}
+			if (current) {
+				cacheState.expiresAt = Date.now() + REDIRECT_CACHE_TTL_MS;
+				return cached;
+			}
+			if (cacheState.redirects === cached) invalidateRedirectCache();
+			continue;
+		}
 		if (cached) {
 			if (Date.now() >= cacheState.expiresAt) revalidateInBackground(source, cached);
 			return cached;
