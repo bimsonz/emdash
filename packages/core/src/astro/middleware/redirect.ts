@@ -21,12 +21,8 @@ import { after } from "../../after.js";
 import { RedirectRepository } from "../../database/repositories/redirect.js";
 import { getDb } from "../../loader.js";
 import { createRedirectSource } from "../../redirects/artifacts.js";
-import {
-	type CachedRedirects,
-	loadCachedRedirects,
-	matchCachedPatterns,
-	type RedirectRule,
-} from "../../redirects/cache.js";
+import type { CachedRedirects, RedirectRule } from "../../redirects/cache.js";
+import { loadCachedRedirects, matchCachedPatterns } from "../../redirects/cache.js";
 import { isSiteRelativeDestination } from "../../redirects/destination.js";
 import { isTerminalStatus } from "../../redirects/status.js";
 
