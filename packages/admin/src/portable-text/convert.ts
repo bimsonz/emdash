@@ -21,6 +21,11 @@ import {
 	assertProseMirrorMarksSupported,
 } from "../lib/portable-text-marks.js";
 import {
+	isPortableTextColumnsInput,
+	portableTextColumnsToProseMirror,
+	proseMirrorColumnsToPortableText,
+} from "../portable-text-columns.js";
+import {
 	UnsafePortableTextTableError,
 	portableTextTableToProseMirror,
 	proseMirrorTableToPortableText,
@@ -162,6 +167,12 @@ function keyClaims(explicit: Iterable<string | undefined>): ClaimKey {
 function tableKeys(tableKey: string): () => string {
 	let next = 0;
 	return () => `${tableKey}:t${next++}`;
+}
+
+/** Keys for a columns block's unkeyed columns, in order. */
+function columnKeys(columnsKey: string): () => string {
+	let next = 0;
+	return () => `${columnsKey}:c${next++}`;
 }
 
 type ImageMedia = Pick<GalleryImage, "asset" | "alt" | "width" | "height">;
@@ -459,7 +470,11 @@ function normalizeOrderedListJson(doc: { type: "doc"; content: PortableTextProse
 				child,
 				childPath,
 				depth + 1,
-				child.type === "listItem" ? `listItem:${childPath}` : context,
+				child.type === "listItem"
+					? `listItem:${childPath}`
+					: node.type === "column"
+						? `column:${path}`
+						: context,
 			);
 		}
 	};
@@ -540,17 +555,38 @@ export function prosemirrorToPortableText(doc: {
 	}
 	assertProseMirrorMarksSupported(doc);
 
-	const blocks: PortableTextBlock[] = [];
-	const claimKey = keyClaims(explicitBlockKeys(doc.content));
+	return convertPMNodes(doc.content, "root");
+}
 
-	for (let i = 0; i < doc.content.length; i++) {
-		const node = doc.content[i]!;
-		if (i === doc.content.length - 1 && isUnkeyedEmptyParagraph(node)) continue;
-		const converted = convertPMNode(node, `root:${i}`, claimKey);
+/**
+ * Convert sibling nodes: the document's, or a column's. Keys only need to be
+ * unique among siblings, so each list of siblings claims its own.
+ */
+function convertPMNodes(
+	nodes: Array<{
+		type: string;
+		attrs?: Record<string, unknown>;
+		content?: unknown[];
+		marks?: unknown[];
+		text?: string;
+	}>,
+	path: string,
+): PortableTextBlock[] {
+	const blocks: PortableTextBlock[] = [];
+	const claimKey = keyClaims(explicitBlockKeys(nodes));
+
+	for (let i = 0; i < nodes.length; i++) {
+		const node = nodes[i]!;
+		if (i === nodes.length - 1 && isUnkeyedEmptyParagraph(node)) continue;
+		const converted = convertPMNode(node, `${path}:${i}`, claimKey);
 		if (converted) blocks.push(...(Array.isArray(converted) ? converted : [converted]));
 	}
 
 	return blocks;
+}
+
+function isPMNodeJson(value: unknown): value is { type: string; attrs?: Record<string, unknown> } {
+	return isRecord(value) && typeof value.type === "string";
 }
 
 const BLOCK_CONTAINERS = new Set(["blockquote", "bulletList", "orderedList", "listItem"]);
@@ -561,9 +597,9 @@ function explicitBlockKeys(nodes: unknown[]): string[] {
 	const visit = (node: PortableTextProseMirrorNode) => {
 		const key = portableTextKeyFromAttrs(node.attrs);
 		if (key) keys.push(key);
-		if (node.type === "table") {
-			const tableKey = attrStr(node.attrs?.emdashKey);
-			if (tableKey) keys.push(tableKey);
+		if (node.type === "table" || node.type === "columns") {
+			const containerKey = attrStr(node.attrs?.emdashKey);
+			if (containerKey) keys.push(containerKey);
 		} else if (node.type === "pluginBlock") {
 			const original = portableTextBlockFromAttrs(node.attrs);
 			if (original) keys.push(original._key);
@@ -803,6 +839,15 @@ function convertPMNode(
 				throw new UnsafePortableTextTableError(result.reason, result.raw, result.renderFallback);
 			}
 			return result.table;
+		}
+
+		case "columns": {
+			const key = claimKey(attrStr(node.attrs?.emdashKey), path);
+			return proseMirrorColumnsToPortableText(
+				{ ...node, attrs: { ...node.attrs, emdashKey: key } },
+				(content, index) => convertPMNodes(content.filter(isPMNodeJson), `${path}:${index}`),
+				columnKeys(key),
+			);
 		}
 
 		case "pluginBlock": {
@@ -1114,6 +1159,25 @@ export function portableTextToProsemirror(
 	}
 	assertPortableTextMarksSupported(blocks);
 
+	const content = convertPTBlocks(blocks, "root", pluginTypes);
+
+	// The editor keeps an empty paragraph after a final block, and a document
+	// loads in the shape the editor's normalizers give it.
+	if ((content.at(-1) as PortableTextProseMirrorNode | undefined)?.type !== "paragraph") {
+		content.push({ type: "paragraph" });
+	}
+	return normalizeOrderedListJson({
+		type: "doc",
+		content: content as PortableTextProseMirrorNode[],
+	});
+}
+
+/** Convert sibling blocks: the document's, or a column's. */
+function convertPTBlocks(
+	blocks: PortableTextBlock[],
+	path: string,
+	pluginTypes: ReadonlySet<string>,
+): unknown[] {
 	const content: unknown[] = [];
 	let i = 0;
 
@@ -1147,7 +1211,7 @@ export function portableTextToProsemirror(
 				}
 			}
 
-			content.push(convertPTList(listBlocks, listType, `root:${runStart}`));
+			content.push(convertPTList(listBlocks, listType, `${path}:${runStart}`));
 		} else if (isQuoteBlock(block)) {
 			// Portable Text stores each paragraph of a quote as its own block.
 			const quoteBlocks: PortableTextTextBlock[] = [];
@@ -1157,7 +1221,7 @@ export function portableTextToProsemirror(
 			}
 			content.push(convertPTQuote(quoteBlocks));
 		} else {
-			const converted = convertPTBlock(block, `root:${i}`, pluginTypes);
+			const converted = convertPTBlock(block, `${path}:${i}`, pluginTypes);
 			if (converted) {
 				content.push(converted);
 			}
@@ -1165,15 +1229,7 @@ export function portableTextToProsemirror(
 		}
 	}
 
-	// The editor keeps an empty paragraph after a final block, and a document
-	// loads in the shape the editor's normalizers give it.
-	if ((content.at(-1) as PortableTextProseMirrorNode | undefined)?.type !== "paragraph") {
-		content.push({ type: "paragraph" });
-	}
-	return normalizeOrderedListJson({
-		type: "doc",
-		content: content as PortableTextProseMirrorNode[],
-	});
+	return content;
 }
 
 function getListMetadata(
@@ -1359,6 +1415,13 @@ function convertPTBlock(
 						type: "videoBlock",
 						attrs: attrsWithPortableTextKey(videoNodeAttrs(block), block._key),
 					}
+				: convertCustomBlock(block);
+
+		case "columns":
+			return isPortableTextColumnsInput(block) && !pluginTypes.has("columns")
+				? portableTextColumnsToProseMirror(block, (content, index) =>
+						convertPTBlocks(content as PortableTextBlock[], `${path}:${index}`, pluginTypes),
+					)
 				: convertCustomBlock(block);
 
 		case "table": {

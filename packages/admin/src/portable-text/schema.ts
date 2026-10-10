@@ -16,6 +16,7 @@ import type { EditorState, Transaction } from "@tiptap/pm/state";
 import StarterKit from "@tiptap/starter-kit";
 
 import { CodeMarkExtension } from "../components/editor/CodeMarkExtension.js";
+import { ColumnBlock, ColumnsBlock } from "../components/editor/ColumnsExtension.js";
 import { EmDashOrderedList } from "../components/editor/ordered-list.js";
 import {
 	PORTABLE_TEXT_BLOCK_ATTR,
@@ -537,6 +538,8 @@ export function portableTextExtensions(): AnyExtension[] {
 		PortableTextStarterKit,
 		TopBlockDocument,
 		EmDashOrderedList,
+		ColumnsBlock,
+		ColumnBlock,
 		CodeMarkExtension,
 		CodeBlockNode,
 		HtmlBlockNode,

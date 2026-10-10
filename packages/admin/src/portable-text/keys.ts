@@ -30,19 +30,28 @@ const TOP_LEVEL_BLOCKS = new Set([
 ]);
 
 /** The nodes that can hold a node that owns a key. */
-const KEYED_CONTAINERS = new Set(["blockquote", "bulletList", "orderedList", "listItem"]);
+const KEYED_CONTAINERS = new Set([
+	"blockquote",
+	"bulletList",
+	"orderedList",
+	"listItem",
+	"columns",
+	"column",
+]);
 
 /**
  * Whether `node`, a child of `parent`, holds the `_key` of a Portable Text
- * block: a top-level text block or block atom, or a list item's or quote's
- * paragraph. Tables keep their keys in `emdashKey`.
+ * block: a text block or block atom at the top level or in a column, or a list
+ * item's or quote's paragraph. Tables and columns keep their keys in `emdashKey`.
  */
 export function ownsPortableTextKey(
 	node: ProseMirrorNode,
 	parent: ProseMirrorNode | null,
 ): boolean {
 	if (!parent) return false;
-	if (parent.type === parent.type.schema.topNodeType) return TOP_LEVEL_BLOCKS.has(node.type.name);
+	if (parent.type === parent.type.schema.topNodeType || parent.type.name === "column") {
+		return TOP_LEVEL_BLOCKS.has(node.type.name);
+	}
 	if (node.type.name !== "paragraph") return false;
 	return parent.type.name === "listItem" || parent.type.name === "blockquote";
 }
@@ -55,15 +64,15 @@ function keyOf(node: ProseMirrorNode): string | undefined {
 const hasContent = (node: ProseMirrorNode) => !node.isTextblock || node.content.size > 0;
 
 /**
- * An empty last paragraph, such as TrailingNode's after a final block, isn't
- * content: the converter drops it only while it has no key.
+ * An empty last paragraph of the document or of a column, such as TrailingNode's
+ * after a final block or the one an empty column holds, isn't content: the
+ * converter drops it only while it has no key.
  */
 function isTrailingParagraph(doc: ProseMirrorNode, pos: number, node: ProseMirrorNode): boolean {
-	return (
-		node.type.name === "paragraph" &&
-		node.childCount === 0 &&
-		pos + node.nodeSize === doc.content.size
-	);
+	if (node.type.name !== "paragraph" || node.childCount !== 0) return false;
+	if (pos + node.nodeSize === doc.content.size) return true;
+	const $pos = doc.resolve(pos);
+	return $pos.parent.type.name === "column" && $pos.index() === $pos.parent.childCount - 1;
 }
 
 function assignPortableTextKeys(
