@@ -67,6 +67,7 @@ export default defineConfig({
 		"src/internal/portable-text-y-sync.ts",
 		"src/internal/co-editing.ts",
 		"src/internal/co-editing/types.ts",
+		"src/portable-text-columns.ts",
 		"src/html-block.ts",
 		"src/internal/video-block.ts",
 		"src/slugify.ts",

@@ -469,6 +469,57 @@ describe("extractMediaUsageOccurrences", () => {
 		]);
 	});
 
+	it("extracts the images inside columns, at every depth", () => {
+		const occurrences = extractMediaUsageOccurrences({
+			fields: [field("body", "portableText")],
+			data: {
+				body: [
+					{
+						_type: "columns",
+						_key: "cols",
+						columns: [
+							{
+								_type: "column",
+								_key: "c1",
+								content: [{ _type: "image", _key: "img", asset: { _ref: "in-a-column" } }],
+							},
+							{
+								_type: "column",
+								_key: "c2",
+								content: [
+									{
+										_type: "columns",
+										_key: "inner",
+										columns: [
+											{
+												_type: "column",
+												_key: "c3",
+												content: [
+													{
+														_type: "gallery",
+														_key: "g",
+														images: [{ _key: "a", asset: { _ref: "two-deep" } }],
+													},
+												],
+											},
+										],
+									},
+								],
+							},
+							"not-a-column",
+						],
+					},
+					{ _type: "columns", _key: "bad", columns: "malformed" },
+				],
+			},
+		});
+
+		expect(occurrences.map((occurrence) => [occurrence.fieldPath, occurrence.mediaId])).toEqual([
+			["body[0].columns[0].content[0].asset._ref", "in-a-column"],
+			["body[0].columns[1].content[0].columns[0].content[0].images[0].asset._ref", "two-deep"],
+		]);
+	});
+
 	it("counts an image used both in a gallery and as an image block as two uses", () => {
 		const occurrences = extractMediaUsageOccurrences({
 			fields: [field("body", "portableText")],

@@ -4,7 +4,16 @@
  * Defines the structure of Portable Text blocks used in EmDash.
  */
 
+import type { PortableTextColumnsBlock } from "@emdash-cms/admin/portable-text-columns";
 import type { PortableTextTableBlock } from "@emdash-cms/admin/portable-text-table";
+
+export type {
+	PortableTextColumn,
+	PortableTextColumnsBlock,
+	PortableTextColumnsGap,
+	PortableTextColumnSpan,
+	PortableTextColumnsVerticalAlignment,
+} from "@emdash-cms/admin/portable-text-columns";
 
 export type {
 	PortableTextTableAlignment,
@@ -222,6 +231,7 @@ export type PortableTextBlock =
 	| PortableTextIframeBlock
 	| PortableTextVideoBlock
 	| PortableTextTableBlock
+	| PortableTextColumnsBlock
 	| PortableTextUnknownBlock;
 
 /**
