@@ -5,6 +5,7 @@
  */
 
 import { htmlBlockFields } from "@emdash-cms/admin/html-block";
+import { proseMirrorColumnsToPortableText } from "@emdash-cms/admin/portable-text-columns";
 import {
 	UnsafePortableTextTableError,
 	proseMirrorTableToPortableText,
@@ -57,12 +58,20 @@ export function prosemirrorToPortableText(doc: ProseMirrorDocument): PortableTex
 	}
 	assertProseMirrorMarksSupported(doc);
 
+	return convertNodes(doc.content, "root");
+}
+
+/**
+ * Convert sibling nodes: the document's, or a column's. A key that repeats a
+ * sibling's is replaced, since keys only need to be unique among siblings.
+ */
+function convertNodes(nodes: ProseMirrorNode[], path: string): PortableTextBlock[] {
 	const blocks: PortableTextBlock[] = [];
 	const usedBlockKeys = new Set<string>();
 
-	for (const [i, node] of doc.content.entries()) {
-		if (i === doc.content.length - 1 && isUnkeyedEmptyParagraph(node)) continue;
-		const converted = convertNode(node, `root:${i}`);
+	for (const [i, node] of nodes.entries()) {
+		if (i === nodes.length - 1 && isUnkeyedEmptyParagraph(node)) continue;
+		const converted = convertNode(node, `${path}:${i}`);
 		for (const block of converted ? (Array.isArray(converted) ? converted : [converted]) : []) {
 			let key = block._key;
 			if (usedBlockKeys.has(key)) {
@@ -75,6 +84,14 @@ export function prosemirrorToPortableText(doc: ProseMirrorDocument): PortableTex
 	}
 
 	return blocks;
+}
+
+function isProseMirrorNode(value: unknown): value is ProseMirrorNode {
+	return (
+		typeof value === "object" &&
+		value !== null &&
+		typeof (value as { type?: unknown }).type === "string"
+	);
 }
 
 function isUnkeyedEmptyParagraph(node: ProseMirrorNode): boolean {
@@ -143,6 +160,13 @@ function convertNode(
 			}
 			return result.table;
 		}
+
+		case "columns":
+			return proseMirrorColumnsToPortableText(
+				node,
+				(content, index) => convertNodes(content.filter(isProseMirrorNode), `${path}:${index}`),
+				generateKey,
+			);
 
 		case "horizontalRule":
 			return {
