@@ -1,7 +1,8 @@
 /**
- * Block-level commands for the block menu, which moves the current
- * top-level block(s) up or down or duplicates them, and keyboard selection
- * of whole blocks, the way the block handle selects them.
+ * Block-level commands for the block menu, which moves the current row(s) up
+ * or down or duplicates them, and keyboard selection of whole rows, the way
+ * the block handle selects them. A row is a block of the document or of a
+ * column (see `rows.ts`).
  */
 
 import { Extension, type Editor } from "@tiptap/core";
@@ -19,24 +20,25 @@ import {
 import { Decoration, DecorationSet, type EditorView } from "@tiptap/pm/view";
 import { SuggestionPluginKey } from "@tiptap/suggestion";
 
+import { isRowParent, rowDepth, rowNodeSelection, rowRange } from "./rows.js";
+
 export interface BlockRange {
 	from: number;
 	to: number;
 }
 
-/** The top-level blocks the selection touches, or `null` for a whole-document selection. */
+/** The rows the selection touches, or `null` for a whole-document selection. */
 export function selectedBlockRange(state: EditorState): BlockRange | null {
 	const { selection, doc } = state;
-	if (selection instanceof NodeSelection && selection.$from.depth === 0) {
-		return { from: selection.from, to: selection.to };
-	}
+	const row = rowNodeSelection(selection);
+	if (row) return { from: row.from, to: row.to };
 	const { $from, $to } = selection;
-	if ($from.depth === 0 || $to.depth === 0) {
+	if (rowDepth($from) === null || rowDepth($to) === null) {
 		if (selection.from === 0 && selection.to === doc.content.size) return null;
 		const node = doc.nodeAt(selection.from);
 		return node ? { from: selection.from, to: selection.from + node.nodeSize } : null;
 	}
-	return { from: $from.before(1), to: $to.after(1) };
+	return rowRange($from, $to);
 }
 
 /**
@@ -54,9 +56,9 @@ export function moveBlocks(
 	const { doc } = state;
 	if (direction === "up") {
 		const $from = doc.resolve(range.from);
-		const index = $from.index(0);
+		const index = $from.index();
 		if (index === 0) return false;
-		const previous = doc.child(index - 1);
+		const previous = $from.parent.child(index - 1);
 		const previousStart = range.from - previous.nodeSize;
 		const tr = state.tr
 			.delete(previousStart, range.from)
@@ -66,9 +68,9 @@ export function moveBlocks(
 		return true;
 	}
 	const $to = doc.resolve(range.to);
-	const index = $to.index(0);
-	if (index >= doc.childCount) return false;
-	const next = doc.child(index);
+	const index = $to.index();
+	if (index >= $to.parent.childCount) return false;
+	const next = $to.parent.child(index);
 	const tr = state.tr
 		.delete(range.to, range.to + next.nodeSize)
 		.insert(range.from, next)
@@ -85,14 +87,16 @@ export function moveBlocks(
  * caret.
  */
 export function blockInsertPosition(selection: Selection): number | null {
-	if (selection instanceof NodeSelection && selection.$from.depth === 0) return selection.to;
+	const row = rowNodeSelection(selection);
+	if (row) return row.to;
 	const { $from } = selection;
-	if ($from.depth === 0) return null;
-	for (let depth = $from.depth; depth > 0; depth--) {
-		const { name } = $from.node(depth).type;
-		if (name === "listItem" || name === "blockquote") return $from.after(1);
+	const depth = rowDepth($from);
+	if (depth === null) return null;
+	for (let current = $from.depth; current >= depth; current--) {
+		const { name } = $from.node(current).type;
+		if (name === "listItem" || name === "blockquote") return $from.after(depth);
 	}
-	return $from.parent.content.size > 0 ? $from.after(1) : null;
+	return $from.parent.content.size > 0 ? $from.after(depth) : null;
 }
 
 export function duplicateBlocks(editor: Editor, range = selectedBlockRange(editor.state)): boolean {
@@ -117,11 +121,6 @@ const selectedFromKey = new PluginKey<-1 | 1 | null>("emdashSelectedFrom");
 const IME_KEY_CODE = 229;
 const TEXT_INPUT_TYPES = new Set(["insertText", "insertReplacementText"]);
 
-function topLevelNodeSelection(state: EditorState): NodeSelection | null {
-	const { selection } = state;
-	return selection instanceof NodeSelection && selection.$from.depth === 0 ? selection : null;
-}
-
 function isBlockSelectionActive(state: EditorState): boolean {
 	return blockSelectionKey.getState(state) === true;
 }
@@ -131,7 +130,7 @@ function isBlockSelectionActive(state: EditorState): boolean {
  * an image, a divider, or a table selected with Backspace.
  */
 function isSelectedBlockProtected(state: EditorState): boolean {
-	return topLevelNodeSelection(state) !== null;
+	return rowNodeSelection(state.selection) !== null;
 }
 
 /** Treats an existing whole-block selection, like the block handle's, as keyboard block selection. */
@@ -152,7 +151,7 @@ export function focusDocumentStart(editor: Editor): void {
 	view.focus();
 }
 
-/** Selects the top-level block at `pos` as a whole. */
+/** Selects the row at `pos` as a whole. */
 function selectBlock(editor: Editor, pos: number): boolean {
 	const { state } = editor;
 	const node = state.doc.nodeAt(pos);
@@ -171,24 +170,25 @@ function selectCurrentBlock(editor: Editor): boolean {
 	const { state } = editor;
 	const { selection } = state;
 	if (selection instanceof AllSelection) return false;
-	if (topLevelNodeSelection(state)) {
+	if (rowNodeSelection(selection)) {
 		return !isBlockSelectionActive(state) && enterBlockSelection(editor);
 	}
 	const { $from, $to } = selection;
-	if ($from.depth === 0 || $to.depth === 0 || $from.before(1) !== $to.before(1)) return false;
-	return selectBlock(editor, $from.before(1));
+	const fromDepth = rowDepth($from);
+	const toDepth = rowDepth($to);
+	if (fromDepth === null || toDepth === null) return false;
+	const row = $from.before(fromDepth);
+	if (row !== $to.before(toDepth)) return false;
+	return selectBlock(editor, row);
 }
 
 function selectNeighbourBlock(editor: Editor, direction: -1 | 1): boolean {
-	const { state } = editor;
-	const selection = topLevelNodeSelection(state);
+	const selection = rowNodeSelection(editor.state.selection);
 	if (!selection) return false;
-	const { doc } = state;
-	const index = selection.$from.index(0) + direction;
-	if (index < 0 || index >= doc.childCount) return true;
-	let pos = 0;
-	for (let i = 0; i < index; i++) pos += doc.child(i).nodeSize;
-	selectBlock(editor, pos);
+	const { parent } = selection.$from;
+	const index = selection.$from.index() + direction;
+	if (index < 0 || index >= parent.childCount) return true;
+	selectBlock(editor, direction < 0 ? selection.from - parent.child(index).nodeSize : selection.to);
 	return true;
 }
 
@@ -210,7 +210,7 @@ function moveAfterSelectedBlock(view: EditorView): void {
  * dividers, it's a gap cursor where the block was.
  */
 function deleteSelectedBlock(view: EditorView, direction: -1 | 1): boolean {
-	const selection = topLevelNodeSelection(view.state);
+	const selection = rowNodeSelection(view.state.selection);
 	if (!selection) return false;
 	const side = selectedFromKey.getState(view.state) ?? direction;
 	const tr = view.state.tr.deleteSelection();
@@ -235,7 +235,7 @@ function selectAtomBeside(view: EditorView, direction: -1 | 1): boolean {
 	if (!(selection instanceof TextSelection) || !selection.empty) return false;
 	const { $from } = selection;
 	const size = $from.parent.content.size;
-	if ($from.depth !== 1 || size === 0) return false;
+	if (!isRowParent($from.node(-1)) || size === 0) return false;
 	if ($from.parentOffset !== (direction < 0 ? 0 : size)) return false;
 	const $edge = doc.resolve(direction < 0 ? $from.before() : $from.after());
 	const atom = direction < 0 ? $edge.nodeBefore : $edge.nodeAfter;
@@ -248,7 +248,7 @@ function selectAtomBeside(view: EditorView, direction: -1 | 1): boolean {
 /** Enter on a selected block goes back to writing at the end of it. */
 function editSelectedBlock(editor: Editor): boolean {
 	const { state } = editor;
-	const selection = topLevelNodeSelection(state);
+	const selection = rowNodeSelection(state.selection);
 	if (!selection || selection.node.isAtom) return false;
 	const end = TextSelection.findFrom(state.doc.resolve(selection.to), -1, true);
 	if (!end || end.from < selection.from) return false;
@@ -274,10 +274,13 @@ function selectTextblockText(editor: Editor): boolean {
 	return true;
 }
 
-/** A menu or popover opened from the editor's controls takes Escape first. */
+/**
+ * A menu or popover opened from the editor's controls takes Escape first. A
+ * disclosure, such as an expanded columns block's toggle, opens nothing to close.
+ */
 function hasOpenPopup(view: EditorView): boolean {
 	const root = view.dom.closest("[data-emdash-editor-floating-root]");
-	return root?.querySelector('[aria-expanded="true"]') != null;
+	return root?.querySelector('[aria-expanded="true"]:not([data-emdash-disclosure])') != null;
 }
 
 function isAtDocumentStart(view: EditorView): boolean {
@@ -324,11 +327,12 @@ export const BlockSelection = Extension.create<BlockSelectionOptions>({
 					apply: (tr, side, oldState, newState) => {
 						if (tr.docChanged) return null;
 						if (!tr.selectionSet) return side;
-						const block = topLevelNodeSelection(newState);
+						const block = rowNodeSelection(newState.selection);
 						const { $from, empty } = oldState.selection;
-						if (!pressingKey || !block || !empty || $from.depth === 0) return null;
-						if ($from.before(1) === block.to) return 1;
-						return $from.after(1) === block.from ? -1 : null;
+						const depth = rowDepth($from);
+						if (!pressingKey || !block || !empty || depth === null) return null;
+						if ($from.before(depth) === block.to) return 1;
+						return $from.after(depth) === block.from ? -1 : null;
 					},
 				},
 			}),
@@ -337,7 +341,7 @@ export const BlockSelection = Extension.create<BlockSelectionOptions>({
 				state: {
 					init: () => false,
 					apply: (tr, active, _oldState, newState) => {
-						if (!topLevelNodeSelection(newState)) return false;
+						if (!rowNodeSelection(newState.selection)) return false;
 						const meta: unknown = tr.getMeta(blockSelectionKey);
 						if (typeof meta === "boolean") return meta;
 						return tr.selectionSet ? false : active;
