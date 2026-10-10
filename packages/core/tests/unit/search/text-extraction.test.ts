@@ -29,4 +29,40 @@ describe("extractPlainText", () => {
 
 		expect(text).toBe("");
 	});
+	it("includes the text inside columns, including columns nested in a column", () => {
+		const paragraph = (key: string, text: string) => ({
+			_type: "block",
+			_key: key,
+			children: [{ _type: "span", _key: `${key}s`, text }],
+		});
+		const text = extractPlainText([
+			paragraph("intro", "Before the columns"),
+			{
+				_type: "columns",
+				_key: "cols",
+				columns: [
+					{ _type: "column", _key: "c1", content: [paragraph("a", "Opening hours")] },
+					{
+						_type: "column",
+						_key: "c2",
+						content: [
+							{
+								_type: "columns",
+								_key: "inner",
+								columns: [
+									{
+										_type: "column",
+										_key: "c3",
+										content: [{ _type: "image", _key: "img", alt: "The climbing wall" }],
+									},
+								],
+							},
+						],
+					},
+				],
+			},
+		]);
+
+		expect(text.split(/\n+/)).toEqual(["Before the columns", "Opening hours", "The climbing wall"]);
+	});
 });
