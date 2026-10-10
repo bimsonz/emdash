@@ -35,6 +35,7 @@ import {
 import { canJoin } from "@tiptap/pm/transform";
 
 import { blockInsertPosition, enterBlockSelection } from "./BlockCommands.js";
+import { isRowParent, rowNodeSelection, rowStart } from "./rows.js";
 import { selectionTouchesTable } from "./TableExtensions.js";
 
 export type TextBlockTypeId =
@@ -175,6 +176,13 @@ export function activeTextBlockType(editor: Editor): TextBlockType | undefined {
 export function canTurnInto(editor: Editor): boolean {
 	const { state } = editor;
 	if (!editor.isEditable || selectionTouchesTable(state)) return false;
+	const { $from, $to } = state.selection;
+	const rows = $from.blockRange($to, isRowParent);
+	if (rows) {
+		for (let index = rows.startIndex; index < rows.endIndex; index++) {
+			if (rows.parent.child(index).type.name === "columns") return false;
+		}
+	}
 	let hasText = false;
 	let hasAtom = false;
 	state.doc.nodesBetween(state.selection.from, state.selection.to, (node) => {
@@ -325,10 +333,10 @@ function convertTextBlocks(tr: Transaction, id: TextBlockTypeId): boolean {
 		// Keep a single converted block selected; several leave the caret after them.
 		const $first = tr.doc.resolve(map(firstBlock));
 		const $last = tr.doc.resolve(map(lastBlock));
-		const top = $first.before(1);
+		const row = rowStart($first);
 		tr.setSelection(
-			$last.before(1) === top
-				? NodeSelection.create(tr.doc, top)
+			rowStart($last) === row
+				? NodeSelection.create(tr.doc, row)
 				: TextSelection.create(tr.doc, $last.end()),
 		);
 	} else {
@@ -349,7 +357,7 @@ function convertTextBlocks(tr: Transaction, id: TextBlockTypeId): boolean {
 export function turnInto(editor: Editor, id: TextBlockTypeId, range?: Range): void {
 	if (!editor.isEditable) return;
 	const { selection } = editor.state;
-	const wholeBlock = selection instanceof NodeSelection && selection.$from.depth === 0;
+	const wholeBlock = rowNodeSelection(selection) !== null;
 	const unchanged = activeTextBlockType(editor)?.id === id;
 	const chain = editor.chain().focus();
 	if (range) chain.deleteRange(range);
@@ -370,7 +378,7 @@ export function turnInto(editor: Editor, id: TextBlockTypeId, range?: Range): vo
 	// the selected block to a caret inside it.
 	const after = editor.state.selection;
 	editor.commands.setNodeSelection(
-		after instanceof NodeSelection ? after.from : after.$head.before(1),
+		after instanceof NodeSelection ? after.from : rowStart(after.$head),
 	);
 	enterBlockSelection(editor);
 }
