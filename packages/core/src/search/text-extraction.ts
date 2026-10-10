@@ -49,6 +49,21 @@ function extractCustomBlockText(block: PortableTextBlock): string {
 		return block.caption ?? "";
 	}
 
+	if (block._type === "columns" && Array.isArray(block.columns)) {
+		return block.columns
+			.map((column: unknown) =>
+				typeof column === "object" &&
+				column !== null &&
+				"content" in column &&
+				Array.isArray(column.content) &&
+				isPortableTextArray(column.content)
+					? extractPlainText(column.content)
+					: "",
+			)
+			.filter((text: string) => text.length > 0)
+			.join("\n");
+	}
+
 	return "";
 }
 
