@@ -38,6 +38,10 @@
       "types": "./dist/portable-text-table.d.ts",
       "default": "./dist/portable-text-table.js"
     },
+    "./portable-text-columns": {
+      "types": "./dist/portable-text-columns.d.ts",
+      "default": "./dist/portable-text-columns.js"
+    },
     "./html-block": {
       "types": "./dist/html-block.d.ts",
       "default": "./dist/html-block.js"

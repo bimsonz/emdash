@@ -160,6 +160,20 @@ function extractPortableTextOccurrences(
 			continue;
 		}
 
+		if (block._type === "columns" && Array.isArray(block.columns)) {
+			for (const [columnIndex, column] of block.columns.entries()) {
+				if (!isRecord(column)) continue;
+				extractPortableTextOccurrences(
+					occurrences,
+					seen,
+					fieldSlug,
+					column.content,
+					`${pathPrefix}[${blockIndex}].columns[${columnIndex}].content`,
+				);
+			}
+			continue;
+		}
+
 		// A gallery block holds its images in `images[]`, each with its own asset.
 		if (block._type === "gallery" && Array.isArray(block.images)) {
 			for (const [imageIndex, image] of block.images.entries()) {
