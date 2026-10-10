@@ -6,6 +6,10 @@
 
 import { htmlBlockFields } from "@emdash-cms/admin/html-block";
 import {
+	isPortableTextColumnsInput,
+	portableTextColumnsToProseMirror,
+} from "@emdash-cms/admin/portable-text-columns";
+import {
 	UnsafePortableTextTableError,
 	portableTextTableToProseMirror,
 } from "@emdash-cms/admin/portable-text-table";
@@ -69,6 +73,20 @@ export function portableTextToProsemirror(
 	assertPortableTextMarksSupported(blocks);
 	const preserveIdentity = options.preserveIdentity === true;
 
+	const content = convertBlockList(blocks, "root", preserveIdentity);
+
+	return normalizeProseMirrorOrderedListJson({
+		type: "doc",
+		content: content.length > 0 ? content : [{ type: "paragraph" }],
+	});
+}
+
+/** Convert sibling blocks: the document's, or a column's. */
+function convertBlockList(
+	blocks: PortableTextBlock[],
+	path: string,
+	preserveIdentity: boolean,
+): ProseMirrorNode[] {
 	const content: ProseMirrorNode[] = [];
 	let i = 0;
 
@@ -109,7 +127,7 @@ export function portableTextToProsemirror(
 				}
 			}
 
-			content.push(convertList(listBlocks, listType, `root:${runStart}`, preserveIdentity));
+			content.push(convertList(listBlocks, listType, `${path}:${runStart}`, preserveIdentity));
 		} else if (isTextBlock(block) && block.style === "blockquote") {
 			// Collect a blockquote "run": Portable Text is flat, so a
 			// multi-paragraph quote is stored as consecutive blocks with
@@ -147,7 +165,7 @@ export function portableTextToProsemirror(
 				}),
 			});
 		} else {
-			const converted = convertBlock(block, `root:${i}`, preserveIdentity);
+			const converted = convertBlock(block, `${path}:${i}`, preserveIdentity);
 			if (converted) {
 				content.push(converted);
 			}
@@ -155,10 +173,7 @@ export function portableTextToProsemirror(
 		}
 	}
 
-	return normalizeProseMirrorOrderedListJson({
-		type: "doc",
-		content: content.length > 0 ? content : [{ type: "paragraph" }],
-	});
+	return content;
 }
 
 function identityAttrs(
@@ -340,6 +355,11 @@ function convertBlock(
 			type: PORTABLE_TEXT_BLOCK_NODE,
 			attrs: { [PORTABLE_TEXT_BLOCK_ATTR]: block },
 		};
+	}
+	if (isPortableTextColumnsInput(block)) {
+		return portableTextColumnsToProseMirror(block, (content, index) =>
+			convertBlockList(content, `${path}:${index}`, preserveIdentity),
+		);
 	}
 	if (block._type === "table") {
 		const result = portableTextTableToProseMirror(block, {
