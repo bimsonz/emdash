@@ -27,6 +27,7 @@ import { pluginBlockComponents } from "virtual:emdash/block-components";
 import { emdashComponents } from "./index.js";
 import InlineEditor from "./InlineEditor.astro";
 import { groupBlockquoteRuns } from "./portable-text-blockquote-group.js";
+import { attachRenderProps } from "./portable-text-render-props.js";
 
 export interface Props extends Omit<PortableTextProps, "value"> {
 	value: PortableTextProps["value"];
@@ -62,6 +63,12 @@ if (!editMeta) {
 		grouped as Array<Record<string, unknown>>,
 		listNestingMode,
 	) as typeof value;
+	attachRenderProps(renderValue, {
+		components: userComponents,
+		listNestingMode,
+		tablePlaceholder,
+		...rest,
+	});
 }
 ---
 

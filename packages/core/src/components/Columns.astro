@@ -1,42 +1,73 @@
 ---
 /**
- * Portable Text Columns block component
+ * Portable Text columns block
  *
- * Renders multi-column layouts from WordPress imports.
+ * Lays its columns out side by side, stacking them on narrow screens unless
+ * they wrap, and renders each column's blocks with the components of the
+ * surrounding Portable Text.
  */
-import { PortableText } from "astro-portabletext";
+import type { PortableTextColumnsBlock } from "@emdash-cms/admin/portable-text-columns";
 
-import { emdashMarkComponents } from "./marks.js";
+import PortableText from "./PortableText.astro";
+import { renderPropsOf } from "./portable-text-render-props.js";
 
 export interface Props {
-	node: {
-		_type: "columns";
-		_key: string;
-		columns: Array<{
-			_type: "column";
-			_key: string;
-			content: unknown[];
-			width?: string;
-		}>;
-	};
+	node: PortableTextColumnsBlock;
 }
 
+const GAP_CLASSES: Record<string, string> = {
+	none: "emdash-columns--gap-none",
+	sm: "emdash-columns--gap-sm",
+	lg: "emdash-columns--gap-lg",
+};
+const ALIGNMENT_CLASSES: Record<string, string> = {
+	top: "emdash-columns--align-top",
+	center: "emdash-columns--align-center",
+	bottom: "emdash-columns--align-bottom",
+};
+const SPAN_CLASSES: Record<string, string> = {
+	2: "emdash-column--span-2",
+	3: "emdash-column--span-3",
+};
+const CSS_LENGTH = /^\d+(?:\.\d+)?(?:%|px|rem|em|ch|vw)$/;
+
+// Allowlist lookups, so stored values can't inject class names or styles.
+const classFor = (classes: Record<string, string>, value: unknown) =>
+	(typeof value === "string" || typeof value === "number") && Object.hasOwn(classes, value)
+		? classes[value]
+		: undefined;
+
 const { node } = Astro.props;
-const columns = node?.columns ?? [];
+const columns = Array.isArray(node?.columns) ? node.columns : [];
+const renderProps = renderPropsOf(node) ?? {};
 
 if (!columns.length) {
 	return null;
 }
 ---
 
-<div class="emdash-columns" style={`--column-count: ${columns.length}`}>
+<div
+	class:list={[
+		"emdash-columns",
+		classFor(GAP_CLASSES, node.gap),
+		classFor(ALIGNMENT_CLASSES, node.verticalAlignment),
+		node.wrap === true && "emdash-columns--wrap",
+	]}
+>
 	{
 		columns.map((column) => (
 			<div
-				class="emdash-column"
-				style={column.width ? `flex-basis: ${column.width}` : undefined}
+				class:list={["emdash-column", classFor(SPAN_CLASSES, column?.span)]}
+				style={
+					typeof column?.width === "string" && CSS_LENGTH.test(column.width)
+						? `flex-basis: ${column.width}`
+						: undefined
+				}
 			>
-				<PortableText value={column.content} components={{ mark: emdashMarkComponents }} />
+				<PortableText
+					{...renderProps}
+					value={Array.isArray(column?.content) ? column.content : []}
+				/>
 			</div>
 		))
 	}
@@ -48,13 +79,51 @@ if (!columns.length) {
 		gap: 2rem;
 		margin: 1.5rem 0;
 	}
+	.emdash-columns--gap-none {
+		gap: 0;
+	}
+	.emdash-columns--gap-sm {
+		gap: 1rem;
+	}
+	.emdash-columns--gap-lg {
+		gap: 3rem;
+	}
+	.emdash-columns--align-top {
+		align-items: flex-start;
+	}
+	.emdash-columns--align-center {
+		align-items: center;
+	}
+	.emdash-columns--align-bottom {
+		align-items: flex-end;
+	}
+	.emdash-columns--wrap {
+		flex-wrap: wrap;
+	}
 	.emdash-column {
 		flex: 1;
 		min-width: 0;
 	}
+	.emdash-column--span-2 {
+		flex-grow: 2;
+	}
+	.emdash-column--span-3 {
+		flex-grow: 3;
+	}
+	.emdash-columns--wrap > .emdash-column {
+		min-width: min(100%, 12rem);
+	}
+	.emdash-column > :global(:first-child) {
+		margin-top: 0;
+	}
+	.emdash-column > :global(:last-child) {
+		margin-bottom: 0;
+	}
 	@media (max-width: 768px) {
-		.emdash-columns {
+		.emdash-columns:not(.emdash-columns--wrap) {
 			flex-direction: column;
+		}
+		.emdash-columns:not(.emdash-columns--wrap, .emdash-columns--gap-none) {
 			gap: 1rem;
 		}
 	}
