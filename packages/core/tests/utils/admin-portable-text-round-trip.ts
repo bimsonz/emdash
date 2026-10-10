@@ -454,6 +454,56 @@ export const editorFixtures: RoundTripFixture[] = [
 		],
 	},
 	{
+		name: "columns holding headings, lists, a divider and columns",
+		blocks: [
+			{
+				_type: "columns",
+				_key: "cols",
+				gap: "lg",
+				verticalAlignment: "center",
+				anchor: "intro",
+				columns: [
+					{
+						_type: "column",
+						_key: "c1",
+						span: 2,
+						content: [
+							{ ...paragraph("c1h", "Column heading"), style: "h2" },
+							{ ...paragraph("c1b", "Bullet"), listItem: "bullet", level: 1 },
+							{
+								...paragraph("c1n", "Number"),
+								listItem: "number",
+								level: 1,
+								listId: "in-column",
+								listStart: 1,
+							},
+						],
+					},
+					{
+						_type: "column",
+						_key: "c2",
+						content: [
+							{
+								_type: "columns",
+								_key: "inner",
+								wrap: true,
+								columns: [
+									{ _type: "column", _key: "i1", content: [paragraph("i1p", "Deep")] },
+									{
+										_type: "column",
+										_key: "i2",
+										content: [{ _type: "break", _key: "i2b", style: "lineBreak" }],
+									},
+									{ _type: "column", _key: "i3", content: [] },
+								],
+							},
+						],
+					},
+				],
+			},
+		],
+	},
+	{
 		name: "plugin blocks",
 		blocks: [
 			{ _type: "youtube", _key: "yt", id: "dQw4w9WgXcQ", title: "A video", posterQuality: "high" },
