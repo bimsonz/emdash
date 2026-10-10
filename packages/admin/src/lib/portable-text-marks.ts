@@ -102,12 +102,24 @@ export class UnsupportedPortableTextMarksError extends Error {
 
 export function findUnsupportedPortableTextMarks(blocks: unknown[]): string[] {
 	const unsupported = new Set<string>();
+	collectEditableBlockMarks(blocks, unsupported);
+	return [...unsupported].toSorted();
+}
+
+/** The editor edits text, tables and the blocks inside columns; other blocks are opaque to it. */
+function collectEditableBlockMarks(blocks: unknown[], unsupported: Set<string>): void {
 	for (const block of blocks) {
-		if (isRecord(block) && (block._type === "block" || block._type === "table")) {
+		if (!isRecord(block)) continue;
+		if (block._type === "block" || block._type === "table") {
 			collectPortableTextMarks(block, new Map(), unsupported);
+		} else if (block._type === "columns" && Array.isArray(block.columns)) {
+			for (const column of block.columns) {
+				if (isRecord(column) && Array.isArray(column.content)) {
+					collectEditableBlockMarks(column.content, unsupported);
+				}
+			}
 		}
 	}
-	return [...unsupported].toSorted();
 }
 
 export function assertPortableTextMarksSupported(blocks: unknown[]): void {

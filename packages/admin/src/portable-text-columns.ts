@@ -95,8 +95,9 @@ export function portableTextColumnsToProseMirror<Node>(
 }
 
 /**
- * The Portable Text block for a `columns` node. A column whose key repeats a
- * sibling's gets a new one, since keys only need to be unique among siblings.
+ * The Portable Text block for a `columns` node. A column with no key, or whose
+ * key repeats an earlier sibling's, gets a new one that no sibling holds, since
+ * keys only need to be unique among siblings.
  */
 export function proseMirrorColumnsToPortableText<Block>(
 	node: PortableTextColumnsProseMirrorNode,
@@ -104,11 +105,18 @@ export function proseMirrorColumnsToPortableText<Block>(
 	createKey: () => string,
 ) {
 	const attrs = isRecord(node.attrs) ? node.attrs : {};
+	const columnNodes = (node.content ?? []).filter(isRecord);
+	const columnKeyOf = (column: Record<string, unknown>) =>
+		readKey(isRecord(column.attrs) ? column.attrs.emdashKey : undefined);
+	const reservedKeys = new Set(columnNodes.map(columnKeyOf).filter((key) => key !== undefined));
 	const usedKeys = new Set<string>();
-	const columns = (node.content ?? []).filter(isRecord).map((column, index) => {
+	const columns = columnNodes.map((column, index) => {
 		const columnAttrs = isRecord(column.attrs) ? column.attrs : {};
-		let key = readKey(columnAttrs.emdashKey) ?? createKey();
-		while (usedKeys.has(key)) key = createKey();
+		let key = columnKeyOf(column);
+		if (key === undefined || usedKeys.has(key)) {
+			do key = createKey();
+			while (usedKeys.has(key) || reservedKeys.has(key));
+		}
 		usedKeys.add(key);
 		return {
 			_type: "column" as const,

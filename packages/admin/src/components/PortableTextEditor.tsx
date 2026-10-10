@@ -198,6 +198,7 @@ import {
 	type TextBlockTypeId,
 } from "./editor/blockTypes.js";
 import { CodeBlockExtension } from "./editor/CodeBlockNode";
+import { ColumnBlock, ColumnsBlock } from "./editor/ColumnsExtension";
 import { DragHandleWrapper } from "./editor/DragHandleWrapper";
 import {
 	EditorMenuCheckboxItem,
@@ -1946,6 +1947,10 @@ export type { PluginBlockDef } from "./editor/PluginBlockNode";
 export { prosemirrorToPortableText as _prosemirrorToPortableText };
 export { portableTextToProsemirror as _portableTextToProsemirror };
 export {
+	PortableTextIdentityExtension as _PortableTextIdentityExtension,
+	PortableTextSpanIdentity as _PortableTextSpanIdentity,
+};
+export {
 	buildPluginBlockFormValues as _buildPluginBlockFormValues,
 	hasPluginBlockFormData as _hasPluginBlockFormData,
 };
@@ -2668,6 +2673,8 @@ export function PortableTextEditor({
 			collaboration ? EditorStarterKit.configure({ undoRedo: false }) : EditorStarterKit,
 			TopBlockDocument,
 			EmDashOrderedList,
+			ColumnsBlock,
+			ColumnBlock,
 			CodeMarkExtension,
 			CodeBlockExtension,
 			HtmlBlockExtension,
