@@ -60,7 +60,11 @@ function collectProseMirrorOrderedLists(doc: ProseMirrorDocument): ProseMirrorLi
 				child,
 				childPath,
 				depth + 1,
-				child.type === "listItem" ? `listItem:${childPath}` : context,
+				child.type === "listItem"
+					? `listItem:${childPath}`
+					: node.type === "column"
+						? `column:${path}`
+						: context,
 			);
 		}
 	};
