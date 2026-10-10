@@ -1,3 +1,5 @@
+import { safeFields } from "./portable-text-fields.js";
+
 export const MAX_TABLE_SPAN = 100;
 export const MAX_TABLE_COLUMN_WIDTH = 4096;
 export const TABLE_CELL_MIN_WIDTH = 96;
@@ -101,8 +103,6 @@ const ROW_FIELDS = new Set("_type _key cells".split(" "));
 const CELL_FIELDS = new Set(
 	"_type _key content markDefs isHeader colspan rowspan colwidth textAlign".split(" "),
 );
-const DOM_FIELD =
-	/^(?:aria-|data-|class(?:name)?$|id$|role$|style$|on(?:animation(?:end|iteration|start)|beforeinput|blur|change|click|contextmenu|copy|cut|drag|drop|error|focus|input|key(?:down|press|up)|load|mouse(?:down|move|up)|paste|pointer(?:down|move|up)|scroll|submit|touch(?:end|move|start)|transition(?:cancel|end|run|start)|wheel)$)/i;
 
 export class UnsafePortableTextTableError extends Error {
 	readonly code = "UNSAFE_PORTABLE_TEXT_TABLE";
@@ -768,20 +768,6 @@ const pmAttrs = (record: UnknownRecord, fields: Set<string>): UnknownRecord => (
 	emdashKey: record._key,
 	emdashData: safeFields(record, fields),
 });
-
-function safeFields(value: unknown, excluded = new Set<string>()): UnknownRecord {
-	if (!isRecord(value)) return {};
-	return Object.fromEntries(
-		Object.entries(value).filter(
-			([key]) =>
-				!excluded.has(key) &&
-				key !== "__proto__" &&
-				key !== "prototype" &&
-				key !== "constructor" &&
-				!DOM_FIELD.test(key),
-		),
-	);
-}
 
 const isRecord = (value: unknown): value is UnknownRecord =>
 	typeof value === "object" && value !== null && !Array.isArray(value);
