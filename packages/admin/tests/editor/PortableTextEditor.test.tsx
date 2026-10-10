@@ -996,6 +996,62 @@ describe("Portable Text ↔ ProseMirror conversion", () => {
 		});
 	});
 
+	it("opens content that ends in columns without reporting a change", async () => {
+		const onChange = vi.fn();
+		const paragraph = (key: string, text: string) => ({
+			_type: "block",
+			_key: key,
+			style: "normal",
+			children: [{ _type: "span", _key: `${key}-s`, text }],
+		});
+		const numbered = (key: string, text: string, listId: string) => ({
+			...paragraph(key, text),
+			listItem: "number",
+			level: 1,
+			listId,
+			listStart: 1,
+		});
+		const blocks = [
+			paragraph("intro", "Intro"),
+			{
+				_type: "columns",
+				_key: "cols",
+				gap: "sm",
+				columns: [
+					{
+						_type: "column",
+						_key: "a",
+						span: 2,
+						content: [numbered("a1", "One", "steps"), numbered("a2", "Two", "steps")],
+					},
+					{
+						_type: "column",
+						_key: "b",
+						content: [
+							numbered("b1", "One", "more"),
+							{
+								_type: "columns",
+								_key: "inner",
+								columns: [
+									{ _type: "column", _key: "c", content: [paragraph("deep", "Two deep")] },
+									{ _type: "column", _key: "d", content: [] },
+								],
+							},
+						],
+					},
+				],
+			},
+		];
+		const { editor } = await renderAndGetEditor({ value: blocks, onChange });
+
+		expect(editor.state.doc.child(1).type.name).toBe("columns");
+		expect(onChange).not.toHaveBeenCalled();
+		await React.act(async () => {
+			editor.commands.setContent(editor.getJSON(), { emitUpdate: true });
+		});
+		expect(onChange).not.toHaveBeenCalled();
+	});
+
 	it("renders an h1 heading", async () => {
 		await render(<PortableTextEditor value={[textBlock("Title", { style: "h1" })]} />);
 		const pm = await waitForEditor();
