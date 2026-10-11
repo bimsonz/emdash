@@ -244,8 +244,8 @@ if (Astro.cache?.enabled) Astro.cache.set(cacheHint);
 ```
 
 `PortableText` supplies renderers for EmDash's standard blocks, including images, videos,
-galleries, code, tables, HTML blocks and iframe blocks. Pass custom components when a site adds its
-own Portable Text blocks.
+galleries, code, tables, columns, HTML blocks and iframe blocks. Pass custom components when a site
+adds its own Portable Text blocks.
 
 An HTML block with `isolated: true` renders its `html`, `css` and `js` in a sandboxed iframe that
 sizes itself to its content. Other HTML blocks render their `html` in the page, sanitized. If you
@@ -261,6 +261,12 @@ A video block renders through `Video` from `emdash/ui`. A Media Library video pl
 own player, with controls and its caption, from your storage's public URL when one is configured.
 Without a public URL, videos are served through `/_emdash/api/media/file/`. A video from a media
 provider renders through that provider. An empty video block, which has no `asset`, renders nothing.
+
+A columns block renders through `Columns` from `emdash/ui`, with its columns side by side. Each
+column's blocks render with the same components as the rest of the `PortableText`, including the
+ones your site passes, so a custom block works inside a column too. A wide column takes two or three
+times the width of a normal one. Below 768px the columns stack, unless the block wraps them onto new
+rows as they run out of room.
 
 With [Astro's content security policy](https://docs.astro.build/en/reference/configuration-reference/#securitycsp)
 turned on, the browser blocks the styles and scripts inside isolated HTML blocks, so they render
