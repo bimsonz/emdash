@@ -11,6 +11,7 @@ import { createRoot, type Root } from "react-dom/client";
 import { createUploadPreviewUrl } from "../../lib/media-utils.js";
 import { matchesMimeAllowlist } from "../../lib/mime-utils.js";
 import { getMutationError } from "../DialogError.js";
+import { rowDepth } from "./rows.js";
 
 export interface ImageUploadOptions {
 	/** Uploads a file and resolves to the attributes of the image or video node to insert. */
@@ -129,11 +130,12 @@ function renderPlaceholder(placeholder: Placeholder, onDismiss: () => void) {
 	return root;
 }
 
-// Portable Text drops images nested in lists or quotes, so they go between top-level blocks.
+// Portable Text drops images nested in lists or quotes, so they go between rows.
 function blockBoundary(doc: Node, pos: number) {
 	const $pos = doc.resolve(pos);
-	if ($pos.depth === 0) return pos;
-	return pos <= ($pos.start(1) + $pos.end(1)) / 2 ? $pos.before(1) : $pos.after(1);
+	const row = rowDepth($pos);
+	if (row === null) return pos;
+	return pos <= ($pos.start(row) + $pos.end(row)) / 2 ? $pos.before(row) : $pos.after(row);
 }
 
 function hasText(html: string) {
