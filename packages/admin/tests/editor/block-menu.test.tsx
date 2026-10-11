@@ -196,6 +196,23 @@ function ClosingBlockMenuTestWrapper({
 	);
 }
 
+function setColumnsContent(editor: Editor) {
+	const text = (value: string) => ({ type: "paragraph", content: [{ type: "text", text: value }] });
+	editor.commands.setContent({
+		type: "doc",
+		content: [
+			text("Before"),
+			{
+				type: "columns",
+				content: [
+					{ type: "column", content: [text("a1"), text("a2")] },
+					{ type: "column", content: [text("b1")] },
+				],
+			},
+		],
+	});
+}
+
 /** Get the block menu popup */
 function getBlockMenu(): HTMLElement | null {
 	return document.querySelector<HTMLElement>('[role="menu"][aria-label="Block actions"]');
@@ -297,6 +314,35 @@ describe("BlockMenu", () => {
 			"aria-disabled",
 			"true",
 		);
+	});
+
+	it("moves a block in a column only within the column", async () => {
+		const { editor } = await getEditor();
+		setColumnsContent(editor);
+		let lastRowOfFirstColumn = -1;
+		editor.state.doc.descendants((node, pos) => {
+			if (node.isTextblock && node.textContent === "a2") lastRowOfFirstColumn = pos;
+		});
+		editor.commands.setNodeSelection(lastRowOfFirstColumn);
+
+		await render(<BlockMenuTestWrapper editor={editor} isOpen={true} onClose={vi.fn()} />);
+		await vi.waitFor(() => expect(getBlockMenu()).toBeTruthy());
+
+		expect(findButtonByText(getBlockMenu()!, "Move up")).not.toHaveAttribute(
+			"aria-disabled",
+			"true",
+		);
+		expect(findButtonByText(getBlockMenu()!, "Move down")).toHaveAttribute("aria-disabled", "true");
+	});
+
+	it("names a selected columns block", async () => {
+		const { editor } = await getEditor();
+		setColumnsContent(editor);
+		editor.commands.setNodeSelection(editor.state.doc.child(0).nodeSize);
+
+		await render(<BlockMenuTestWrapper editor={editor} isOpen={true} onClose={vi.fn()} />);
+
+		await vi.waitFor(() => expect(getBlockMenu()?.textContent).toMatch(/^Columns/));
 	});
 
 	it("moves the selected block down and keeps it selected", async () => {

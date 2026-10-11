@@ -18,6 +18,7 @@ import type { EditorView } from "@tiptap/pm/view";
 import { MAX_TABLE_REPAIRED_SLOTS, MAX_TABLE_SPAN } from "../../portable-text-table.js";
 import { changedRanges, localOnly } from "../../portable-text/normalize.js";
 import { closeHistoryGroup } from "./history.js";
+import { isRowParent } from "./rows.js";
 import { yPluginKeys } from "./y-plugin-keys.js";
 
 const TABLE_NODE_ROLES = new Set(["table", "row", "cell", "header_cell"]);
@@ -350,7 +351,7 @@ export const TableIdentity = Extension.create({
 					for (const [key, positions] of survivingPositions) {
 						for (const position of positions) {
 							if (
-								newState.doc.resolve(position).depth === 0 &&
+								isRowParent(newState.doc.resolve(position).parent) &&
 								newState.doc.nodeAt(position)?.type.spec.tableRole === "table"
 							) {
 								topLevelSurvivorKeys.add(key);
@@ -383,7 +384,7 @@ export const TableIdentity = Extension.create({
 					newState.doc.descendants((node, position) => {
 						if (node.type.spec.tableRole !== "table") return;
 						if (!changed(position, node.nodeSize)) return false;
-						const isTopLevelTable = newState.doc.resolve(position).depth === 0;
+						const isTopLevelTable = isRowParent(newState.doc.resolve(position).parent);
 
 						const entries = [{ node, position }];
 						node.descendants((descendant, relativePosition) => {
