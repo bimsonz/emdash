@@ -130,7 +130,7 @@ import { PortableText } from "emdash/ui";
 <PortableText value={post.data.content} />
 ```
 
-Renders standard blocks (paragraphs, headings, lists, blockquotes, code blocks, images) and inline marks (bold, italic, code, strikethrough, links).
+Renders standard blocks (paragraphs, headings, lists, blockquotes, code blocks, images, columns) and inline marks (bold, italic, code, strikethrough, links). Blocks inside a columns block render with the same components, including custom ones.
 
 ### Custom block types
 
