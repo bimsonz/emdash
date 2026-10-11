@@ -47,6 +47,7 @@ const NODE_LABELS: Record<string, MessageDescriptor> = {
 	htmlBlock: msg`HTML`,
 	iframeBlock: msg`Iframe`,
 	pluginBlock: msg`Embed`,
+	columns: msg`Columns`,
 };
 
 const ALIGNMENTS = [
@@ -86,7 +87,8 @@ export function BlockMenu({
 
 	const selection = editor.state.selection;
 	const selectedNode = selection instanceof NodeSelection ? selection.node : null;
-	const blockIndex = selection instanceof NodeSelection ? selection.$from.index(0) : -1;
+	const blockIndex = selection instanceof NodeSelection ? selection.$from.index() : -1;
+	const siblingCount = selection instanceof NodeSelection ? selection.$from.parent.childCount : 0;
 	const activeType = selectedNode ? activeTextBlockType(editor) : undefined;
 	const nodeLabel = selectedNode ? NODE_LABELS[selectedNode.type.name] : undefined;
 	const blockLabel = activeType ? t(activeType.label) : nodeLabel ? t(nodeLabel) : t`Block`;
@@ -210,7 +212,7 @@ export function BlockMenu({
 							<EditorMenuItem
 								icon={ArrowDown}
 								label={t`Move down`}
-								disabled={blockIndex < 0 || blockIndex >= editor.state.doc.childCount - 1}
+								disabled={blockIndex < 0 || blockIndex >= siblingCount - 1}
 								onClick={() => moveBlocks(editor, "down")}
 							/>
 						</Menu.Group>

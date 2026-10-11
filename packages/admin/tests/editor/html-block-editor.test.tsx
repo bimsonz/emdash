@@ -169,6 +169,31 @@ describe("HTML block editor", () => {
 		);
 	});
 
+	it("adds a block right after the focused block when it ends a column", async () => {
+		const saved: Block = { _type: "htmlBlock", _key: "saved", html: "<p>Saved</p>" };
+		const columns: Block = {
+			_type: "columns",
+			_key: "cols",
+			columns: [
+				{ _type: "column", _key: "a", content: [saved] },
+				{ _type: "column", _key: "b", content: [paragraph("other", "Other")] },
+			],
+		};
+		const { screen, latest } = await renderEditor({ value: [columns] });
+		await screen.getByRole("tab", { name: "HTML" }).click();
+		await vi.waitFor(() => expect(codeEditors()[0]).toBeDefined());
+		await userEvent.click(codeEditors()[0]!);
+
+		await screen.getByRole("button", { name: "Insert HTML" }).click();
+		await waitForCodeEditorFocus(1);
+
+		await vi.waitFor(() => {
+			const [first, second] = (latest()[0]?.columns ?? []) as Array<{ content: Block[] }>;
+			expect(first?.content.map((block) => block._type)).toEqual(["htmlBlock", "htmlBlock"]);
+			expect(second?.content.map((block) => block._type)).toEqual(["block"]);
+		});
+	});
+
 	it("adds a block right after the focused block when a table follows it", async () => {
 		const saved: Block = { _type: "htmlBlock", _key: "saved", html: "<p>Saved</p>" };
 		const table: Block = {

@@ -233,6 +233,7 @@ import {
 	resolveIcon,
 } from "./editor/PluginBlockNode";
 import { PORTABLE_TEXT_KEY_ATTR } from "./editor/portableTextIdentity.js";
+import { isRowParent, rowDepth } from "./editor/rows.js";
 import { runTableAction } from "./editor/TableActions.js";
 import { createTableCellSafety, type TablePasteRejection } from "./editor/TableCellSafety.js";
 import { createTableClipboard } from "./editor/TableClipboard.js";
@@ -429,7 +430,9 @@ interface SlashCommandItem {
 function insertDivider(tr: Transaction): boolean {
 	prepareBlockInsert(tr);
 	const { $from } = tr.selection;
-	if ($from.depth !== 1 || $from.parent.content.size > 0) return false;
+	if ($from.depth === 0 || !isRowParent($from.node(-1)) || $from.parent.content.size > 0) {
+		return false;
+	}
 	const { schema } = tr.doc.type;
 	const start = $from.before();
 	tr.replaceWith(start, $from.after(), schema.nodes.horizontalRule!.create());
@@ -442,10 +445,10 @@ function insertDivider(tr: Transaction): boolean {
 }
 
 /**
- * Insert a top-level block: at `position` when given, in place of an empty
- * top-level paragraph or an empty line in a list or quote, before the
- * top-level block whose start holds the cursor, and otherwise after it. The
- * new block is node-selected; its node view takes focus itself.
+ * Insert a block as a row of the document or of a column: at `position` when
+ * given, in place of an empty paragraph row or an empty line in a list or
+ * quote, before the row whose start holds the cursor, and otherwise after it.
+ * The new block is node-selected; its node view takes focus itself.
  */
 function insertTopLevelBlock(
 	editor: Editor,
@@ -460,9 +463,11 @@ function insertTopLevelBlock(
 	}
 	const { selection } = tr;
 	const { $from } = selection;
-	const atBlockStart =
+	const row = rowDepth($from);
+	const atRowStart =
+		row !== null &&
 		$from.parentOffset === 0 &&
-		Array.from({ length: $from.depth - 1 }, (_, depth) => $from.index(depth + 1)).every(
+		Array.from({ length: $from.depth - row }, (_, offset) => $from.index(row + offset)).every(
 			(index) => index === 0,
 		);
 	let at: number;
@@ -470,14 +475,15 @@ function insertTopLevelBlock(
 		at = position;
 		tr.insert(at, block);
 	} else if (
-		$from.depth === 1 &&
+		row !== null &&
+		row === $from.depth &&
 		$from.parent.type.name === "paragraph" &&
 		!$from.parent.childCount
 	) {
-		at = $from.before(1);
-		tr.replaceWith(at, $from.after(1), block);
+		at = $from.before(row);
+		tr.replaceWith(at, $from.after(row), block);
 	} else {
-		at = $from.depth === 0 ? selection.to : atBlockStart ? $from.before(1) : $from.after(1);
+		at = row === null ? selection.to : atRowStart ? $from.before(row) : $from.after(row);
 		tr.insert(at, block);
 	}
 	tr.setSelection(NodeSelection.create(tr.doc, at));
@@ -2852,7 +2858,7 @@ export function PortableTextEditor({
 				pos = insert.position;
 			}
 			const { doc } = editor.state;
-			if (pos < 0 || pos > doc.content.size || doc.resolve(pos).depth !== 0) return;
+			if (pos < 0 || pos > doc.content.size || !isRowParent(doc.resolve(pos).parent)) return;
 			const { nodeBefore, nodeAfter } = doc.resolve(pos);
 			// An empty paragraph beside the insert point takes the slash instead of gaining a neighbour.
 			const reuseBefore = isEmptyParagraph(nodeBefore);
@@ -2947,11 +2953,10 @@ export function PortableTextEditor({
 	const handleTouchInsertBlock = React.useCallback(() => {
 		if (!editor) return;
 		const { $from } = editor.state.selection;
-		const topLevelPos = $from.depth > 0 ? $from.before(1) : $from.pos;
-		const topLevelNode = editor.state.doc.nodeAt(topLevelPos);
-		openBlockInsertMenuAt(
-			topLevelNode ? topLevelPos + topLevelNode.nodeSize : editor.state.doc.content.size,
-		);
+		const row = rowDepth($from);
+		const rowPos = row === null ? $from.pos : $from.before(row);
+		const rowNode = editor.state.doc.nodeAt(rowPos);
+		openBlockInsertMenuAt(rowNode ? rowPos + rowNode.nodeSize : $from.pos);
 	}, [editor, openBlockInsertMenuAt]);
 
 	// Notify when editor is ready, and on unmount so consumers can clear the
@@ -4871,7 +4876,7 @@ function getSelectionTextAlignments(editor: Editor): {
 	let nested = false;
 	const collectAlignment = (node: ProseMirrorNode, parent: ProseMirrorNode | null) => {
 		if (node.type.name !== "paragraph" && node.type.name !== "heading") return;
-		if (parent?.type.name !== "doc") nested = true;
+		if (!parent || !isRowParent(parent)) nested = true;
 		const textAlign = node.attrs.textAlign;
 		alignments.add(
 			textAlign === "left" ||
