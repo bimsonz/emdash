@@ -150,7 +150,7 @@ EmDash automatically adds plugin components to its `<PortableText>` component. C
 2. Plugin `blockComponents`
 3. Components passed by the site to `<PortableText>`
 
-Later entries override earlier ones with the same type key. A site can therefore replace only the callout renderer while leaving the plugin's editor definition enabled:
+Later entries override earlier ones with the same type key, and the merged components also render the blocks inside a columns block. A site can therefore replace only the callout renderer while leaving the plugin's editor definition enabled:
 
 ```astro title="src/pages/article.astro"
 ---
