@@ -26,6 +26,11 @@ async function hoverBlock(editor: Editor, node: PMNode, pos: number) {
 	});
 }
 
+function offsetOf(middleware?: Array<{ name: string; options?: [(number | (() => number))?] }>) {
+	const value = middleware?.find(({ name }) => name === "offset")?.options?.[0];
+	return typeof value === "function" ? value() : (value ?? "");
+}
+
 vi.mock("@tiptap/extension-drag-handle-react", () => ({
 	DragHandle: ({
 		children,
@@ -35,7 +40,7 @@ vi.mock("@tiptap/extension-drag-handle-react", () => ({
 		children: React.ReactNode;
 		computePositionConfig: {
 			placement: string;
-			middleware?: Array<{ name: string; options?: [number?] }>;
+			middleware?: Array<{ name: string; options?: [(number | (() => number))?] }>;
 		};
 		onNodeChange: NodeChangeHandler;
 	}) => {
@@ -58,10 +63,7 @@ vi.mock("@tiptap/extension-drag-handle-react", () => ({
 				draggable={!dragHandleLocked}
 				data-node-position={nodePosition ?? ""}
 				data-placement={computePositionConfig.placement}
-				data-offset={
-					computePositionConfig.middleware?.find(({ name }) => name === "offset")?.options?.[0] ??
-					""
-				}
+				data-offset={offsetOf(computePositionConfig.middleware)}
 			>
 				{children}
 			</div>
@@ -99,6 +101,35 @@ describe("DragHandleWrapper interactions", () => {
 		moveDragHandle = null;
 		closeBlockMenu = null;
 		completeBlockMenuExit = null;
+	});
+
+	it("stacks the controls inside the gutter of a block in a column", async () => {
+		const column = document.createElement("div");
+		column.className = "emdash-column-content";
+		const row = document.createElement("p");
+		column.append(document.createElement("div"));
+		column.firstElementChild!.append(row);
+		document.body.append(column);
+		const editor = {
+			view: {
+				dom: document.createElement("div"),
+				nodeDOM: (pos: number) => (pos === 7 ? row : null),
+			},
+		} as unknown as Editor;
+		try {
+			const screen = await render(<DragHandleWrapper editor={editor} onInsertBlock={vi.fn()} />);
+			const insertButton = screen.getByRole("button", { name: "Insert block below" }).element();
+
+			await hoverBlock(editor, {} as PMNode, 7);
+			expect(insertButton.closest("[data-offset]")?.getAttribute("data-offset")).toBe("-24");
+			const controls = insertButton.closest("[data-in-column]");
+			expect(controls && getComputedStyle(controls).flexDirection).toBe("column");
+
+			await hoverBlock(editor, {} as PMNode, 3);
+			expect(insertButton.closest("[data-offset]")?.getAttribute("data-offset")).toBe("4");
+		} finally {
+			column.remove();
+		}
 	});
 
 	it("uses Kumo buttons for both drag-handle controls", async () => {

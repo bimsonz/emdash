@@ -53,6 +53,7 @@ import {
 	TextSubscript,
 	TextSuperscript,
 	Code,
+	Columns,
 	TextHOne,
 	TextHTwo,
 	TextHThree,
@@ -177,7 +178,8 @@ import {
 } from "./editor/blockTypes.js";
 import { CodeBlockExtension } from "./editor/CodeBlockNode";
 import { CodeMarkExtension } from "./editor/CodeMarkExtension";
-import { ColumnBlock, ColumnsBlock } from "./editor/ColumnsExtension";
+import { insertColumns } from "./editor/columnsCommands.js";
+import { ColumnBlockWithView, ColumnsBlockWithView } from "./editor/ColumnsNode";
 import { DragHandleWrapper } from "./editor/DragHandleWrapper";
 import {
 	EditorMenuCheckboxItem,
@@ -2155,6 +2157,17 @@ const defaultSlashCommands: SlashCommandItem[] = [
 		opensTablePicker: true,
 		command: () => undefined,
 	},
+	{
+		id: "columns",
+		title: msg`Columns`,
+		description: msg`Lay blocks out side by side`,
+		icon: Columns,
+		aliases: ["layout", "sidebar", "side by side"],
+		category: BASIC_BLOCKS_CATEGORY,
+		command: ({ editor, range }) => {
+			insertColumns(editor, 2, range);
+		},
+	},
 	headingCommand(4, msg`Heading 4`, msg`Smaller section heading`, TextHFour, ["h4"]),
 	headingCommand(5, msg`Heading 5`, msg`Minor section heading`, TextHFive, ["h5"]),
 	headingCommand(6, msg`Heading 6`, msg`Smallest section heading`, TextHSix, ["h6"]),
@@ -3951,8 +3964,8 @@ export function PortableTextEditor({
 			}),
 			TopBlockDocument,
 			EmDashOrderedList,
-			ColumnsBlock,
-			ColumnBlock,
+			ColumnsBlockWithView,
+			ColumnBlockWithView,
 			CodeMarkExtension,
 			CodeBlockExtension,
 			HtmlBlockExtension,

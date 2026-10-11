@@ -13,6 +13,7 @@ import { offset } from "@floating-ui/react";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { DotsSixVertical, Plus } from "@phosphor-icons/react";
 import type { Editor } from "@tiptap/core";
+import type { DragHandleRule } from "@tiptap/extension-drag-handle";
 import { DragHandle } from "@tiptap/extension-drag-handle-react";
 import type { Node as PMNode } from "@tiptap/pm/model";
 import * as React from "react";
@@ -21,6 +22,7 @@ import { cn } from "../../lib/utils";
 import { getLocaleDir } from "../../locales/config.js";
 import { enterBlockSelection } from "./BlockCommands.js";
 import { BlockMenu } from "./BlockMenu";
+import { isRowParent } from "./rows.js";
 
 interface DragHandleWrapperProps {
 	editor: Editor;
@@ -33,6 +35,28 @@ interface HoveredNode {
 }
 
 const HANDLE_SIZE_PX = 24;
+
+/**
+ * Only rows are drag targets: blocks of the document or of a column, so a list
+ * moves as one block and a column's blocks move one by one. The rule replaces
+ * TipTap's defaults, which target a list's items.
+ */
+export const _rowsOnlyRule: DragHandleRule = {
+	id: "emdashRows",
+	evaluate: ({ parent }) => (parent && isRowParent(parent) ? 0 : 1000),
+};
+
+// A constant: the handle compares options by their JSON, which drops the rule's function.
+const NESTED_OPTIONS = {
+	rules: [_rowsOnlyRule],
+	defaultRules: false,
+	edgeDetection: "none" as const,
+};
+
+/** In a column the handle's buttons stack inside the row's own gutter (see `styles.css`). */
+export function _dragHandleOffset(inColumn: boolean): number {
+	return inColumn ? -HANDLE_SIZE_PX : 4;
+}
 const TEXT_BLOCK_SELECTOR = "p, h1, h2, h3, h4, h5, h6";
 
 export function _getDragHandlePlacement(direction: "ltr" | "rtl") {
@@ -79,6 +103,8 @@ export function DragHandleWrapper({ editor, onInsertBlock }: DragHandleWrapperPr
 	const { i18n, t } = useLingui();
 	const direction = getLocaleDir(i18n.locale);
 	const [hoveredNode, setHoveredNode] = React.useState<HoveredNode | null>(null);
+	const inColumnRef = React.useRef(false);
+	const controlsRef = React.useRef<HTMLDivElement>(null);
 	const [lineOffset, setLineOffset] = React.useState(0);
 	const [menuOpen, setMenuOpen] = React.useState(false);
 	const [menuAnchor, setMenuAnchor] = React.useState<HTMLElement | null>(null);
@@ -185,6 +211,11 @@ export function DragHandleWrapper({ editor, onInsertBlock }: DragHandleWrapperPr
 			}
 			setHoveredNode({ node: data.node, pos: data.pos });
 			const dom = data.editor.view.nodeDOM(data.pos);
+			// Set before TipTap measures the handle to place it, which follows this call.
+			const inColumn =
+				dom instanceof HTMLElement && dom.parentElement?.closest(".emdash-column-content") != null;
+			inColumnRef.current = inColumn;
+			controlsRef.current?.toggleAttribute("data-in-column", inColumn);
 			setLineOffset(dom instanceof HTMLElement ? firstLineOffset(dom) : 0);
 		},
 		[],
@@ -197,7 +228,7 @@ export function DragHandleWrapper({ editor, onInsertBlock }: DragHandleWrapperPr
 		() => ({
 			placement: _getDragHandlePlacement(direction),
 			strategy: "absolute" as const,
-			middleware: [offset(4)],
+			middleware: [offset(() => _dragHandleOffset(inColumnRef.current))],
 		}),
 		[direction],
 	);
@@ -212,12 +243,14 @@ export function DragHandleWrapper({ editor, onInsertBlock }: DragHandleWrapperPr
 			<DragHandle
 				editor={editor}
 				onNodeChange={handleNodeChange}
+				nested={NESTED_OPTIONS}
 				computePositionConfig={computePositionConfig}
 				className="drag-handle"
 			>
 				<TooltipProvider>
 					<div
-						className="flex items-center gap-0.5"
+						ref={controlsRef}
+						className="flex items-center gap-0.5 data-[in-column]:flex-col"
 						style={{ transform: `translateY(${lineOffset}px)` }}
 					>
 						<Tooltip
