@@ -198,8 +198,10 @@ export function useEmbedBlockFocus({
 		if (!block) return;
 		const $after = state.doc.resolve(pos + block.nodeSize);
 		const next = $after.nodeAfter;
+		// The last block of a column keeps the selection in its column.
+		const endOfColumn = !next && $after.parent.type.name === "column";
 		const selection =
-			next && (next.isAtom || next.type.spec.isolating)
+			endOfColumn || (next && (next.isAtom || next.type.spec.isolating))
 				? new GapCursor($after)
 				: (Selection.findFrom($after, 1, true) ??
 					Selection.findFrom(state.doc.resolve(pos), -1, true));

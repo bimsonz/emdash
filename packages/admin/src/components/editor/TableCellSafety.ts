@@ -236,7 +236,7 @@ function tableSafetyInSlice(slice: Slice): {
 				return;
 			}
 		}
-		node.forEach((child) => visit(child, false));
+		node.forEach((child) => visit(child, node.type.name === "column"));
 	};
 	slice.content.forEach((node) => visit(node, true));
 	if (!rejection && foundTable && !textWithinBounds(slice, true)) rejection = "too-large";

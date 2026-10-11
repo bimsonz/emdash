@@ -5,6 +5,7 @@ import StarterKit from "@tiptap/starter-kit";
 import * as React from "react";
 import { describe, it, expect, vi } from "vitest";
 
+import { ColumnBlock, ColumnsBlock } from "../../src/components/editor/ColumnsExtension.js";
 import { TopBlockDocument } from "../../src/components/editor/EmbedBlockShell.js";
 import { ImageExtension } from "../../src/components/editor/ImageNode.js";
 import {
@@ -58,12 +59,14 @@ const TWO_PARAGRAPHS = [textBlock("First"), textBlock("Second")];
 function TestEditor({
 	upload,
 	acceptsVideo,
+	columns,
 	editable = true,
 	content = TWO_PARAGRAPHS,
 	onReady,
 }: {
 	upload: ImageUploadOptions["upload"];
 	acceptsVideo?: () => boolean;
+	columns?: boolean;
 	editable?: boolean;
 	content?: JSONContent[];
 	onReady: (editor: Editor) => void;
@@ -77,7 +80,16 @@ function TestEditor({
 					VideoExtension,
 					ImageUploadExtension.configure({ upload, acceptsVideo }),
 				]
-			: [StarterKit, ImageExtension, ImageUploadExtension.configure({ upload })],
+			: columns
+				? [
+						StarterKit.configure({ document: false }),
+						TopBlockDocument,
+						ColumnsBlock,
+						ColumnBlock,
+						ImageExtension,
+						ImageUploadExtension.configure({ upload }),
+					]
+				: [StarterKit, ImageExtension, ImageUploadExtension.configure({ upload })],
 		content: { type: "doc", content },
 		editable,
 		immediatelyRender: true,
@@ -91,13 +103,19 @@ function TestEditor({
 
 async function setup(
 	upload: ImageUploadOptions["upload"],
-	options: { editable?: boolean; content?: JSONContent[]; acceptsVideo?: () => boolean } = {},
+	options: {
+		editable?: boolean;
+		content?: JSONContent[];
+		acceptsVideo?: () => boolean;
+		columns?: boolean;
+	} = {},
 ) {
 	let editor: Editor | undefined;
 	await render(
 		<TestEditor
 			upload={upload}
 			acceptsVideo={options.acceptsVideo}
+			columns={options.columns}
 			editable={options.editable}
 			content={options.content}
 			onReady={(instance) => {
@@ -191,6 +209,29 @@ describe("ImageUploadExtension", () => {
 			expect(blockTypes(editor)).toEqual(["First", "image:media-cat.png", "Second"]),
 		);
 		expect(document.querySelector("[data-image-upload-placeholder]")).toBeNull();
+	});
+
+	it("puts an image dropped in a column between that column's blocks", async () => {
+		const editor = await setup(async (file) => attrsFor(file), {
+			columns: true,
+			content: [
+				{
+					type: "columns",
+					content: [
+						{ type: "column", content: [textBlock("First"), textBlock("Second")] },
+						{ type: "column", content: [textBlock("Other")] },
+					],
+				},
+			],
+		});
+
+		dropFiles(paragraph("First"), [imageFile("cat.png")]);
+
+		await vi.waitFor(() => {
+			const [first, second] = editor.getJSON().content?.[0]?.content ?? [];
+			expect(first?.content?.map((node) => node.type)).toEqual(["paragraph", "image", "paragraph"]);
+			expect(second?.content?.map((node) => node.type)).toEqual(["paragraph"]);
+		});
 	});
 
 	it("shows a spinner hidden from screen readers and unmounts it with the placeholder", async () => {
