@@ -1,20 +1,21 @@
 /**
- * Node views for the columns block: a header to fold and lay out the whole
- * block, and a menu on each column to add, move, size or delete it. The block
- * itself moves with the editor's own handle, which reaches it from the header.
- * Folding is view state, kept in a plugin rather than the document, so it
- * never reaches a revision.
+ * Node views for the columns block. A columns block is edited as a map of its
+ * layout: one box per column, at its relative width, saying what the column
+ * holds. Columns are too narrow to write in side by side, so a column's blocks
+ * show only while it is open, below the map at the editor's full width.
+ *
+ * The open column is the one holding the selection, so the keyboard, undo and
+ * search open the column they move into. It is kept in a plugin rather than
+ * the document, so it never reaches a revision.
  */
 
 import { Button, Popover, Select, Switch, Tooltip } from "@cloudflare/kumo";
 import { Menu } from "@cloudflare/kumo/primitives/menu";
-import { plural } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react/macro";
 import {
 	ArrowLeft,
 	ArrowRight,
 	ArrowsHorizontal,
-	CaretDown,
 	DotsThree,
 	GearSix,
 	Plus,
@@ -22,8 +23,9 @@ import {
 	type Icon,
 	type IconProps,
 } from "@phosphor-icons/react";
+import type { Editor } from "@tiptap/core";
 import type { Node as ProseMirrorNode } from "@tiptap/pm/model";
-import { NodeSelection, Plugin, PluginKey } from "@tiptap/pm/state";
+import { NodeSelection, Plugin, PluginKey, Selection, type EditorState } from "@tiptap/pm/state";
 import { Decoration, DecorationSet } from "@tiptap/pm/view";
 import {
 	NodeViewContent,
@@ -37,7 +39,7 @@ import * as React from "react";
 import { cn } from "../../lib/utils";
 import { getLocaleDir } from "../../locales/config.js";
 import { MAX_EDITOR_COLUMNS } from "../../portable-text-columns.js";
-import { CaretNext } from "../ArrowIcons.js";
+import { blockLabel } from "./blockTypes.js";
 import {
 	addColumn,
 	deleteColumn,
@@ -54,109 +56,154 @@ import {
 	editorMenuPopupClassName,
 	tabToEditor,
 } from "./EditorMenu.js";
+import { getEmbedMeta, getRegistry } from "./PluginBlockNode.js";
 
-export const columnsCollapseKey = new PluginKey<ReadonlySet<string>>("emdashColumnsCollapse");
+/**
+ * The positions of the open columns, outermost first. Positions rather than
+ * keys: keys are only unique among a column's siblings, so a duplicated
+ * columns block would open in both places.
+ */
+export const openColumnsKey = new PluginKey<readonly number[]>("emdashOpenColumns");
 
-interface CollapseMeta {
-	key: string;
-	collapsed: boolean;
+/** The columns holding the selection, outermost first. */
+function columnsAroundSelection({ selection }: EditorState): number[] {
+	const { $head } = selection;
+	const open: number[] = [];
+	for (let depth = 1; depth <= $head.depth; depth++) {
+		if ($head.node(depth).type.name === "column") open.push($head.before(depth));
+	}
+	return open;
+}
+
+/** The end of the content of the column at `index` in the columns block at `pos`. */
+function columnContentEnd(doc: ProseMirrorNode, pos: number, index: number): number | null {
+	const columns = doc.nodeAt(pos);
+	if (columns?.type.name !== "columns" || index >= columns.childCount) return null;
+	let end = pos + 1;
+	for (let i = 0; i <= index; i++) end += columns.child(i).nodeSize;
+	return end - 1;
 }
 
 /**
- * Remembers which columns blocks are folded, by key, so a block stays folded
- * when it is dragged. A selection that lands inside a folded block unfolds it.
+ * Opens the column the selection moves into and closes the rest; a document
+ * that has just loaded has none open. A block dropped on a column's box in
+ * the map goes to the end of that column.
  */
-function collapsePlugin() {
-	return new Plugin<ReadonlySet<string>>({
-		key: columnsCollapseKey,
+function openColumnsPlugin() {
+	return new Plugin<readonly number[]>({
+		key: openColumnsKey,
 		state: {
-			init: () => new Set(),
-			apply(tr, collapsed, _oldState, newState) {
-				const meta = tr.getMeta(columnsCollapseKey) as CollapseMeta | undefined;
-				const opened: string[] = [];
+			init: () => [],
+			apply(tr, open, _oldState, newState) {
 				if (tr.selectionSet) {
-					const { $from } = newState.selection;
-					for (let depth = $from.depth; depth > 0; depth--) {
-						const ancestor = $from.node(depth);
-						const key: unknown = ancestor.attrs.emdashKey;
-						if (ancestor.type.name === "columns" && typeof key === "string" && collapsed.has(key)) {
-							opened.push(key);
-						}
-					}
+					const next = columnsAroundSelection(newState);
+					const unchanged = next.length === open.length && next.every((pos, i) => pos === open[i]);
+					return unchanged ? open : next;
 				}
-				if (!meta && opened.length === 0) return collapsed;
-				const next = new Set(collapsed);
-				if (meta?.collapsed) next.add(meta.key);
-				else if (meta) next.delete(meta.key);
-				for (const key of opened) next.delete(key);
-				return next;
+				if (!tr.docChanged || open.length === 0) return open;
+				return open
+					.map((pos) => tr.mapping.map(pos))
+					.filter((pos) => newState.doc.nodeAt(pos)?.type.name === "column");
 			},
 		},
 		props: {
 			decorations(state) {
-				const collapsed = columnsCollapseKey.getState(state);
-				if (!collapsed?.size) return null;
-				const decorations: Decoration[] = [];
-				state.doc.descendants((node, pos) => {
-					if (node.type.name === "columns" && collapsed.has(node.attrs.emdashKey)) {
-						decorations.push(
-							Decoration.node(pos, pos + node.nodeSize, { class: "emdash-columns-collapsed" }),
-						);
-					}
-				});
-				return DecorationSet.create(state.doc, decorations);
+				const open = openColumnsKey.getState(state);
+				if (!open?.length) return null;
+				return DecorationSet.create(
+					state.doc,
+					open.map((pos) =>
+						Decoration.node(pos, pos + state.doc.nodeAt(pos)!.nodeSize, {
+							class: "emdash-column-open",
+						}),
+					),
+				);
+			},
+			handleDrop(view, event, slice, moved) {
+				const box =
+					event.target instanceof Element
+						? event.target.closest<HTMLElement>("[data-emdash-column-index]")
+						: null;
+				if (!box) return false;
+				// The map comes before the columns' content, so its DOM position is the content's start.
+				const columnsPos = view.posAtDOM(box, 0) - 1;
+				const index = Number(box.dataset.emdashColumnIndex);
+				const end = columnContentEnd(view.state.doc, columnsPos, index);
+				if (end === null) return true;
+				const { tr } = view.state;
+				if (moved) {
+					const { from, to } = tr.selection;
+					// A columns block can't be dropped into one of its own columns.
+					if (from <= end && end <= to) return true;
+					tr.deleteSelection();
+				}
+				const at = tr.mapping.map(end);
+				tr.replaceRange(at, at, slice);
+				view.dispatch(tr.setSelection(Selection.near(tr.doc.resolve(at))).scrollIntoView());
+				view.focus();
+				return true;
 			},
 		},
 	});
 }
 
-/** The blocks a columns block holds, leaving out the empty line an empty column keeps. */
-function countBlocks(node: ProseMirrorNode): number {
-	let count = 0;
-	node.forEach((column) =>
-		column.forEach((block) => {
-			if (block.type.name !== "paragraph" || block.content.size > 0) count++;
-		}),
-	);
-	return count;
+/** Moves the selection into the column at `pos`, which opens it. */
+function openColumn(editor: Editor, pos: number) {
+	const { state } = editor;
+	editor.view.dispatch(state.tr.setSelection(Selection.near(state.doc.resolve(pos + 1))));
+	editor.view.focus();
+}
+
+/** Selects the columns block at `pos`, which closes its open column. */
+function closeColumns(editor: Editor, pos: number) {
+	editor.view.dispatch(editor.state.tr.setSelection(NodeSelection.create(editor.state.doc, pos)));
+	editor.view.focus();
 }
 
 const GAPS = ["none", "sm", "md", "lg"] as const;
 const ALIGNMENTS = ["stretch", "top", "center", "bottom"] as const;
+const SPANS = [1, 2, 3] as const;
 
 function ColumnsNodeView({ node, editor, getPos }: NodeViewProps) {
 	const { i18n, t } = useLingui();
-	const [localCollapsed, setLocalCollapsed] = React.useState(false);
-	const key = typeof node.attrs.emdashKey === "string" ? node.attrs.emdashKey : null;
-	const foldedByKey = useEditorState({
+	const open = useEditorState({
 		editor,
-		selector: ({ editor: current }) =>
-			key !== null && (columnsCollapseKey.getState(current.state)?.has(key) ?? false),
+		selector: ({ editor: current }) => openColumnsKey.getState(current.state),
 	});
-	const collapsed = key ? foldedByKey : localCollapsed;
-	const contentId = React.useId();
-	const columnCount = node.childCount;
-	const blockCount = countBlocks(node);
+	const [dropIndex, setDropIndex] = React.useState<number | null>(null);
+	const summaryId = React.useId();
 	const editable = editor.isEditable;
+	const columnCount = node.childCount;
+	const registry = getRegistry(
+		editor as unknown as { storage: Record<string, Record<string, unknown>> },
+	);
 
 	const position = () => {
 		const pos = getPos();
 		return typeof pos === "number" ? pos : null;
 	};
 
-	const toggle = () => {
-		if (!key) {
-			setLocalCollapsed(!localCollapsed);
-			return;
+	const label = (block: ProseMirrorNode) => {
+		if (block.type.name === "pluginBlock") {
+			const blockType = typeof block.attrs.blockType === "string" ? block.attrs.blockType : "";
+			return getEmbedMeta(blockType, registry).label;
 		}
-		const tr = editor.state.tr.setMeta(columnsCollapseKey, {
-			key,
-			collapsed: !collapsed,
-		} satisfies CollapseMeta);
-		// A caret left inside a folded block would unfold it on the next selection change.
-		const pos = position();
-		if (!collapsed && pos !== null) tr.setSelection(NodeSelection.create(tr.doc, pos));
-		editor.view.dispatch(tr);
+		const name = blockLabel(block);
+		return name ? t(name) : t`Block`;
+	};
+
+	/** The column's first heading, or failing that its first line of text, and the kinds of block in it. */
+	const summarize = (column: ProseMirrorNode) => {
+		let heading = "";
+		let text = "";
+		const kinds = new Set<string>();
+		column.forEach((block) => {
+			if (block.type.name === "paragraph" && block.content.size === 0) return;
+			kinds.add(label(block));
+			if (!heading && block.type.name === "heading") heading = block.textContent.trim();
+			if (!text && block.isTextblock) text = block.textContent.trim();
+		});
+		return { title: heading || text, kinds: [...kinds].join(", ") };
 	};
 
 	const addLast = () => {
@@ -184,46 +231,66 @@ function ColumnsNodeView({ node, editor, getPos }: NodeViewProps) {
 	};
 	const gap = GAPS.find((value) => value === node.attrs.gap) ?? "md";
 	const alignment = ALIGNMENTS.find((value) => value === node.attrs.verticalAlignment) ?? "stretch";
-	const summary = t`${plural(columnCount, { one: "# column", other: "# columns" })}, ${plural(
-		blockCount,
-		{ one: "# block", other: "# blocks" },
-	)}`;
 
-	return (
-		<NodeViewWrapper
-			className={cn("emdash-columns-node", !key && localCollapsed && "emdash-columns-collapsed")}
-			data-gap={gap}
-			data-vertical-alignment={alignment}
-			data-wrap={node.attrs.wrap === true ? "" : undefined}
-		>
-			<div
-				className="emdash-columns-header"
-				contentEditable={false}
-				dir={getLocaleDir(i18n.locale)}
+	const pos = position();
+	const boxes: React.ReactNode[] = [];
+	node.forEach((column, offset, index) => {
+		const columnPos = pos === null ? null : pos + 1 + offset;
+		const isOpen = columnPos !== null && (open?.includes(columnPos) ?? false);
+		const span = SPANS.find((value) => value === column.attrs.span) ?? 1;
+		const { title, kinds } = summarize(column);
+		boxes.push(
+			<button
+				key={index}
+				type="button"
+				className="emdash-columns-map-box"
+				data-span={span > 1 ? span : undefined}
+				data-emdash-column-index={index}
+				data-drop-target={dropIndex === index ? "" : undefined}
+				aria-expanded={isOpen}
+				aria-label={t`Column ${index + 1} of ${columnCount}`}
+				aria-describedby={`${summaryId}-${index}`}
+				data-emdash-disclosure
+				onMouseDown={(event) => event.preventDefault()}
+				onClick={() => {
+					if (pos === null || columnPos === null) return;
+					if (isOpen) closeColumns(editor, pos);
+					else openColumn(editor, columnPos);
+				}}
+				onDragOver={(event) => {
+					if (!editable || !editor.view.dragging) return;
+					event.preventDefault();
+					setDropIndex(index);
+				}}
+				onDragLeave={() => setDropIndex(null)}
+				onDrop={() => setDropIndex(null)}
 			>
-				<button
-					type="button"
-					className="emdash-columns-toggle flex min-w-0 flex-1 items-center gap-1.5 text-start"
-					onClick={toggle}
-					aria-expanded={!collapsed}
-					aria-controls={contentId}
-					aria-label={collapsed ? t`Expand block` : t`Collapse block`}
-					data-emdash-disclosure
-				>
-					{collapsed ? (
-						<CaretNext className="size-3.5 flex-none" aria-hidden="true" />
-					) : (
-						<CaretDown className="size-3.5 flex-none" aria-hidden="true" />
-					)}
-					<span className="font-medium">{t`Columns`}</span>
-					{collapsed && (
-						<span className="min-w-0 truncate text-kumo-subtle" dir="auto">
-							{summary}
+				<span id={`${summaryId}-${index}`} className="contents">
+					{title && (
+						<span className="emdash-columns-map-title" dir="auto">
+							{title}
 						</span>
 					)}
-				</button>
+					<span className="emdash-columns-map-kinds" dir="auto">
+						{kinds || t`Empty`}
+					</span>
+				</span>
+			</button>,
+		);
+	});
+
+	return (
+		<NodeViewWrapper className="emdash-columns-node">
+			<div
+				className="emdash-columns-map"
+				contentEditable={false}
+				dir={getLocaleDir(i18n.locale)}
+				role="group"
+				aria-label={t`Columns`}
+			>
+				{boxes}
 				{editable && (
-					<>
+					<div className="emdash-columns-map-actions">
 						<Tooltip
 							content={t`Add column`}
 							render={
@@ -276,15 +343,13 @@ function ColumnsNodeView({ node, editor, getPos }: NodeViewProps) {
 								/>
 							</Popover.Content>
 						</Popover>
-					</>
+					</div>
 				)}
 			</div>
-			<NodeViewContent className="emdash-columns-row" id={contentId} />
+			<NodeViewContent className="emdash-columns-row" />
 		</NodeViewWrapper>
 	);
 }
-
-const SPANS = [1, 2, 3] as const;
 
 // Reading-order arrows: left points earlier in left-to-right text and later in right-to-left text.
 const ArrowEarlier: Icon = React.forwardRef<SVGSVGElement, IconProps>(
@@ -319,12 +384,9 @@ function ColumnNodeView({ node, editor, getPos }: NodeViewProps) {
 
 	return (
 		<NodeViewWrapper className="emdash-column-node">
-			{editor.isEditable && (
-				<div
-					className="emdash-column-header"
-					contentEditable={false}
-					dir={getLocaleDir(i18n.locale)}
-				>
+			<div className="emdash-column-header" contentEditable={false} dir={getLocaleDir(i18n.locale)}>
+				<span className="min-w-0 flex-1 truncate">{t`Column ${index + 1} of ${siblings}`}</span>
+				{editor.isEditable && (
 					<Menu.Root modal={false} open={menuOpen} onOpenChange={setMenuOpen}>
 						<Menu.Trigger
 							render={
@@ -333,7 +395,7 @@ function ColumnNodeView({ node, editor, getPos }: NodeViewProps) {
 									variant="ghost"
 									shape="square"
 									size="sm"
-									className="emdash-column-menu-trigger text-kumo-subtle"
+									className="text-kumo-subtle"
 									aria-label={t`Column actions`}
 								>
 									<DotsThree className="size-4" weight="bold" aria-hidden="true" />
@@ -403,8 +465,22 @@ function ColumnNodeView({ node, editor, getPos }: NodeViewProps) {
 							</Menu.Positioner>
 						</Menu.Portal>
 					</Menu.Root>
-				</div>
-			)}
+				)}
+				<Button
+					type="button"
+					variant="secondary"
+					size="sm"
+					onMouseDown={(event) => event.preventDefault()}
+					onClick={() => {
+						const columnPos = getPos();
+						if (typeof columnPos === "number") {
+							closeColumns(editor, editor.state.doc.resolve(columnPos).before());
+						}
+					}}
+				>
+					{t`Done`}
+				</Button>
+			</div>
 			<NodeViewContent className="emdash-column-content" />
 		</NodeViewWrapper>
 	);
@@ -415,17 +491,12 @@ export const ColumnsBlockWithView = ColumnsBlock.extend({
 		return ReactNodeViewRenderer(ColumnsNodeView);
 	},
 	addProseMirrorPlugins() {
-		return [collapsePlugin()];
+		return [openColumnsPlugin()];
 	},
 });
 
 export const ColumnBlockWithView = ColumnBlock.extend({
 	addNodeView() {
-		return ReactNodeViewRenderer(ColumnNodeView, {
-			attrs: ({ node }): Record<string, string> => {
-				const span = SPANS.find((value) => value === node.attrs.span);
-				return span && span > 1 ? { "data-span": String(span) } : {};
-			},
-		});
+		return ReactNodeViewRenderer(ColumnNodeView);
 	},
 });

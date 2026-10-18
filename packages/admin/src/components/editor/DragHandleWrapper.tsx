@@ -53,10 +53,6 @@ const NESTED_OPTIONS = {
 	edgeDetection: "none" as const,
 };
 
-/** In a column the handle's buttons stack inside the row's own gutter (see `styles.css`). */
-export function _dragHandleOffset(inColumn: boolean): number {
-	return inColumn ? -HANDLE_SIZE_PX : 4;
-}
 const TEXT_BLOCK_SELECTOR = "p, h1, h2, h3, h4, h5, h6";
 
 export function _getDragHandlePlacement(direction: "ltr" | "rtl") {
@@ -104,7 +100,6 @@ export function DragHandleWrapper({ editor, onInsertBlock }: DragHandleWrapperPr
 	const direction = getLocaleDir(i18n.locale);
 	const [hoveredNode, setHoveredNode] = React.useState<HoveredNode | null>(null);
 	const inColumnRef = React.useRef(false);
-	const controlsRef = React.useRef<HTMLDivElement>(null);
 	const [lineOffset, setLineOffset] = React.useState(0);
 	const [menuOpen, setMenuOpen] = React.useState(false);
 	const [menuAnchor, setMenuAnchor] = React.useState<HTMLElement | null>(null);
@@ -212,10 +207,8 @@ export function DragHandleWrapper({ editor, onInsertBlock }: DragHandleWrapperPr
 			setHoveredNode({ node: data.node, pos: data.pos });
 			const dom = data.editor.view.nodeDOM(data.pos);
 			// Set before TipTap measures the handle to place it, which follows this call.
-			const inColumn =
+			inColumnRef.current =
 				dom instanceof HTMLElement && dom.parentElement?.closest(".emdash-column-content") != null;
-			inColumnRef.current = inColumn;
-			controlsRef.current?.toggleAttribute("data-in-column", inColumn);
 			setLineOffset(dom instanceof HTMLElement ? firstLineOffset(dom) : 0);
 		},
 		[],
@@ -228,7 +221,8 @@ export function DragHandleWrapper({ editor, onInsertBlock }: DragHandleWrapperPr
 		() => ({
 			placement: _getDragHandlePlacement(direction),
 			strategy: "absolute" as const,
-			middleware: [offset(() => _dragHandleOffset(inColumnRef.current))],
+			// In a column the handle sits inside the row's own gutter, not beside the row (see `styles.css`).
+			middleware: [offset(({ rects }) => (inColumnRef.current ? -rects.floating.width : 4))],
 		}),
 		[direction],
 	);
@@ -249,8 +243,7 @@ export function DragHandleWrapper({ editor, onInsertBlock }: DragHandleWrapperPr
 			>
 				<TooltipProvider>
 					<div
-						ref={controlsRef}
-						className="flex items-center gap-0.5 data-[in-column]:flex-col"
+						className="flex items-center gap-0.5"
 						style={{ transform: `translateY(${lineOffset}px)` }}
 					>
 						<Tooltip

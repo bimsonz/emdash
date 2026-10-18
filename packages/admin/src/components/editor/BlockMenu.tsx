@@ -6,7 +6,6 @@
  */
 
 import { Menu } from "@cloudflare/kumo/primitives/menu";
-import type { MessageDescriptor } from "@lingui/core";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react/macro";
 import {
@@ -27,7 +26,12 @@ import * as React from "react";
 
 import { cn } from "../../lib/utils";
 import { duplicateBlocks, moveBlocks } from "./BlockCommands.js";
-import { activeTextBlockType, textBlockTypes, turnIntoMenuTypes } from "./blockTypes.js";
+import {
+	NODE_LABELS,
+	activeTextBlockType,
+	textBlockTypes,
+	turnIntoMenuTypes,
+} from "./blockTypes.js";
 import {
 	EditorMenuItem,
 	EditorMenuLabel,
@@ -37,18 +41,6 @@ import {
 	editorMenuPopupClassName,
 	tabToEditor,
 } from "./EditorMenu.js";
-
-const NODE_LABELS: Record<string, MessageDescriptor> = {
-	image: msg`Image`,
-	videoBlock: msg`Video`,
-	gallery: msg`Gallery`,
-	table: msg`Table`,
-	horizontalRule: msg`Divider`,
-	htmlBlock: msg`HTML`,
-	iframeBlock: msg`Iframe`,
-	pluginBlock: msg`Embed`,
-	columns: msg`Columns`,
-};
 
 const ALIGNMENTS = [
 	{ value: "left", label: msg`Left`, icon: TextAlignLeft },

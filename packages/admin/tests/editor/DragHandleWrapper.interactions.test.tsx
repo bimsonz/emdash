@@ -26,9 +26,14 @@ async function hoverBlock(editor: Editor, node: PMNode, pos: number) {
 	});
 }
 
-function offsetOf(middleware?: Array<{ name: string; options?: [(number | (() => number))?] }>) {
+type OffsetOption = number | ((state: { rects: { floating: { width: number } } }) => number);
+
+/** The handle's offset, as Floating UI would compute it for a 50px-wide handle. */
+function offsetOf(middleware?: Array<{ name: string; options?: [OffsetOption?] }>) {
 	const value = middleware?.find(({ name }) => name === "offset")?.options?.[0];
-	return typeof value === "function" ? value() : (value ?? "");
+	return typeof value === "function"
+		? value({ rects: { floating: { width: 50 } } })
+		: (value ?? "");
 }
 
 vi.mock("@tiptap/extension-drag-handle-react", () => ({
@@ -40,7 +45,7 @@ vi.mock("@tiptap/extension-drag-handle-react", () => ({
 		children: React.ReactNode;
 		computePositionConfig: {
 			placement: string;
-			middleware?: Array<{ name: string; options?: [(number | (() => number))?] }>;
+			middleware?: Array<{ name: string; options?: [OffsetOption?] }>;
 		};
 		onNodeChange: NodeChangeHandler;
 	}) => {
@@ -103,7 +108,7 @@ describe("DragHandleWrapper interactions", () => {
 		completeBlockMenuExit = null;
 	});
 
-	it("stacks the controls inside the gutter of a block in a column", async () => {
+	it("places the controls inside the gutter of a block in a column", async () => {
 		const column = document.createElement("div");
 		column.className = "emdash-column-content";
 		const row = document.createElement("p");
@@ -121,9 +126,7 @@ describe("DragHandleWrapper interactions", () => {
 			const insertButton = screen.getByRole("button", { name: "Insert block below" }).element();
 
 			await hoverBlock(editor, {} as PMNode, 7);
-			expect(insertButton.closest("[data-offset]")?.getAttribute("data-offset")).toBe("-24");
-			const controls = insertButton.closest("[data-in-column]");
-			expect(controls && getComputedStyle(controls).flexDirection).toBe("column");
+			expect(insertButton.closest("[data-offset]")?.getAttribute("data-offset")).toBe("-50");
 
 			await hoverBlock(editor, {} as PMNode, 3);
 			expect(insertButton.closest("[data-offset]")?.getAttribute("data-offset")).toBe("4");
