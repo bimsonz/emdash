@@ -165,13 +165,20 @@ function selectBlock(editor: Editor, pos: number): boolean {
 	return true;
 }
 
-/** Selects the block around the caret, or does nothing if the selection spans several blocks. */
+/**
+ * Selects the block around the caret, or does nothing if the selection spans
+ * several blocks. With a block in a column already selected, it selects the
+ * columns block around it instead, which closes the column.
+ */
 function selectCurrentBlock(editor: Editor): boolean {
 	const { state } = editor;
 	const { selection } = state;
 	if (selection instanceof AllSelection) return false;
-	if (rowNodeSelection(selection)) {
-		return !isBlockSelectionActive(state) && enterBlockSelection(editor);
+	const selected = rowNodeSelection(selection);
+	if (selected) {
+		if (!isBlockSelectionActive(state)) return enterBlockSelection(editor);
+		const { $from } = selected;
+		return $from.parent.type.name === "column" && selectBlock(editor, $from.before(-1));
 	}
 	const { $from, $to } = selection;
 	const fromDepth = rowDepth($from);
@@ -276,7 +283,7 @@ function selectTextblockText(editor: Editor): boolean {
 
 /**
  * A menu or popover opened from the editor's controls takes Escape first. A
- * disclosure, such as an expanded columns block's toggle, opens nothing to close.
+ * disclosure, such as the box of an open column, opens nothing to close.
  */
 function hasOpenPopup(view: EditorView): boolean {
 	const root = view.dom.closest("[data-emdash-editor-floating-root]");

@@ -89,6 +89,7 @@ vi.mock("../../src/components/editor/PluginBlockNode", async () => {
 	return {
 		PluginBlockExtension,
 		getEmbedMeta: () => ({ label: "Embed", Icon: () => null }),
+		getRegistry: () => new Map(),
 		registerPluginBlocks: () => {},
 		resolveIcon: () => () => null,
 	};
