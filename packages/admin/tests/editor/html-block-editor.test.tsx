@@ -180,6 +180,7 @@ describe("HTML block editor", () => {
 			],
 		};
 		const { screen, latest } = await renderEditor({ value: [columns] });
+		await screen.getByRole("button", { name: "Column 1 of 2" }).click();
 		await screen.getByRole("tab", { name: "HTML" }).click();
 		await vi.waitFor(() => expect(codeEditors()[0]).toBeDefined());
 		await userEvent.click(codeEditors()[0]!);
