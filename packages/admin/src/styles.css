@@ -858,125 +858,135 @@ div:has(> [role="listbox"] > .emdash-compact-select-option) {
 }
 
 /*
- * Columns block. Its columns sit side by side, as on the page, and fold away
- * behind the header. Each row in a column carries the gutter its handle sits
- * in as padding: a pointer in a column's own padding would find the column,
- * which is never a drag target, and the handle would leave the row.
+ * Columns block: a map of its layout, one box per column at its relative
+ * width, with the open column below it at full width. Each row in a column
+ * carries the gutter its handle sits in as padding: a pointer in a column's
+ * own padding would find the column, which is never a drag target, and the
+ * handle would leave the row.
  */
 .emdash-columns-node {
 	margin-block: 0.5rem;
-	border: 1px dashed var(--color-kumo-line);
+	border: 1px solid var(--color-kumo-line);
 	border-radius: 0.5rem;
-	container-type: inline-size;
 }
 
-.emdash-columns-header {
+.emdash-columns-map {
+	display: flex;
+	gap: 0.375rem;
+	padding: 0.5rem;
+}
+
+/* Adding a column and the block's settings sit at the end of its row. */
+.emdash-columns-map-actions {
+	display: flex;
+	flex: none;
+	flex-direction: column;
+	justify-content: center;
+	gap: 0.125rem;
+}
+
+.emdash-columns-map-actions:empty {
+	display: none;
+}
+
+.emdash-columns-map-box {
+	display: grid;
+	flex: 1 1 0;
+	align-content: start;
+	gap: 0.125rem;
+	min-width: 0;
+	min-height: 4rem;
+	padding: 0.5rem 0.625rem;
+	border: 1px solid var(--color-kumo-line);
+	border-radius: 0.375rem;
+	background-color: var(--color-kumo-tint);
+	font-size: 0.8125rem;
+	line-height: 1.25rem;
+	text-align: start;
+	cursor: pointer;
+}
+
+.emdash-columns-map-box[data-span="2"] {
+	flex-grow: 2;
+}
+
+.emdash-columns-map-box[data-span="3"] {
+	flex-grow: 3;
+}
+
+.emdash-columns-map-box:hover {
+	border-color: var(--color-kumo-fill-hover);
+}
+
+.emdash-columns-map-box:focus-visible {
+	outline: 2px solid var(--color-kumo-brand);
+	outline-offset: 1px;
+}
+
+.emdash-columns-map-box[aria-expanded="true"] {
+	border-color: var(--color-kumo-brand);
+	background-color: var(--color-kumo-base);
+	box-shadow: inset 0 0 0 1px var(--color-kumo-brand);
+}
+
+/* A block dragged over a column's box goes to the end of that column. */
+.emdash-columns-map-box[data-drop-target] {
+	border-style: dashed;
+	border-color: var(--color-kumo-brand);
+	background-color: var(--color-kumo-base);
+}
+
+.emdash-columns-map-title {
+	overflow: hidden;
+	font-weight: 500;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+.emdash-columns-map-kinds {
+	display: -webkit-box;
+	overflow: hidden;
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: 2;
+	color: var(--text-color-kumo-subtle);
+}
+
+.emdash-columns-row > [data-node-view-content-react] > .node-column:not(.emdash-column-open) {
+	display: none;
+}
+
+.emdash-columns-row > [data-node-view-content-react] > .node-column.emdash-column-open {
+	margin: 0 0.5rem 0.5rem;
+}
+
+.emdash-column-node {
+	border: 1px solid var(--color-kumo-brand);
+	border-radius: 0.375rem;
+	background-color: var(--color-kumo-base);
+	padding-block-end: 0.5rem;
+}
+
+.emdash-column-header {
 	display: flex;
 	align-items: center;
 	gap: 0.25rem;
-	padding: 0.25rem 0.375rem;
+	margin-block-end: 0.5rem;
+	padding-block: 0.25rem;
+	padding-inline: 0.75rem 0.375rem;
+	border-block-end: 1px solid var(--color-kumo-line);
 	font-size: 0.8125rem;
 	line-height: 1.25rem;
 	color: var(--text-color-kumo-subtle);
 }
 
-.emdash-columns-collapsed .emdash-columns-row {
-	display: none;
-}
-
-.emdash-columns-row > [data-node-view-content-react] {
-	display: flex;
-	gap: 1rem;
-	padding: 0 0.5rem 0.5rem;
-}
-
-.emdash-columns-node[data-gap="none"] > .emdash-columns-row > [data-node-view-content-react] {
-	gap: 0;
-}
-
-.emdash-columns-node[data-gap="sm"] > .emdash-columns-row > [data-node-view-content-react] {
-	gap: 0.5rem;
-}
-
-.emdash-columns-node[data-gap="lg"] > .emdash-columns-row > [data-node-view-content-react] {
-	gap: 1.5rem;
-}
-
-.emdash-columns-node[data-vertical-alignment="top"]
-	> .emdash-columns-row
-	> [data-node-view-content-react] {
-	align-items: flex-start;
-}
-
-.emdash-columns-node[data-vertical-alignment="center"]
-	> .emdash-columns-row
-	> [data-node-view-content-react] {
-	align-items: center;
-}
-
-.emdash-columns-node[data-vertical-alignment="bottom"]
-	> .emdash-columns-row
-	> [data-node-view-content-react] {
-	align-items: flex-end;
-}
-
-.emdash-columns-node[data-wrap] > .emdash-columns-row > [data-node-view-content-react] {
-	flex-wrap: wrap;
-}
-
-.emdash-columns-row > [data-node-view-content-react] > .node-column {
-	flex: 1 1 0;
-	min-width: 0;
-}
-
-.emdash-columns-node[data-wrap]
-	> .emdash-columns-row
-	> [data-node-view-content-react]
-	> .node-column {
-	min-width: min(100%, 10rem);
-}
-
-.emdash-columns-row > [data-node-view-content-react] > .node-column[data-span="2"] {
-	flex-grow: 2;
-}
-
-.emdash-columns-row > [data-node-view-content-react] > .node-column[data-span="3"] {
-	flex-grow: 3;
-}
-
-/* Columns too narrow to write in side by side are edited one above the other. */
-@container (width < 26rem) {
-	.emdash-columns-row > [data-node-view-content-react] {
-		flex-direction: column;
-	}
-}
-
-.emdash-column-node {
-	height: 100%;
-	border-radius: 0.375rem;
-	background-color: var(--color-kumo-tint);
-	padding-block-end: 0.375rem;
-}
-
-/* A column inside a column stands out from the one around it. */
-.emdash-column-node .emdash-column-node {
-	background-color: var(--color-kumo-base);
-}
-
-.emdash-column-header {
-	display: flex;
-	justify-content: flex-end;
-	padding: 0.125rem;
-}
-
 .emdash-column-content > [data-node-view-content-react] {
-	--emdash-column-gutter: 1.75rem;
+	--emdash-column-gutter: var(--emdash-editor-gutter, 3.25rem);
 	min-height: 2rem;
-	padding-inline-end: 0.5rem;
+	padding-inline-end: 0.75rem;
 }
 
 .ProseMirror:not([contenteditable="true"]) .emdash-column-content > [data-node-view-content-react] {
-	--emdash-column-gutter: 0.5rem;
+	--emdash-column-gutter: 0.75rem;
 }
 
 .emdash-column-content > [data-node-view-content-react] > * {

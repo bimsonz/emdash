@@ -268,13 +268,13 @@ function PluginBlockNodeView({
 		>
 			<div className="relative group">
 				{/* Main block content */}
-				<div className="@container rounded-lg border bg-kumo-base">
+				<div className="rounded-lg border bg-kumo-base">
 					{/* Header with icon, label, and actions */}
-					<div className="flex flex-wrap items-center gap-3 px-2 py-3 @[10rem]:px-4">
+					<div className="flex items-center gap-3 px-4 py-3">
 						{/* Icon */}
 						<div
 							className={cn(
-								"hidden flex-shrink-0 w-10 h-10 rounded-lg bg-kumo-tint items-center justify-center @[10rem]:flex",
+								"flex-shrink-0 w-10 h-10 rounded-lg bg-kumo-tint flex items-center justify-center",
 								color,
 							)}
 						>
@@ -499,4 +499,4 @@ export const PluginBlockExtension = Node.create({
 });
 
 // Re-export helpers for use elsewhere
-export { getEmbedMeta, resolveIcon };
+export { getEmbedMeta, getRegistry, resolveIcon };

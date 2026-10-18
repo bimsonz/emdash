@@ -1,7 +1,7 @@
 /**
- * Text block types the editor can turn a block into. Shared by the block
- * menu, the selection toolbar, and the slash menu so they agree on labels
- * and icons.
+ * Text block types the editor can turn a block into, and the names of the
+ * other blocks. Shared by the block menu, the selection toolbar, the slash
+ * menu and the columns map so they agree on labels and icons.
  */
 
 import type { MessageDescriptor } from "@lingui/core";
@@ -129,6 +129,25 @@ const MENU_HIDDEN_TYPES = new Set<TextBlockTypeId>(["heading4", "heading5", "hea
 /** The types a Turn into menu offers for a block of the given type. */
 export function turnIntoMenuTypes(activeId?: TextBlockTypeId): TextBlockType[] {
 	return textBlockTypes.filter((type) => !MENU_HIDDEN_TYPES.has(type.id) || type.id === activeId);
+}
+
+/** The names of the blocks that aren't text block types. */
+export const NODE_LABELS: Record<string, MessageDescriptor> = {
+	image: msg`Image`,
+	videoBlock: msg`Video`,
+	gallery: msg`Gallery`,
+	table: msg`Table`,
+	horizontalRule: msg`Divider`,
+	htmlBlock: msg`HTML`,
+	iframeBlock: msg`Iframe`,
+	pluginBlock: msg`Embed`,
+	columns: msg`Columns`,
+};
+
+/** A block's name, such as "Heading 2" or "Image". */
+export function blockLabel(node: ProseMirrorNode): MessageDescriptor | undefined {
+	const id = node.type.name === "heading" ? `heading${String(node.attrs.level)}` : node.type.name;
+	return textBlockTypes.find((type) => type.id === id)?.label ?? NODE_LABELS[node.type.name];
 }
 
 const ACTIVE_ORDER: TextBlockTypeId[] = [
