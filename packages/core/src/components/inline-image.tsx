@@ -97,12 +97,13 @@ function showToolbarsAgain(editor: Editor) {
 }
 
 /**
- * Puts an image where the caret was, as a block of its own at the top of
- * the document: in place of an empty line, or before or after the block the
- * caret is in. Lists and quotes keep only their text when saved, so an image
- * never goes inside one; an empty line there goes, and the image follows
- * the list or quote, or takes its place when that line was all it held. The
- * new image ends up selected.
+ * Puts an image where the caret was, as a block of its own among the
+ * document's blocks, or the blocks of the column the caret is in: in place
+ * of an empty line, or before or after the block the caret is in. Lists and
+ * quotes keep only their text when saved, so an image never goes inside one;
+ * an empty line there goes, and the image follows the list or quote, or
+ * takes its place when that line was all it held. The new image ends up
+ * selected.
  */
 export function insertImage(editor: Editor, position: number, image: ChosenImage) {
 	editor.commands.command(({ tr, state }) => {
@@ -111,21 +112,25 @@ export function insertImage(editor: Editor, position: number, image: ChosenImage
 		const $pos = tr.doc.resolve(Math.min(position, tr.doc.content.size));
 		const node = type.create(image);
 		const emptyLine = $pos.parent.isTextblock && $pos.parent.childCount === 0;
+		// The depth of the document or column whose blocks the image joins.
+		let base = $pos.depth;
+		while (base > 0 && $pos.node(base).type.name !== "column") base--;
+		const top = base + 1;
 		// The outermost block that holds nothing but the caret's line.
 		let depth = $pos.depth;
-		while (depth > 1 && $pos.node(depth - 1).childCount === 1) depth--;
+		while (depth > top && $pos.node(depth - 1).childCount === 1) depth--;
 		let at: number;
-		if ($pos.depth === 0) {
+		if ($pos.depth === base) {
 			at = $pos.pos;
 			tr.insert(at, node);
-		} else if (emptyLine && depth === 1) {
-			at = $pos.before(1);
-			tr.replaceWith(at, $pos.after(1), node);
-		} else if ($pos.depth === 1 && $pos.parentOffset === 0) {
-			at = $pos.before(1);
+		} else if (emptyLine && depth === top) {
+			at = $pos.before(top);
+			tr.replaceWith(at, $pos.after(top), node);
+		} else if ($pos.depth === top && $pos.parentOffset === 0) {
+			at = $pos.before(top);
 			tr.insert(at, node);
 		} else {
-			const after = $pos.after(1);
+			const after = $pos.after(top);
 			// An empty line takes its list item with it when it was the item's only line.
 			if (emptyLine) tr.deleteRange($pos.before(), $pos.after());
 			at = tr.mapping.map(after);
