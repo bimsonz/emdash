@@ -425,6 +425,80 @@ describe("inline Portable Text image picker and image toolbar", () => {
 		expect(blocks.filter((savedBlock) => savedBlock.listItem === "bullet")).toHaveLength(2);
 	});
 
+	it("puts an image typed in a column in that column", async () => {
+		stubMedia();
+		const editable = await mount([
+			{
+				_type: "columns",
+				_key: "pair",
+				columns: [
+					{ _type: "column", _key: "left", content: [block("l", "Left side.")] },
+					{ _type: "column", _key: "right", content: [block("r", "Right side.")] },
+				],
+			},
+		]);
+		const dialog = await typeImageCommand(editable, (editor) => {
+			editor.commands.setTextSelection(endOf(editor, "Left side."));
+			editor.commands.splitBlock();
+		});
+
+		await click(await option(dialog, "photo-2.jpg"));
+
+		const [columns] = await savedBlocks();
+		expect(columns).toMatchObject({
+			_type: "columns",
+			columns: [
+				{
+					_key: "left",
+					content: [
+						{ children: [{ text: "Left side." }] },
+						{ _type: "image", asset: { _ref: "media-2" } },
+					],
+				},
+				{ _key: "right", content: [{ children: [{ text: "Right side." }] }] },
+			],
+		});
+	});
+
+	it("puts an image typed in a quote in a column after the quote, in the column", async () => {
+		stubMedia();
+		const editable = await mount([
+			{
+				_type: "columns",
+				_key: "pair",
+				columns: [
+					{
+						_type: "column",
+						_key: "left",
+						content: [block("q", "Quoted line.", "blockquote"), block("a", "After.")],
+					},
+					{ _type: "column", _key: "right", content: [block("r", "Right side.")] },
+				],
+			},
+		]);
+		const dialog = await typeImageCommand(editable, (editor) => {
+			editor.commands.setTextSelection(endOf(editor, "Quoted line."));
+			editor.commands.splitBlock();
+		});
+
+		await click(await option(dialog, "photo-2.jpg"));
+
+		const [columns] = await savedBlocks();
+		expect(columns).toMatchObject({
+			columns: [
+				{
+					_key: "left",
+					content: [
+						{ style: "blockquote", children: [{ text: "Quoted line." }] },
+						{ _type: "image", asset: { _ref: "media-2" } },
+						{ children: [{ text: "After." }] },
+					],
+				},
+				{ _key: "right", content: [{ children: [{ text: "Right side." }] }] },
+			],
+		});
+	});
+
 	it("pages through the library nine images at a time", async () => {
 		stubMedia();
 		const editable = await mount([block("a", "Intro.")]);

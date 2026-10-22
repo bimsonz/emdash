@@ -114,10 +114,22 @@ export function activeBlockType(editor: Editor): BlockTypeId | undefined {
 	return editor.isActive("paragraph") ? "paragraph" : undefined;
 }
 
-/** Whether the selection holds text blocks, and no images or other blocks, to convert. */
+/** The start of the column holding a position, or -1 when it is in none. */
+function columnStart($pos: ResolvedPos): number {
+	for (let depth = $pos.depth; depth > 0; depth--) {
+		if ($pos.node(depth).type.name === "column") return $pos.before(depth);
+	}
+	return -1;
+}
+
+/**
+ * Whether the selection holds text blocks, and no images or other blocks, to
+ * convert, all in one column or none.
+ */
 export function canTurnInto(editor: Editor): boolean {
 	const { state } = editor;
 	if (!editor.isEditable) return false;
+	if (columnStart(state.selection.$from) !== columnStart(state.selection.$to)) return false;
 	let hasText = false;
 	let hasAtom = false;
 	state.doc.nodesBetween(state.selection.from, state.selection.to, (node) => {

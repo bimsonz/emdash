@@ -196,6 +196,62 @@ describe("inline Portable Text editor toolbars and slash menu", () => {
 		expect(blocks.some((savedBlock) => savedBlock.style === "blockquote")).toBe(false);
 	});
 
+	// "Left side." fills positions 3 to 13, and "Right side." 17 to 28.
+	const pair = {
+		_type: "columns",
+		_key: "pair",
+		columns: [
+			{ _type: "column", _key: "left", content: [block("l", "Left side.")] },
+			{ _type: "column", _key: "right", content: [block("r", "Right side.")] },
+		],
+	};
+
+	it("turns a line in a column into a quote that stays in the column", async () => {
+		const editable = await mount([pair] as unknown as PortableTextValue);
+		const toolbar = await selectAndShowToolbar(editable, 4, 8);
+
+		await turnInto(toolbar, "Quote");
+
+		const [columns] = (await saved(editable)) as unknown as Array<Record<string, unknown>>;
+		expect(columns).toMatchObject({
+			_type: "columns",
+			columns: [
+				{ _key: "left", content: [{ style: "blockquote", children: [{ text: "Left side." }] }] },
+				{ _key: "right", content: [{ style: "normal", children: [{ text: "Right side." }] }] },
+			],
+		});
+	});
+
+	it("offers no Turn into for a selection across two columns", async () => {
+		const editable = await mount([pair] as unknown as PortableTextValue);
+		const toolbar = await selectAndShowToolbar(editable, 4, 20);
+
+		expect(toolbar.querySelector('[aria-label="Turn into"]')).toBeNull();
+		expect(toolbar.querySelector('[aria-label="Add link"]')).not.toBeNull();
+	});
+
+	it("aligns a line in a column", async () => {
+		const editable = await mount([pair] as unknown as PortableTextValue);
+		const toolbar = await selectAndShowToolbar(editable, 4, 8);
+
+		await click(toolbar.querySelector('[aria-label="More formatting"]')!);
+		const center = await vi.waitFor(() => {
+			const match = [
+				...document.querySelectorAll<HTMLButtonElement>('[role="menuitemradio"]'),
+			].find((candidate) => candidate.textContent === "Center");
+			expect(match).toBeDefined();
+			return match!;
+		});
+		expect(center.disabled).toBe(false);
+		await click(center);
+
+		const [columns] = (await saved(editable)) as unknown as Array<Record<string, any>>;
+		expect(columns?.columns[0].content[0]).toMatchObject({
+			textAlign: "center",
+			children: [{ text: "Left side." }],
+		});
+	});
+
 	it("tabs through the toolbar as if it followed the editor", async () => {
 		const editable = await mount([block("a", "Some text to format.")]);
 		const nextOnPage = document.createElement("button");
