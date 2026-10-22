@@ -214,9 +214,9 @@ function linkLineRect(editor: Editor): DOMRect | null {
 }
 
 /**
- * The selection's alignment when it has exactly one. Only top-level
- * paragraphs and headings keep an alignment, so anything in a quote or list
- * can't be aligned.
+ * The selection's alignment when it has exactly one. Only paragraphs and
+ * headings among the document's or a column's blocks keep an alignment, so
+ * anything in a quote or list can't be aligned.
  */
 function selectionAlignment(editor: Editor): { value?: string; unavailable: boolean } {
 	const fallback = getComputedStyle(editor.view.dom).direction === "rtl" ? "right" : "left";
@@ -225,7 +225,7 @@ function selectionAlignment(editor: Editor): { value?: string; unavailable: bool
 	const { from, to } = editor.state.selection;
 	editor.state.doc.nodesBetween(from, to, (node, _pos, parent) => {
 		if (node.type.name !== "paragraph" && node.type.name !== "heading") return true;
-		if (parent?.type.name !== "doc") nested = true;
+		if (parent?.type.name !== "doc" && parent?.type.name !== "column") nested = true;
 		const value: unknown = node.attrs.textAlign;
 		alignments.add(
 			value === "left" || value === "center" || value === "right" || value === "justify"
