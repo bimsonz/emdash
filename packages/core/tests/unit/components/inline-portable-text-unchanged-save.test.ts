@@ -102,6 +102,28 @@ describe("inline Portable Text editor saves", () => {
 		expect(puts).toHaveLength(0);
 	});
 
+	it("does not save an unedited body that ends in a block when focus or the page goes", async () => {
+		const states: unknown[] = [];
+		const record = (event: Event) => states.push((event as CustomEvent).detail?.state);
+		document.addEventListener("emdash:save", record);
+		try {
+			const editable = await mount([
+				...storedBody,
+				{ _type: "image", _key: "last", asset: { _ref: "01LAST", url: "/last.jpg" } },
+			]);
+			await blur(editable);
+			await blur(editable);
+			await blur(editable);
+			await act(async () => {
+				window.dispatchEvent(new Event("pagehide"));
+			});
+		} finally {
+			document.removeEventListener("emdash:save", record);
+		}
+		expect(puts).toHaveLength(0);
+		expect(states).toEqual([]);
+	});
+
 	it("does not save on page leave when the body was never touched", async () => {
 		await mount();
 		await act(async () => {
