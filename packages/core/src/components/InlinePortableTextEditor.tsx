@@ -1286,7 +1286,16 @@ export function InlinePortableTextEditor({
 	// Store editor ref for getBlocks, and record the loaded document as saved.
 	React.useEffect(() => {
 		editorRef.current = editor;
-		if (editor && !savedDocRef.current) savedDocRef.current = editor.state.doc;
+		if (editor && !savedDocRef.current) {
+			// TrailingNode adds an empty line after a body that ends in a block,
+			// but only on the editor's first transaction, so the first click would
+			// count as an edit. Let it add the line before recording the document,
+			// without reporting it as an unsaved change or making it undoable.
+			editor.view.dispatch(
+				editor.state.tr.setMeta("addToHistory", false).setMeta("preventUpdate", true),
+			);
+			savedDocRef.current = editor.state.doc;
+		}
 	}, [editor]);
 
 	const runSlashCommand = React.useCallback(
