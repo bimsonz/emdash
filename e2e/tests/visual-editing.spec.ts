@@ -1017,6 +1017,192 @@ test.describe("Inline Editor", () => {
 	});
 });
 
+function textBlock(key: string, text: string) {
+	return {
+		_type: "block",
+		_key: key,
+		style: "normal",
+		markDefs: [],
+		children: [{ _type: "span", _key: `${key}-1`, text, marks: [] }],
+	};
+}
+
+/** Creates and publishes a post laid out in two columns, runs `use`, then deletes the post. */
+async function withColumnsPost(
+	page: import("@playwright/test").Page,
+	token: string,
+	use: (path: string) => Promise<void>,
+): Promise<void> {
+	const headers = { Authorization: `Bearer ${token}`, "X-EmDash-Request": "1" };
+	const slug = `columns-${crypto.randomUUID().slice(0, 8)}`;
+	const created = await page.request.post("/_emdash/api/content/posts", {
+		headers,
+		data: {
+			slug,
+			data: {
+				title: "Post With Columns",
+				body: [
+					{
+						_type: "columns",
+						_key: "layout",
+						gap: "lg",
+						columns: [
+							{
+								_type: "column",
+								_key: "left",
+								span: 2,
+								content: [textBlock("l1", "The left column holds the story.")],
+							},
+							{
+								_type: "column",
+								_key: "right",
+								content: [textBlock("r1", "The right column holds the aside.")],
+							},
+						],
+					},
+					textBlock("after", "Text after the columns."),
+				],
+			},
+		},
+	});
+	expect(created.ok(), await created.text()).toBe(true);
+	const { data } = (await created.json()) as { data: { item: { id: string } } };
+	const id = data.item.id;
+	try {
+		const published = await page.request.post(`/_emdash/api/content/posts/${id}/publish`, {
+			headers,
+			data: {},
+		});
+		expect(published.ok(), await published.text()).toBe(true);
+		await use(`/posts/${slug}`);
+	} finally {
+		await page.request.delete(`/_emdash/api/content/posts/${id}`, { headers });
+		await page.request.delete(`/_emdash/api/content/posts/${id}/permanent`, { headers });
+	}
+}
+
+/** Each column's left edge and width, rounded to whole pixels. */
+function columnBoxes(page: import("@playwright/test").Page, scope: string) {
+	return page.locator(`${scope} .emdash-columns > .emdash-column`).evaluateAll((columns) =>
+		columns.map((column) => {
+			const { x, y, width, height } = column.getBoundingClientRect();
+			return { x: Math.round(x), y: Math.round(y), width: Math.round(width), height };
+		}),
+	);
+}
+
+test.describe("Columns in the inline editor", () => {
+	test("lays the columns out as published, and labels the column being edited", async ({
+		page,
+		serverInfo,
+	}) => {
+		await withColumnsPost(page, serverInfo.token, async (path) => {
+			await gotoWithRetry(page, path);
+			const published = await columnBoxes(page, "body");
+			expect(published).toHaveLength(2);
+
+			await enableEditMode(page);
+			await gotoWithRetry(page, path);
+			const editor = page.locator(".emdash-inline-editor");
+			await expect(editor.locator(".emdash-columns")).toBeVisible({ timeout: 15000 });
+			const editing = await columnBoxes(page, ".emdash-inline-editor");
+			expect(editing.map(({ x, width }) => ({ x, width }))).toEqual(
+				published.map(({ x, width }) => ({ x, width })),
+			);
+
+			await editor.getByText("The right column holds the aside.").click();
+			const column = editor.locator(".emdash-column").nth(1);
+			await expect(column).toHaveClass(/has-focus/);
+			await expect(column).toHaveAttribute("data-emdash-column-label", "Column 2 of 2");
+		});
+	});
+
+	test("saves typing in a column into that column", async ({ page, serverInfo }) => {
+		await withColumnsPost(page, serverInfo.token, async (path) => {
+			await enableEditMode(page);
+			await gotoWithRetry(page, path);
+			const editor = page.locator(".emdash-inline-editor");
+			const story = editor.getByText("The left column holds the story.");
+			await expect(story).toBeVisible({ timeout: 15000 });
+
+			await story.click();
+			await page.evaluate(() => {
+				const dom = document.querySelector(".emdash-inline-editor") as InlineEditorDom;
+				let end = -1;
+				dom.editor.state.doc.descendants((node, pos) => {
+					if (node.textContent === "The left column holds the story." && node.nodeSize)
+						end = pos + node.nodeSize - 1;
+					return end === -1;
+				});
+				dom.editor.commands.setTextSelection(end);
+			});
+			await page.keyboard.type(" Edited.");
+			const save = page.waitForRequest(
+				(request) => request.method() === "PUT" && request.url().includes("/_emdash/api/content/"),
+			);
+			await page.mouse.click(5, 5);
+			const { data } = (await save).postDataJSON() as {
+				data: { body: Array<{ _type: string; _key: string; columns?: unknown[] }> };
+			};
+
+			expect(data.body[0]).toMatchObject({
+				_type: "columns",
+				_key: "layout",
+				gap: "lg",
+				columns: [
+					{
+						_key: "left",
+						span: 2,
+						content: [{ children: [{ text: "The left column holds the story. Edited." }] }],
+					},
+					{
+						_key: "right",
+						content: [{ children: [{ text: "The right column holds the aside." }] }],
+					},
+				],
+			});
+		});
+	});
+
+	test("keeps both columns when a selection across them is typed over", async ({
+		page,
+		serverInfo,
+	}) => {
+		await withColumnsPost(page, serverInfo.token, async (path) => {
+			await enableEditMode(page);
+			await gotoWithRetry(page, path);
+			const editor = page.locator(".emdash-inline-editor");
+			const left = editor.getByText("The left column holds the story.");
+			const right = editor.getByText("The right column holds the aside.");
+			await expect(left).toBeVisible({ timeout: 15000 });
+
+			await left.dragTo(right, {
+				sourcePosition: { x: 20, y: 5 },
+				targetPosition: { x: 40, y: 5 },
+			});
+			await page.keyboard.type("x");
+
+			await expect(editor.locator(".emdash-columns > .emdash-column")).toHaveCount(2);
+			await expect(left).toBeVisible();
+			await expect(right).toBeVisible();
+		});
+	});
+
+	test("stacks the columns on a narrow screen, as published", async ({ page, serverInfo }) => {
+		await page.setViewportSize({ width: 375, height: 800 });
+		await withColumnsPost(page, serverInfo.token, async (path) => {
+			await enableEditMode(page);
+			await gotoWithRetry(page, path);
+			await expect(page.locator(".emdash-inline-editor .emdash-columns")).toBeVisible({
+				timeout: 15000,
+			});
+			const [left, right] = await columnBoxes(page, ".emdash-inline-editor");
+
+			expect(right!.y).toBeGreaterThanOrEqual(left!.y + left!.height);
+		});
+	});
+});
+
 /**
  * A point a quarter into the character at `index` of a field's text (negative
  * counts from the end), where a click puts the caret right before it.
