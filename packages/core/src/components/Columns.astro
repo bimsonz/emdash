@@ -8,34 +8,13 @@
  */
 import type { PortableTextColumnsBlock } from "@emdash-cms/admin/portable-text-columns";
 
+import { columnClasses, columnsClasses, columnStyle } from "./columns-layout.js";
 import PortableText from "./PortableText.astro";
 import { renderPropsOf } from "./portable-text-render-props.js";
 
 export interface Props {
 	node: PortableTextColumnsBlock;
 }
-
-const GAP_CLASSES: Record<string, string> = {
-	none: "emdash-columns--gap-none",
-	sm: "emdash-columns--gap-sm",
-	lg: "emdash-columns--gap-lg",
-};
-const ALIGNMENT_CLASSES: Record<string, string> = {
-	top: "emdash-columns--align-top",
-	center: "emdash-columns--align-center",
-	bottom: "emdash-columns--align-bottom",
-};
-const SPAN_CLASSES: Record<string, string> = {
-	2: "emdash-column--span-2",
-	3: "emdash-column--span-3",
-};
-const CSS_LENGTH = /^\d+(?:\.\d+)?(?:%|px|rem|em|ch|vw)$/;
-
-// Allowlist lookups, so stored values can't inject class names or styles.
-const classFor = (classes: Record<string, string>, value: unknown) =>
-	(typeof value === "string" || typeof value === "number") && Object.hasOwn(classes, value)
-		? classes[value]
-		: undefined;
 
 const { node } = Astro.props;
 const columns = Array.isArray(node?.columns) ? node.columns : [];
@@ -46,24 +25,10 @@ if (!columns.length) {
 }
 ---
 
-<div
-	class:list={[
-		"emdash-columns",
-		classFor(GAP_CLASSES, node.gap),
-		classFor(ALIGNMENT_CLASSES, node.verticalAlignment),
-		node.wrap === true && "emdash-columns--wrap",
-	]}
->
+<div class:list={columnsClasses(node)}>
 	{
 		columns.map((column) => (
-			<div
-				class:list={["emdash-column", classFor(SPAN_CLASSES, column?.span)]}
-				style={
-					typeof column?.width === "string" && CSS_LENGTH.test(column.width)
-						? `flex-basis: ${column.width}`
-						: undefined
-				}
-			>
+			<div class:list={columnClasses(column ?? {})} style={columnStyle(column ?? {})}>
 				<PortableText
 					{...renderProps}
 					value={Array.isArray(column?.content) ? column.content : []}
