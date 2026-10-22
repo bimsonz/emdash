@@ -1,3 +1,5 @@
+import { isPortableTextColumnsInput } from "@emdash-cms/admin/portable-text-columns";
+
 import type { ProseMirrorDocument, ProseMirrorNode } from "./types.js";
 
 const SUPPORTED_PORTABLE_TEXT_DECORATORS = new Set([
@@ -95,12 +97,20 @@ export class UnsupportedPortableTextMarksError extends Error {
 
 export function findUnsupportedPortableTextMarks(blocks: readonly { _type: string }[]): string[] {
 	const unsupported = new Set<string>();
+	collectEditableBlockMarks(blocks, unsupported);
+	return [...unsupported].toSorted();
+}
+
+/** The editors edit text, tables and the blocks inside columns; other blocks are opaque to them. */
+function collectEditableBlockMarks(blocks: readonly unknown[], unsupported: Set<string>): void {
 	for (const block of blocks) {
+		if (!isRecord(block)) continue;
 		if (block._type === "block" || block._type === "table") {
 			collectPortableTextMarks(block, new Map(), unsupported);
+		} else if (isPortableTextColumnsInput(block)) {
+			for (const column of block.columns) collectEditableBlockMarks(column.content, unsupported);
 		}
 	}
-	return [...unsupported].toSorted();
 }
 
 export function assertPortableTextMarksSupported(blocks: readonly { _type: string }[]): void {

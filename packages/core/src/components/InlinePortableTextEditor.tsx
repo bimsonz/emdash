@@ -11,6 +11,11 @@
  */
 
 import { htmlBlockFields } from "@emdash-cms/admin/html-block";
+import {
+	isPortableTextColumnsInput,
+	portableTextColumnsToProseMirror,
+	proseMirrorColumnsToPortableText,
+} from "@emdash-cms/admin/portable-text-columns";
 import { Node, mergeAttributes, type JSONContent } from "@tiptap/core";
 import Focus from "@tiptap/extension-focus";
 import Link from "@tiptap/extension-link";
@@ -44,6 +49,13 @@ import type { ProseMirrorDocument } from "../content/converters/types.js";
 import { CodeMarkExtension } from "./code-mark.js";
 import { InlineBubbleMenu } from "./inline-bubble-menu.js";
 import { InlineCodeBlockExtension } from "./inline-code-block.js";
+import {
+	INLINE_COLUMNS_STYLES,
+	InlineColumn,
+	InlineColumns,
+	InlineColumnsLayout,
+	InlineDocument,
+} from "./inline-columns.js";
 import { INLINE_EDITOR_UI_STYLES, useInlineUiRoot } from "./inline-editor-ui.js";
 import { INLINE_IMAGE_STYLES, InlineImageExtension, insertImage } from "./inline-image.js";
 import { INLINE_MEDIA_PICKER_STYLES, InlineMediaPicker } from "./inline-media-picker.js";
@@ -211,15 +223,42 @@ function canonicalMediaProviderId(provider: string | undefined): string | undefi
 
 function pmToPortableText(doc: PMNode): PTBlock[] {
 	if (!doc || doc.type !== "doc" || !doc.content) return [];
+	return convertPMNodes(doc.content, "root");
+}
+
+/**
+ * Convert sibling nodes: the document's, or a column's. A key that repeats a
+ * sibling's is replaced, since keys only need to be unique among siblings.
+ */
+function convertPMNodes(nodes: PMNode[], path: string): PTBlock[] {
 	const blocks: PTBlock[] = [];
-	for (let i = 0; i < doc.content.length; i++) {
-		const r = convertPMNode(doc.content[i]!, `root:${i}`);
-		if (r) {
-			if (Array.isArray(r)) blocks.push(...r);
-			else blocks.push(r);
+	const usedKeys = new Set<string>();
+	for (let i = 0; i < nodes.length; i++) {
+		const r = convertPMNode(nodes[i]!, `${path}:${i}`);
+		for (const block of r ? (Array.isArray(r) ? r : [r]) : []) {
+			let key = typeof block._key === "string" ? block._key : k();
+			while (usedKeys.has(key)) key = k();
+			usedKeys.add(key);
+			blocks.push(key === block._key ? block : { ...block, _type: block._type, _key: key });
 		}
 	}
 	return blocks;
+}
+
+function isPMNode(value: unknown): value is PMNode {
+	return (
+		typeof value === "object" &&
+		value !== null &&
+		typeof (value as { type?: unknown }).type === "string"
+	);
+}
+
+/** A column's blocks. An empty column is one empty line in the editor, and no blocks when stored. */
+function convertPMColumn(content: unknown[], path: string): PTBlock[] {
+	const nodes = content.filter(isPMNode);
+	const [only] = nodes;
+	if (nodes.length === 1 && only?.type === "paragraph" && !only.content?.length) return [];
+	return convertPMNodes(nodes, path);
 }
 
 function convertPMNode(node: PMNode, path: string): PTBlock | PTBlock[] | null {
@@ -344,6 +383,12 @@ function convertPMNode(node: PMNode, path: string): PTBlock | PTBlock[] | null {
 			if (isPTTableBlock(rawTable)) return rawTable;
 			return null;
 		}
+		case "columns":
+			return proseMirrorColumnsToPortableText(
+				node,
+				(content, index) => convertPMColumn(content, `${path}:${index}`),
+				k,
+			);
 		case "pluginBlock": {
 			// Spread the captured data back out so the block round-trips losslessly.
 			// `data` holds every field except _type / _key and the identity field
@@ -485,6 +530,16 @@ function portableTextToPM(blocks: PTBlock[]): JSONContent {
 	if (!blocks || blocks.length === 0) return { type: "doc", content: [{ type: "paragraph" }] };
 	assertPortableTextMarksSupported(blocks);
 
+	const content = convertPTBlocks(blocks, "root");
+
+	return normalizeProseMirrorOrderedListJson({
+		type: "doc",
+		content: content.length > 0 ? content : [{ type: "paragraph" }],
+	});
+}
+
+/** Convert sibling blocks: the document's, or a column's. */
+function convertPTBlocks(blocks: PTBlock[], path: string): PMNode[] {
 	const content: PMNode[] = [];
 	let i = 0;
 
@@ -513,7 +568,7 @@ function portableTextToPM(blocks: PTBlock[]): JSONContent {
 					i++;
 				} else break;
 			}
-			content.push(convertPTList(listBlocks, listType, `root:${runStart}`));
+			content.push(convertPTList(listBlocks, listType, `${path}:${runStart}`));
 		} else if (
 			isPTTextBlock(block) &&
 			block.style === "blockquote" &&
@@ -549,19 +604,16 @@ function portableTextToPM(blocks: PTBlock[]): JSONContent {
 				}),
 			});
 		} else {
-			const c = convertPTBlock(block);
+			const c = convertPTBlock(block, `${path}:${i}`);
 			if (c) content.push(c);
 			i++;
 		}
 	}
 
-	return normalizeProseMirrorOrderedListJson({
-		type: "doc",
-		content: content.length > 0 ? content : [{ type: "paragraph" }],
-	});
+	return content;
 }
 
-function convertPTBlock(block: PTBlock): PMNode | null {
+function convertPTBlock(block: PTBlock, path: string): PMNode | null {
 	if (isPTTextBlock(block)) {
 		const { style = "normal", children, markDefs = [], textAlign } = block;
 		const pmContent = convertPTSpans(children, markDefs);
@@ -672,6 +724,11 @@ function convertPTBlock(block: PTBlock): PMNode | null {
 			type: "table",
 			attrs: { rawTable: block },
 		};
+	}
+	if (isPortableTextColumnsInput(block)) {
+		return portableTextColumnsToProseMirror(block, (content, index) =>
+			convertPTBlocks(content, `${path}:${index}`),
+		);
 	}
 	// Unknown block types — treat as plugin blocks. Capture every field other
 	// than the well-known ones into `data` so the block round-trips losslessly,
@@ -1225,6 +1282,8 @@ export function InlinePortableTextEditor({
 	const editor = useEditor({
 		extensions: [
 			StarterKit.configure({
+				// Replaced with InlineDocument below, which also holds columns blocks.
+				document: false,
 				dropcursor: { color: "#3b82f6", width: 2 },
 				// Replaced with InlineCodeBlockExtension below (adds language picker).
 				codeBlock: false,
@@ -1264,6 +1323,10 @@ export function InlinePortableTextEditor({
 				mode: "all",
 			}),
 			Typography,
+			InlineDocument,
+			InlineColumns,
+			InlineColumn,
+			InlineColumnsLayout,
 			HtmlBlockNode,
 			TableBlockNode.configure({ placeholder: tablePlaceholder }),
 			PluginBlockNode,
@@ -1577,6 +1640,7 @@ export function InlinePortableTextEditor({
 				${INLINE_EDITOR_UI_STYLES}
 				${INLINE_MEDIA_PICKER_STYLES}
 				${INLINE_IMAGE_STYLES}
+				${INLINE_COLUMNS_STYLES}
 				.emdash-inline-editor:focus {
 					outline: none;
 				}
