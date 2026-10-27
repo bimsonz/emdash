@@ -64,6 +64,8 @@ export {
 	// Main component (wrapper with EmDash defaults)
 	PortableText,
 	Blocks,
+	// Shows a plugin block in the visual editor as the page renders it
+	BlockPreview,
 	defineBlockComponents,
 	// Widget components
 	WidgetArea,

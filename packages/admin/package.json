@@ -65,6 +65,10 @@
     "./internal/video-block": {
       "types": "./dist/internal/video-block.d.ts",
       "default": "./dist/internal/video-block.js"
+    },
+    "./plugin-block-key": {
+      "types": "./dist/plugin-block-key.d.ts",
+      "default": "./dist/plugin-block-key.js"
     }
   },
   "scripts": {

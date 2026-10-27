@@ -70,6 +70,7 @@ export default defineConfig({
 		"src/portable-text-columns.ts",
 		"src/html-block.ts",
 		"src/internal/video-block.ts",
+		"src/plugin-block-key.ts",
 		"src/slugify.ts",
 	],
 	format: ["esm"],
