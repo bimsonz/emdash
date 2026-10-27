@@ -24,6 +24,7 @@
 // Wrapper component with EmDash defaults
 export { default as PortableText } from "./PortableText.astro";
 export { default as Blocks } from "./Blocks.astro";
+export { default as BlockPreview } from "./BlockPreview.astro";
 export {
 	defineBlockComponents,
 	type BlockComponent,
