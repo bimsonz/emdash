@@ -45,6 +45,10 @@
     "./html-block": {
       "types": "./dist/html-block.d.ts",
       "default": "./dist/html-block.js"
+    },
+    "./plugin-block-key": {
+      "types": "./dist/plugin-block-key.d.ts",
+      "default": "./dist/plugin-block-key.js"
     }
   },
   "scripts": {

@@ -11,6 +11,7 @@
  */
 
 import { htmlBlockFields } from "@emdash-cms/admin/html-block";
+import { pluginBlockKeyFromAttrs } from "@emdash-cms/admin/plugin-block-key";
 import {
 	isPortableTextColumnsInput,
 	portableTextColumnsToProseMirror,
@@ -1048,16 +1049,18 @@ const TableBlockNode = Node.create<{ placeholder: string }>({
  * editable in the admin via a Block Kit modal. The visual-editing surface
  * deliberately does NOT offer that UX — it would need to fetch the manifest,
  * mount the modal, and round-trip through plugin-block plumbing that lives in
- * `@emdash-cms/admin`. Instead, the inline editor renders these blocks as a
- * read-only placeholder so editors can see they exist and edit the surrounding
- * content without losing the block's data.
+ * `@emdash-cms/admin`. Instead, the inline editor shows these blocks read-only
+ * so editors can see them and edit the surrounding content without losing the
+ * block's data: as the page renders them, when the page supplies a preview
+ * (`BlockPreview`), with a link that opens the block's settings in the admin;
+ * otherwise as a placeholder naming the block.
  *
  * The full block payload is preserved on `data` and round-tripped losslessly
  * through PT ↔ PM conversion (see convertPTBlock/convertPMNode). Without this
  * extension, ProseMirror's schema would silently filter unknown nodes on load
  * and the next save would persist the block's disappearance.
  */
-const PluginBlockNode = Node.create({
+const PluginBlockNode = Node.create<{ editHref: ((key: string) => string) | null }>({
 	name: "pluginBlock",
 	group: "block",
 	atom: true,
@@ -1095,7 +1098,94 @@ const PluginBlockNode = Node.create({
 			`Plugin block: ${label} (edit in admin)`,
 		];
 	},
+
+	addOptions() {
+		return { editHref: null };
+	},
+
+	addNodeView() {
+		return ({ node, HTMLAttributes }) => {
+			const key = pluginBlockKeyFromAttrs(node.attrs);
+			const preview = findBlockPreview(key);
+			if (!preview) {
+				const dom = document.createElement("div");
+				const blockType = typeof node.attrs.blockType === "string" ? node.attrs.blockType : "";
+				for (const [name, value] of Object.entries(
+					mergeAttributes(HTMLAttributes, {
+						"data-emdash-plugin-block": "true",
+						"data-block-type": blockType,
+						class: "emdash-plugin-block-placeholder",
+						contenteditable: "false",
+					}),
+				)) {
+					if (typeof value === "string") dom.setAttribute(name, value);
+				}
+				dom.textContent = `Plugin block: ${blockType || "Block"} (edit in admin)`;
+				return { dom, ignoreMutation: () => true };
+			}
+			const dom = renderBlockPreview(node.attrs, preview, this.options.editHref?.(key) ?? null);
+			return {
+				dom,
+				// The preview is the page's own markup, inert; nothing in it is document content.
+				ignoreMutation: () => true,
+				// Let the settings link be followed rather than select the block.
+				stopEvent: (event) =>
+					event.target instanceof Element &&
+					event.target.closest(".emdash-plugin-block-edit") !== null,
+			};
+		};
+	},
 });
+
+/** The page's preview for a block, if it rendered one (`BlockPreview`). */
+function findBlockPreview(key: string): HTMLTemplateElement | null {
+	if (typeof document === "undefined") return null;
+	return document.querySelector<HTMLTemplateElement>(
+		`template[data-emdash-block-preview="${key.replace(/["\\]/g, "\\$&")}"]`,
+	);
+}
+
+/**
+ * A block as the page renders it, read-only. The markup goes into a shadow root carrying the
+ * page's stylesheets, so it looks as it does on the page and the editor's own text styles (a
+ * `.prose h2` rule, say) cannot restyle it. Islands are unwrapped to their server-rendered markup:
+ * a preview is a picture of the block, not a running copy of it.
+ */
+function renderBlockPreview(
+	attrs: Record<string, unknown>,
+	preview: HTMLTemplateElement,
+	editHref: string | null,
+): HTMLElement {
+	const blockType = typeof attrs.blockType === "string" ? attrs.blockType : "";
+	const dom = document.createElement("div");
+	dom.className = "emdash-plugin-block-preview";
+	dom.setAttribute("data-emdash-plugin-block", "true");
+	dom.setAttribute("data-block-type", blockType);
+	dom.contentEditable = "false";
+
+	const host = document.createElement("div");
+	host.className = "emdash-plugin-block-preview-content";
+	host.setAttribute("aria-hidden", "true");
+	const shadow = host.attachShadow({ mode: "open" });
+	for (const sheet of document.head.querySelectorAll('link[rel="stylesheet"], style')) {
+		shadow.append(sheet.cloneNode(true));
+	}
+	const content = document.importNode(preview.content, true);
+	for (const island of content.querySelectorAll("astro-island")) {
+		island.replaceWith(...island.childNodes);
+	}
+	shadow.append(content);
+	dom.append(host);
+
+	if (editHref) {
+		const link = document.createElement("a");
+		link.className = "emdash-plugin-block-edit";
+		link.href = editHref;
+		link.textContent = "Edit block";
+		dom.append(link);
+	}
+	return dom;
+}
 
 // ── Component ──────────────────────────────────────────────────────
 
@@ -1329,7 +1419,10 @@ export function InlinePortableTextEditor({
 			InlineColumnsLayout,
 			HtmlBlockNode,
 			TableBlockNode.configure({ placeholder: tablePlaceholder }),
-			PluginBlockNode,
+			PluginBlockNode.configure({
+				editHref: (key) =>
+					`/_emdash/admin/content/${encodeURIComponent(collection)}/${encodeURIComponent(entryId)}?block=${encodeURIComponent(key)}`,
+			}),
 			slashCommandsExtension,
 		],
 		content: initialContent,
@@ -1691,6 +1784,46 @@ export function InlinePortableTextEditor({
 					font-size: 0.875rem;
 					font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 					user-select: none;
+				}
+				.emdash-plugin-block-preview {
+					position: relative;
+					user-select: none;
+				}
+				.emdash-plugin-block-preview-content {
+					pointer-events: none;
+				}
+				.emdash-plugin-block-preview.ProseMirror-selectednode {
+					outline: 2px solid #2563eb;
+					outline-offset: 2px;
+				}
+				.emdash-plugin-block-edit {
+					position: absolute;
+					top: 0.75rem;
+					right: 0.75rem;
+					z-index: 1;
+					padding: 0.375rem 0.75rem;
+					border: 1px solid #d1d5db;
+					border-radius: 0.375rem;
+					background: #ffffff;
+					color: #111827;
+					font-size: 0.8125rem;
+					font-weight: 600;
+					line-height: 1.25;
+					font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+					text-decoration: none;
+					box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+					opacity: 0;
+					transition: opacity 120ms;
+				}
+				.emdash-plugin-block-preview:hover .emdash-plugin-block-edit,
+				.emdash-plugin-block-preview.ProseMirror-selectednode .emdash-plugin-block-edit,
+				.emdash-plugin-block-edit:focus-visible {
+					opacity: 1;
+				}
+				@media (hover: none) {
+					.emdash-plugin-block-edit {
+						opacity: 1;
+					}
 				}
 				@media (prefers-color-scheme: dark) {
 					.emdash-inline-editor-guidance {
