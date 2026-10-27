@@ -1,7 +1,9 @@
 ---
 /**
  * How a page shows a plugin block in its visual editor: render the block into this component's
- * slot, as the page draws it, and the editor shows that in place of its "edit in admin" placeholder.
+ * slot, as the page draws it, and the editor shows that, running, in place of a slot naming the
+ * block. When the block's settings change on the page, the editor fetches the page again for the
+ * block's new preview, so render one wherever the body is edited.
  *
  * Render one for each plugin block of the body being edited, beside it. Nothing is displayed: the
  * markup waits in a `<template>`, named by the block's content key, until the editor reaches the
