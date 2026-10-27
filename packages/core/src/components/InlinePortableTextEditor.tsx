@@ -1148,8 +1148,8 @@ function findBlockPreview(key: string): HTMLTemplateElement | null {
 /**
  * A block as the page renders it, read-only. The markup goes into a shadow root carrying the
  * page's stylesheets, so it looks as it does on the page and the editor's own text styles (a
- * `.prose h2` rule, say) cannot restyle it. Islands are unwrapped to their server-rendered markup:
- * a preview is a picture of the block, not a running copy of it.
+ * `.prose h2` rule, say) cannot restyle it. Islands are unwrapped to their server-rendered markup
+ * and scripts dropped: a preview is a picture of the block, not a running copy of it.
  */
 function renderBlockPreview(
 	attrs: Record<string, unknown>,
@@ -1174,6 +1174,9 @@ function renderBlockPreview(
 	for (const island of content.querySelectorAll("astro-island")) {
 		island.replaceWith(...island.childNodes);
 	}
+	// A script in a template is inert, but one inserted into the document runs. Astro writes its
+	// island loaders beside the first island on a page, which may be inside a preview.
+	for (const script of content.querySelectorAll("script")) script.remove();
 	shadow.append(content);
 	dom.append(host);
 

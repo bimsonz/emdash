@@ -128,6 +128,19 @@ describe("plugin blocks in the inline editor", () => {
 		);
 	});
 
+	it("runs no script that came with a preview", async () => {
+		const ran = vi.fn();
+		(globalThis as { previewScriptRan?: () => void }).previewScriptRan = ran;
+		supplyPreview(tiles, "<section>tiles</section><script>globalThis.previewScriptRan()</script>");
+		await mount([tiles]);
+
+		const shadow = container.querySelector(".emdash-plugin-block-preview-content")?.shadowRoot;
+		expect(shadow?.querySelector("section")?.textContent).toBe("tiles");
+		expect(shadow?.querySelector("script")).toBeNull();
+		expect(ran).not.toHaveBeenCalled();
+		delete (globalThis as { previewScriptRan?: () => void }).previewScriptRan;
+	});
+
 	it("keeps the placeholder for a block the page did not preview", async () => {
 		supplyPreview(tiles, "<section>tiles</section>");
 		await mount([tiles, video]);
