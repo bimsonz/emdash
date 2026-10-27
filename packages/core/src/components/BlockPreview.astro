@@ -1,0 +1,20 @@
+---
+/**
+ * How a page shows a plugin block in its visual editor: render the block into this component's
+ * slot, as the page draws it, and the editor shows that in place of its "edit in admin" placeholder.
+ *
+ * Render one for each plugin block of the body being edited, beside it. Nothing is displayed: the
+ * markup waits in a `<template>`, named by the block's content key, until the editor reaches the
+ * block. Give it the block as stored (the editable value), since the key is computed from that.
+ */
+import { pluginBlockKey } from "@emdash-cms/admin/plugin-block-key";
+
+export interface Props {
+	/** The block as stored: its `_type` and fields. */
+	block: { _type: string; [field: string]: unknown };
+}
+
+const key = pluginBlockKey(Astro.props.block);
+---
+
+<template data-emdash-block-preview={key}><slot /></template>
