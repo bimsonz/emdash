@@ -17,7 +17,8 @@ import {
 	portableTextColumnsToProseMirror,
 	proseMirrorColumnsToPortableText,
 } from "@emdash-cms/admin/portable-text-columns";
-import { Node, mergeAttributes, type JSONContent } from "@tiptap/core";
+import { Cube } from "@phosphor-icons/react";
+import { Node, mergeAttributes, type Editor as TiptapEditor, type JSONContent } from "@tiptap/core";
 import Focus from "@tiptap/extension-focus";
 import Link from "@tiptap/extension-link";
 import Placeholder from "@tiptap/extension-placeholder";
@@ -26,7 +27,9 @@ import Superscript from "@tiptap/extension-superscript";
 import TextAlign from "@tiptap/extension-text-align";
 import Typography from "@tiptap/extension-typography";
 import Underline from "@tiptap/extension-underline";
-import { Plugin, type Transaction } from "@tiptap/pm/state";
+import type { Node as ProseMirrorNode } from "@tiptap/pm/model";
+import { NodeSelection, Plugin, type Transaction } from "@tiptap/pm/state";
+import type { NodeView } from "@tiptap/pm/view";
 import { useEditor, EditorContent, type Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { exitSuggestion } from "@tiptap/suggestion";
@@ -48,6 +51,13 @@ import {
 } from "../content/converters/numbered-list.js";
 import type { ProseMirrorDocument } from "../content/converters/types.js";
 import { CodeMarkExtension } from "./code-mark.js";
+import {
+	INLINE_BLOCK_SETTINGS_STYLES,
+	InlineBlockSettings,
+	blockFormValues,
+	loadBlockDefinitions,
+	type BlockDefinition,
+} from "./inline-block-settings.js";
 import { InlineBubbleMenu } from "./inline-bubble-menu.js";
 import { InlineCodeBlockExtension } from "./inline-code-block.js";
 import {
@@ -64,6 +74,7 @@ import {
 	InlineSlashMenu,
 	createSlashCommandsExtension,
 	initialSlashMenuState,
+	slashCommands,
 	type SlashCommandItem,
 	type SlashMenuState,
 } from "./inline-slash-menu.js";
@@ -390,19 +401,8 @@ function convertPMNode(node: PMNode, path: string): PTBlock | PTBlock[] | null {
 				(content, index) => convertPMColumn(content, `${path}:${index}`),
 				k,
 			);
-		case "pluginBlock": {
-			// Spread the captured data back out so the block round-trips losslessly.
-			// `data` holds every field except _type / _key and the identity field
-			// (`id` or `url`, named by `identityField`), which live on dedicated attrs.
-			const { blockType, id, identityField, data } = node.attrs ?? {};
-			const field = identityField === "url" || identityField === "" ? identityField : "id";
-			return {
-				...(data && typeof data === "object" ? data : {}),
-				_type: typeof blockType === "string" ? blockType : "embed",
-				_key: k(),
-				...(field ? { [field]: typeof id === "string" ? id : "" } : {}),
-			};
-		}
+		case "pluginBlock":
+			return pluginBlockToPortableText(node.attrs);
 		default:
 			return null;
 	}
@@ -731,12 +731,17 @@ function convertPTBlock(block: PTBlock, path: string): PMNode | null {
 			convertPTBlocks(content, `${path}:${index}`),
 		);
 	}
-	// Unknown block types — treat as plugin blocks. Capture every field other
-	// than the well-known ones into `data` so the block round-trips losslessly,
-	// even if no plugin currently registers this type. Matches the admin
-	// editor's `convertCustomBlock`.
-	// The identity lives under whichever of `id` / `url` the block arrived with,
-	// so the PM → PT direction can write it back under the same key.
+	// Unknown block types — treat as plugin blocks.
+	return { type: "pluginBlock", attrs: pluginBlockAttrs(block) };
+}
+
+/**
+ * A plugin block's node attributes, from its Portable Text. Every field other than the well-known
+ * ones goes into `data`, so the block round-trips losslessly even if no plugin currently registers
+ * its type (matches the admin editor's `convertCustomBlock`). The identity stays under whichever of
+ * `id` / `url` the block arrived with, so the PM → PT direction writes it back under the same key.
+ */
+function pluginBlockAttrs(block: Record<string, unknown>): Record<string, unknown> {
 	const identityField =
 		typeof block.id === "string" ? "id" : typeof block.url === "string" ? "url" : "";
 	const identity = identityField ? block[identityField] : undefined;
@@ -745,13 +750,26 @@ function convertPTBlock(block: PTBlock, path: string): PMNode | null {
 		Object.entries(block).filter(([key]) => !key.startsWith("_") && key !== identityField),
 	);
 	return {
-		type: "pluginBlock",
-		attrs: {
-			blockType: typeof block._type === "string" ? block._type : "embed",
-			id: typeof identity === "string" ? identity : "",
-			identityField,
-			data,
-		},
+		blockType: typeof block._type === "string" ? block._type : "embed",
+		id: typeof identity === "string" ? identity : "",
+		identityField,
+		data,
+	};
+}
+
+/**
+ * A plugin block's Portable Text, from its node's attributes: the captured data spread back out.
+ * `data` holds every field except _type / _key and the identity field (`id` or `url`, named by
+ * `identityField`), which live on dedicated attrs.
+ */
+function pluginBlockToPortableText(attrs: Record<string, unknown> | undefined): PTBlock {
+	const { blockType, id, identityField, data } = attrs ?? {};
+	const field = identityField === "url" || identityField === "" ? identityField : "id";
+	return {
+		...(data && typeof data === "object" ? data : {}),
+		_type: typeof blockType === "string" ? blockType : "embed",
+		_key: k(),
+		...(field ? { [field]: typeof id === "string" ? id : "" } : {}),
 	};
 }
 
@@ -1043,24 +1061,18 @@ const TableBlockNode = Node.create<{ placeholder: string }>({
 });
 
 /**
- * Minimal `pluginBlock` TipTap node for the inline (visual-editing) editor.
- *
- * Plugin-contributed Portable Text block types (e.g. `marketing.hero`) are
- * editable in the admin via a Block Kit modal. The visual-editing surface
- * deliberately does NOT offer that UX — it would need to fetch the manifest,
- * mount the modal, and round-trip through plugin-block plumbing that lives in
- * `@emdash-cms/admin`. Instead, the inline editor shows these blocks read-only
- * so editors can see them and edit the surrounding content without losing the
- * block's data: as the page renders them, when the page supplies a preview
- * (`BlockPreview`), with a link that opens the block's settings in the admin;
- * otherwise as a placeholder naming the block.
+ * The `pluginBlock` TipTap node of the inline (visual-editing) editor: a plugin-contributed Portable
+ * Text block type (e.g. `marketing.hero`). It shows as the page renders it, running, when the page
+ * supplies a preview (`BlockPreview`); otherwise as a slot naming the block and what it is set to.
+ * A bar on it opens its settings, which are edited on the page in the admin's Block Kit form
+ * (`InlineBlockSettings`), moves it and deletes it.
  *
  * The full block payload is preserved on `data` and round-tripped losslessly
  * through PT ↔ PM conversion (see convertPTBlock/convertPMNode). Without this
  * extension, ProseMirror's schema would silently filter unknown nodes on load
  * and the next save would persist the block's disappearance.
  */
-const PluginBlockNode = Node.create<{ editHref: ((key: string) => string) | null }>({
+const PluginBlockNode = Node.create<PluginBlockOptions>({
 	name: "pluginBlock",
 	group: "block",
 	atom: true,
@@ -1086,7 +1098,6 @@ const PluginBlockNode = Node.create<{ editHref: ((key: string) => string) | null
 
 	renderHTML({ HTMLAttributes, node }) {
 		const blockType = typeof node.attrs.blockType === "string" ? node.attrs.blockType : "";
-		const label = blockType || "Block";
 		return [
 			"div",
 			mergeAttributes(HTMLAttributes, {
@@ -1095,47 +1106,192 @@ const PluginBlockNode = Node.create<{ editHref: ((key: string) => string) | null
 				class: "emdash-plugin-block-placeholder",
 				contenteditable: "false",
 			}),
-			`Plugin block: ${label} (edit in admin)`,
+			blockLabel(blockType),
 		];
 	},
 
 	addOptions() {
-		return { editHref: null };
+		return { definition: () => undefined, openSettings: null, redrawing: () => false };
 	},
 
 	addNodeView() {
-		return ({ node, HTMLAttributes }) => {
-			const key = pluginBlockKeyFromAttrs(node.attrs);
-			const preview = findBlockPreview(key);
-			if (!preview) {
-				const dom = document.createElement("div");
-				const blockType = typeof node.attrs.blockType === "string" ? node.attrs.blockType : "";
-				for (const [name, value] of Object.entries(
-					mergeAttributes(HTMLAttributes, {
-						"data-emdash-plugin-block": "true",
-						"data-block-type": blockType,
-						class: "emdash-plugin-block-placeholder",
-						contenteditable: "false",
-					}),
-				)) {
-					if (typeof value === "string") dom.setAttribute(name, value);
-				}
-				dom.textContent = `Plugin block: ${blockType || "Block"} (edit in admin)`;
-				return { dom, ignoreMutation: () => true };
-			}
-			const dom = renderBlockPreview(node.attrs, preview, this.options.editHref?.(key) ?? null);
-			return {
-				dom,
-				// The preview is the page's own markup, inert; nothing in it is document content.
-				ignoreMutation: () => true,
-				// Let the settings link be followed rather than select the block.
-				stopEvent: (event) =>
-					event.target instanceof Element &&
-					event.target.closest(".emdash-plugin-block-edit") !== null,
-			};
-		};
+		return ({ node, getPos, editor }) => pluginBlockView(node, getPos, editor, this.options);
 	},
 });
+
+interface PluginBlockOptions {
+	/** The block type's definition, once the editor has the admin manifest. */
+	definition: (blockType: string) => BlockDefinition | undefined;
+	/** Opens the settings of the block at a position. */
+	openSettings: ((pos: number) => void) | null;
+	/** Whether the editor is fetching the page for the previews of blocks that just changed. */
+	redrawing: () => boolean;
+}
+
+/** Dispatched on the document when blocks' previews or definitions arrive, for blocks to redraw. */
+const BLOCK_PREVIEWS_EVENT = "emdash:block-previews";
+
+function pluginBlockView(
+	initial: ProseMirrorNode,
+	getPos: () => number | undefined,
+	editor: TiptapEditor,
+	options: PluginBlockOptions,
+): NodeView {
+	let node = initial;
+	const dom = document.createElement("div");
+	dom.setAttribute("data-emdash-plugin-block", "true");
+	dom.contentEditable = "false";
+
+	const bar = document.createElement("div");
+	bar.className = "emdash-plugin-block-bar";
+	// The editor selects the block by its name and drags it from there.
+	const handle = document.createElement("span");
+	handle.className = "emdash-plugin-block-handle";
+	const settings = barButton("Settings", null, () => {
+		const pos = getPos();
+		if (pos !== undefined) options.openSettings?.(pos);
+	});
+	const up = barButton("", ICON_UP, () => moveBlock(-1));
+	const down = barButton("", ICON_DOWN, () => moveBlock(1));
+	const remove = barButton("", ICON_TRASH, () => {
+		const pos = getPos();
+		if (pos === undefined) return;
+		editor
+			.chain()
+			.focus()
+			.deleteRange({ from: pos, to: pos + node.nodeSize })
+			.run();
+	});
+	remove.dataset.danger = "";
+	bar.append(handle, settings, up, down, remove);
+
+	const body = document.createElement("div");
+	body.className = "emdash-plugin-block-body";
+	// The block's own pictures and text drag nowhere: the editor moves the block from its name.
+	body.addEventListener("dragstart", (event) => event.preventDefault());
+	dom.append(bar, body);
+
+	/** Swaps the block with the one before or after it among its siblings. */
+	function moveBlock(by: -1 | 1) {
+		const pos = getPos();
+		if (pos === undefined) return;
+		const { state } = editor;
+		const $pos = state.doc.resolve(pos);
+		const sibling = $pos.parent.maybeChild($pos.index() + by);
+		if (!sibling) return;
+		const to = by < 0 ? pos - sibling.nodeSize : pos + sibling.nodeSize;
+		const tr = state.tr.delete(pos, pos + node.nodeSize).insert(to, node);
+		tr.setSelection(NodeSelection.create(tr.doc, to));
+		editor.view.dispatch(tr.scrollIntoView());
+	}
+
+	let shown: { key: string; preview: boolean; label: string } | null = null;
+	function render() {
+		const blockType = typeof node.attrs.blockType === "string" ? node.attrs.blockType : "";
+		const definition = options.definition(blockType);
+		const label = definition?.label ?? blockLabel(blockType);
+		dom.setAttribute("data-block-type", blockType);
+		handle.textContent = label;
+		settings.hidden = !definition || !options.openSettings;
+		settings.setAttribute("aria-label", `${label} settings`);
+		up.setAttribute("aria-label", `Move ${label} up`);
+		down.setAttribute("aria-label", `Move ${label} down`);
+		remove.setAttribute("aria-label", `Delete ${label}`);
+
+		const key = pluginBlockKeyFromAttrs(node.attrs);
+		const preview = findBlockPreview(key);
+		if (!preview && shown && shown.key !== key && options.redrawing()) {
+			// What it was stays until the page has drawn what it is.
+			dom.setAttribute("data-redrawing", "");
+			return;
+		}
+		dom.removeAttribute("data-redrawing");
+		if (shown?.key === key && shown.preview === !!preview && (preview || shown.label === label)) {
+			return;
+		}
+		dom.className = `emdash-plugin-block ${preview ? "emdash-plugin-block-preview" : "emdash-plugin-block-placeholder"}`;
+		body.replaceChildren(preview ? renderBlockPreview(preview) : blockSlot(node.attrs, label));
+		shown = { key, preview: !!preview, label };
+	}
+	render();
+	document.addEventListener(BLOCK_PREVIEWS_EVENT, render);
+
+	return {
+		dom,
+		update(next) {
+			if (next.type !== node.type) return false;
+			node = next;
+			render();
+			return true;
+		},
+		// The preview is the page's own markup, running; nothing in it is document content.
+		ignoreMutation: () => true,
+		// The block's controls and content take their own events. Its name is where the editor
+		// selects and drags it from.
+		stopEvent(event) {
+			const target = event.target;
+			if (!(target instanceof Element) || target.closest(".emdash-plugin-block-handle")) {
+				return false;
+			}
+			return target.closest(".emdash-plugin-block-bar, .emdash-plugin-block-body") !== null;
+		},
+		destroy() {
+			document.removeEventListener(BLOCK_PREVIEWS_EVENT, render);
+		},
+	};
+}
+
+const ICON_UP = "M12 19V5m-7 7 7-7 7 7";
+const ICON_DOWN = "M12 5v14m7-7-7 7-7-7";
+const ICON_TRASH = "M4 7h16m-10 4v6m4-6v6M6 7l1 13h10l1-13M9 7V4h6v3";
+
+function barButton(text: string, icon: string | null, onClick: () => void): HTMLButtonElement {
+	const button = document.createElement("button");
+	button.type = "button";
+	if (icon) {
+		const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+		svg.setAttribute("viewBox", "0 0 24 24");
+		svg.setAttribute("aria-hidden", "true");
+		const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+		path.setAttribute("d", icon);
+		svg.append(path);
+		button.append(svg);
+		button.dataset.icon = "";
+	} else {
+		button.textContent = text;
+	}
+	button.addEventListener("click", onClick);
+	return button;
+}
+
+/** A block type's name when the admin manifest has none for it. */
+function blockLabel(blockType: string): string {
+	return blockType ? blockType.charAt(0).toUpperCase() + blockType.slice(1) : "Block";
+}
+
+/** A block the page drew nothing for: its name and what it is set to, as the admin shows it. */
+function blockSlot(attrs: Record<string, unknown>, label: string): HTMLElement {
+	const slot = document.createElement("div");
+	slot.className = "emdash-plugin-block-slot";
+	const name = document.createElement("strong");
+	name.textContent = label;
+	const detail = document.createElement("span");
+	const id = typeof attrs.id === "string" ? attrs.id : "";
+	const data = attrs.data && typeof attrs.data === "object" ? Object.values(attrs.data) : [];
+	detail.textContent =
+		id ||
+		data
+			.filter(
+				(value): value is string | number =>
+					(typeof value === "string" && value.length > 0) ||
+					(typeof value === "number" && Number.isFinite(value)),
+			)
+			.map(String)
+			.join(", ") ||
+		"Nothing set yet";
+	slot.append(name, detail);
+	return slot;
+}
 
 /** The page's preview for a block, if it rendered one (`BlockPreview`). */
 function findBlockPreview(key: string): HTMLTemplateElement | null {
@@ -1146,48 +1302,73 @@ function findBlockPreview(key: string): HTMLTemplateElement | null {
 }
 
 /**
- * A block as the page renders it, read-only. The markup goes into a shadow root carrying the
- * page's stylesheets, so it looks as it does on the page and the editor's own text styles (a
- * `.prose h2` rule, say) cannot restyle it. Islands are unwrapped to their server-rendered markup
- * and scripts dropped: a preview is a picture of the block, not a running copy of it.
+ * A block as the page renders it, running as it runs there: its islands hydrate and its scripts
+ * run. The markup goes into a shadow root carrying the page's stylesheets, so it looks as it does
+ * on the page and the editor's own text styles (a `.prose h2` rule, say) cannot restyle it. Its
+ * links and forms stay put while editing, as links in the text do.
  */
-function renderBlockPreview(
-	attrs: Record<string, unknown>,
-	preview: HTMLTemplateElement,
-	editHref: string | null,
-): HTMLElement {
-	const blockType = typeof attrs.blockType === "string" ? attrs.blockType : "";
-	const dom = document.createElement("div");
-	dom.className = "emdash-plugin-block-preview";
-	dom.setAttribute("data-emdash-plugin-block", "true");
-	dom.setAttribute("data-block-type", blockType);
-	dom.contentEditable = "false";
-
+function renderBlockPreview(preview: HTMLTemplateElement): HTMLElement {
 	const host = document.createElement("div");
-	host.className = "emdash-plugin-block-preview-content";
-	host.setAttribute("aria-hidden", "true");
+	host.className = "emdash-plugin-block-content";
 	const shadow = host.attachShadow({ mode: "open" });
 	for (const sheet of document.head.querySelectorAll('link[rel="stylesheet"], style')) {
 		shadow.append(sheet.cloneNode(true));
 	}
 	const content = document.importNode(preview.content, true);
-	for (const island of content.querySelectorAll("astro-island")) {
-		island.replaceWith(...island.childNodes);
+	// A script DOMParser read, as a redrawn block's are, is marked as already run, and so is a copy
+	// of it. A new script element runs, as the page's did.
+	for (const parsed of content.querySelectorAll("script")) {
+		const script = document.createElement("script");
+		for (const { name, value } of parsed.attributes) script.setAttribute(name, value);
+		script.textContent = parsed.textContent;
+		parsed.replaceWith(script);
 	}
-	// A script in a template is inert, but one inserted into the document runs. Astro writes its
-	// island loaders beside the first island on a page, which may be inside a preview.
-	for (const script of content.querySelectorAll("script")) script.remove();
 	shadow.append(content);
-	dom.append(host);
+	shadow.addEventListener("click", (event) => {
+		if (event.target instanceof Element && event.target.closest("a[href]")) event.preventDefault();
+	});
+	shadow.addEventListener("submit", (event) => event.preventDefault());
+	return host;
+}
 
-	if (editHref) {
-		const link = document.createElement("a");
-		link.className = "emdash-plugin-block-edit";
-		link.href = editHref;
-		link.textContent = "Edit block";
-		dom.append(link);
+/**
+ * Fetches the page as the editor's last save left it, which edit mode renders from the draft, for
+ * the previews of blocks that changed, and keeps them beside the page's own.
+ */
+async function fetchBlockPreviews(): Promise<void> {
+	const res = await fetch(location.href, {
+		credentials: "same-origin",
+		cache: "no-store",
+		headers: { Accept: "text/html" },
+	});
+	if (!res.ok) return;
+	const page = new DOMParser().parseFromString(await res.text(), "text/html");
+	for (const template of page.querySelectorAll<HTMLTemplateElement>(
+		"template[data-emdash-block-preview]",
+	)) {
+		const key = template.getAttribute("data-emdash-block-preview");
+		if (key && !findBlockPreview(key)) document.body.append(document.importNode(template, true));
 	}
-	return dom;
+}
+
+/**
+ * Puts a new plugin block where its slash command was typed: in place of the line, when the
+ * command left it empty, or after it.
+ */
+function insertPluginBlock(
+	editor: TiptapEditor,
+	at: number,
+	attrs: Record<string, unknown>,
+): boolean {
+	const content = { type: "pluginBlock", attrs };
+	const $at = editor.state.doc.resolve(Math.min(at, editor.state.doc.content.size));
+	if ($at.depth === 0) return editor.chain().insertContentAt(at, content).run();
+	const line = $at.parent;
+	const where =
+		line.isTextblock && line.content.size === 0
+			? { from: $at.before(), to: $at.after() }
+			: $at.after();
+	return editor.chain().insertContentAt(where, content).run();
 }
 
 // ── Component ──────────────────────────────────────────────────────
@@ -1213,6 +1394,8 @@ export function InlinePortableTextEditor({
 	// while the current document is structurally equal to it (`Node.eq`).
 	const savedDocRef = React.useRef<Editor["state"]["doc"] | null>(null);
 	const savingRef = React.useRef(false);
+	// The save in flight, which a save that must not be skipped waits for.
+	const pendingSaveRef = React.useRef<Promise<void>>(Promise.resolve());
 	const editorRef = React.useRef<ReturnType<typeof useEditor>>(null);
 
 	// Where the image picker that `/image` opened will put the image.
@@ -1300,6 +1483,7 @@ export function InlinePortableTextEditor({
 			const done = new Promise<void>((resolve) => {
 				settle = () => resolve();
 			});
+			pendingSaveRef.current = done;
 			// The visual-editing toolbar holds Publish until `done` settles.
 			document.dispatchEvent(new CustomEvent("emdash:save-pending", { detail: { done } }));
 			try {
@@ -1346,6 +1530,12 @@ export function InlinePortableTextEditor({
 		[collection, entryId, field, getBlocks, loadError],
 	);
 
+	/** Saves now, after any save in flight, which may have started before the latest change. */
+	const saveNow = React.useCallback(async () => {
+		while (savingRef.current) await pendingSaveRef.current;
+		await save();
+	}, [save]);
+
 	// Flush unsaved edits when the page goes away (browser back/forward,
 	// link click, tab close). The blur handler doesn't cover this: unload
 	// doesn't reliably fire React blur, and a plain fetch started during
@@ -1360,10 +1550,72 @@ export function InlinePortableTextEditor({
 		return () => window.removeEventListener("pagehide", flush);
 	}, [save]);
 
+	// Plugin block types, from the admin manifest: the blocks' names and settings, and the slash
+	// menu's commands to insert them.
+	const [definitions, setDefinitions] = React.useState<Map<string, BlockDefinition> | null>(null);
+	const definitionsRef = React.useRef(definitions);
+	definitionsRef.current = definitions;
+	React.useEffect(() => {
+		const controller = new AbortController();
+		loadBlockDefinitions(controller.signal).then(setDefinitions, () => {});
+		return () => controller.abort();
+	}, []);
+	React.useEffect(() => {
+		if (definitions) document.dispatchEvent(new Event(BLOCK_PREVIEWS_EVENT));
+	}, [definitions]);
+
+	const commandsRef = React.useRef(slashCommands);
+	commandsRef.current = React.useMemo(
+		() => [
+			...slashCommands,
+			...Array.from(
+				definitions?.values() ?? [],
+				(definition): SlashCommandItem => ({
+					id: `plugin-${definition.pluginId}-${definition.type}`,
+					title: definition.label,
+					description: definition.description ?? `Embed a ${definition.label}`,
+					icon: Cube,
+					aliases: [definition.type],
+					category: definition.category ?? "Embeds",
+					command: ({ editor, range, openBlockSettings }) => {
+						editor.chain().deleteRange(range).run();
+						openBlockSettings(definition.type);
+					},
+				}),
+			),
+		],
+		[definitions],
+	);
+
+	// The block whose settings are open, or the block a slash command is inserting.
+	const [blockSettings, setBlockSettings] = React.useState<{
+		definition: BlockDefinition;
+		values: Record<string, unknown>;
+		/** The block's position, or where the new block goes. */
+		at: number;
+		inserting: boolean;
+	} | null>(null);
+	const redrawingRef = React.useRef(false);
+	const openSettingsRef = React.useRef((_pos: number) => {});
+	openSettingsRef.current = (pos) => {
+		const node = editorRef.current?.state.doc.nodeAt(pos);
+		if (node?.type.name !== "pluginBlock") return;
+		const definition = definitionsRef.current?.get(String(node.attrs.blockType));
+		if (!definition) return;
+		const { _type, _key, ...stored } = pluginBlockToPortableText(node.attrs);
+		setBlockSettings({
+			definition,
+			values: blockFormValues(definition, stored),
+			at: pos,
+			inserting: false,
+		});
+	};
+
 	// Create slash commands extension once — uses refs to avoid re-render loop
 	const slashCommandsExtension = React.useMemo(
 		() =>
 			createSlashCommandsExtension({
+				getCommands: () => commandsRef.current,
 				onStateChange: setSlashMenuState,
 				getState: () => slashMenuStateRef.current,
 				onCommand: (item) => slashMenuActionsRef.current.run(item),
@@ -1423,8 +1675,9 @@ export function InlinePortableTextEditor({
 			HtmlBlockNode,
 			TableBlockNode.configure({ placeholder: tablePlaceholder }),
 			PluginBlockNode.configure({
-				editHref: (key) =>
-					`/_emdash/admin/content/${encodeURIComponent(collection)}/${encodeURIComponent(entryId)}?block=${encodeURIComponent(key)}`,
+				definition: (blockType) => definitionsRef.current?.get(blockType),
+				openSettings: (pos) => openSettingsRef.current(pos),
+				redrawing: () => redrawingRef.current,
 			}),
 			slashCommandsExtension,
 		],
@@ -1465,6 +1718,16 @@ export function InlinePortableTextEditor({
 				editor,
 				range,
 				openImagePicker: () => setImagePickerAt(editor.state.selection.from),
+				openBlockSettings: (type) => {
+					const definition = definitionsRef.current?.get(type);
+					if (!definition) return;
+					setBlockSettings({
+						definition,
+						values: blockFormValues(definition),
+						at: editor.state.selection.from,
+						inserting: true,
+					});
+				},
 			});
 			setSlashMenuState((prev) => ({ ...prev, isOpen: false }));
 		},
@@ -1511,6 +1774,56 @@ export function InlinePortableTextEditor({
 					}
 				: null,
 		[editor, imagePickerAt],
+	);
+
+	// Edits made while a block's settings are open move the block, or where the new one goes.
+	const settingsOpen = blockSettings !== null;
+	React.useEffect(() => {
+		if (!editor || !settingsOpen) return;
+		const onTransaction = ({ transaction }: { transaction: Transaction }) => {
+			if (!transaction.docChanged) return;
+			setBlockSettings((open) => open && { ...open, at: transaction.mapping.map(open.at) });
+		};
+		editor.on("transaction", onTransaction);
+		return () => {
+			editor.off("transaction", onTransaction);
+		};
+	}, [editor, settingsOpen]);
+
+	/**
+	 * Puts a block's settings into the document, saves, and fetches the page as it now renders for
+	 * the block's new preview. Until it arrives the block shows as it was.
+	 */
+	const applyBlockSettings = React.useCallback(
+		async (values: Record<string, unknown>) => {
+			if (!editor || !blockSettings) return;
+			const { definition, at, inserting } = blockSettings;
+			const attrs = pluginBlockAttrs({ ...values, _type: definition.type });
+			setBlockSettings(null);
+			redrawingRef.current = true;
+			const applied = inserting
+				? insertPluginBlock(editor, at, attrs)
+				: editor
+						.chain()
+						.command(({ tr }) => {
+							if (tr.doc.nodeAt(at)?.type.name !== "pluginBlock") return false;
+							tr.setNodeMarkup(at, undefined, attrs);
+							return true;
+						})
+						.run();
+			try {
+				if (applied) {
+					await saveNow();
+					await fetchBlockPreviews();
+				}
+			} catch (error) {
+				console.error("Couldn't redraw the block:", error);
+			} finally {
+				redrawingRef.current = false;
+				document.dispatchEvent(new Event(BLOCK_PREVIEWS_EVENT));
+			}
+		},
+		[editor, blockSettings, saveNow],
 	);
 
 	// Save on blur — but not when interacting with slash menu or image picker
@@ -1593,6 +1906,16 @@ export function InlinePortableTextEditor({
 						if (reason !== "blur") editor.view.focus();
 						setImagePickerAt(null);
 					}}
+				/>
+			)}
+			{blockSettings && (
+				<InlineBlockSettings
+					uiRoot={uiRoot}
+					definition={blockSettings.definition}
+					values={blockSettings.values}
+					inserting={blockSettings.inserting}
+					onSubmit={(values) => void applyBlockSettings(values)}
+					onClose={() => setBlockSettings(null)}
 				/>
 			)}
 			<style>{`
@@ -1735,6 +2058,7 @@ export function InlinePortableTextEditor({
 				}
 				${INLINE_EDITOR_UI_STYLES}
 				${INLINE_MEDIA_PICKER_STYLES}
+				${INLINE_BLOCK_SETTINGS_STYLES}
 				${INLINE_IMAGE_STYLES}
 				${INLINE_COLUMNS_STYLES}
 				.emdash-inline-editor:focus {
@@ -1777,56 +2101,121 @@ export function InlinePortableTextEditor({
 					line-height: 1.4;
 					text-align: start;
 				}
+				.emdash-plugin-block {
+					position: relative;
+					user-select: none;
+				}
+				.emdash-plugin-block.ProseMirror-selectednode {
+					outline: 2px solid #2563eb;
+					outline-offset: 2px;
+				}
+				.emdash-plugin-block[data-redrawing] .emdash-plugin-block-body {
+					opacity: 0.5;
+					transition: opacity 150ms;
+				}
 				.emdash-plugin-block-placeholder {
 					margin: 0.75rem 0;
-					padding: 0.625rem 0.875rem;
+				}
+				.emdash-plugin-block-slot {
+					display: flex;
+					flex-direction: column;
+					gap: 0.125rem;
+					padding: 0.75rem 0.875rem;
+					padding-inline-end: 16rem;
 					border: 1px dashed #d1d5db;
 					border-radius: 0.5rem;
 					background: #f9fafb;
 					color: #4b5563;
 					font-size: 0.875rem;
 					font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-					user-select: none;
+					line-height: 1.4;
+					overflow-wrap: anywhere;
 				}
-				.emdash-plugin-block-preview {
-					position: relative;
-					user-select: none;
-				}
-				.emdash-plugin-block-preview-content {
-					pointer-events: none;
-				}
-				.emdash-plugin-block-preview.ProseMirror-selectednode {
-					outline: 2px solid #2563eb;
-					outline-offset: 2px;
-				}
-				.emdash-plugin-block-edit {
-					position: absolute;
-					top: 0.75rem;
-					right: 0.75rem;
-					z-index: 1;
-					padding: 0.375rem 0.75rem;
-					border: 1px solid #d1d5db;
-					border-radius: 0.375rem;
-					background: #ffffff;
+				.emdash-plugin-block-slot strong {
 					color: #111827;
-					font-size: 0.8125rem;
 					font-weight: 600;
-					line-height: 1.25;
-					font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-					text-decoration: none;
-					box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+				}
+				@media (max-width: 40rem) {
+					.emdash-plugin-block-slot {
+						padding-block-start: 3rem;
+						padding-inline-end: 0.875rem;
+					}
+				}
+				.emdash-plugin-block-bar {
+					position: absolute;
+					top: 0.5rem;
+					inset-inline-end: 0.5rem;
+					z-index: 2;
+					display: flex;
+					align-items: center;
+					gap: 2px;
+					padding: 3px;
+					border-radius: 8px;
+					background: #ffffff;
+					color: #1d2327;
+					box-shadow: 0 0 0 1px rgb(0 0 0 / 0.1), 0 4px 6px -1px rgb(0 0 0 / 0.1);
+					font: 500 13px/20px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 					opacity: 0;
 					transition: opacity 120ms;
 				}
-				.emdash-plugin-block-preview:hover .emdash-plugin-block-edit,
-				.emdash-plugin-block-preview.ProseMirror-selectednode .emdash-plugin-block-edit,
-				.emdash-plugin-block-edit:focus-visible {
+				.emdash-plugin-block:hover > .emdash-plugin-block-bar,
+				.emdash-plugin-block:focus-within > .emdash-plugin-block-bar,
+				.emdash-plugin-block.ProseMirror-selectednode > .emdash-plugin-block-bar {
 					opacity: 1;
 				}
 				@media (hover: none) {
-					.emdash-plugin-block-edit {
+					.emdash-plugin-block-bar {
 						opacity: 1;
 					}
+				}
+				.emdash-plugin-block-handle {
+					max-width: 16ch;
+					padding: 0 8px;
+					overflow: hidden;
+					color: #646970;
+					text-overflow: ellipsis;
+					white-space: nowrap;
+					cursor: grab;
+				}
+				.emdash-plugin-block-bar button {
+					display: inline-flex;
+					height: 28px;
+					align-items: center;
+					justify-content: center;
+					margin: 0;
+					padding: 0 8px;
+					border: 0;
+					border-radius: 6px;
+					background: transparent;
+					color: inherit;
+					font: inherit;
+					cursor: pointer;
+				}
+				.emdash-plugin-block-bar button[hidden] {
+					display: none;
+				}
+				.emdash-plugin-block-bar button[data-icon] {
+					width: 28px;
+					padding: 0;
+				}
+				.emdash-plugin-block-bar button[data-danger] {
+					color: #b32d2e;
+				}
+				.emdash-plugin-block-bar button:hover {
+					background: #f0f0f1;
+				}
+				.emdash-plugin-block-bar button:focus-visible {
+					outline: 2px solid #2563eb;
+					outline-offset: -2px;
+				}
+				.emdash-plugin-block-bar svg {
+					width: 16px;
+					height: 16px;
+					fill: none;
+					stroke: currentColor;
+					stroke-width: 2;
+					stroke-linecap: round;
+					stroke-linejoin: round;
 				}
 				@media (prefers-color-scheme: dark) {
 					.emdash-inline-editor-guidance {
@@ -1839,10 +2228,27 @@ export function InlinePortableTextEditor({
 						background: #450a0a;
 						color: #fee2e2;
 					}
-					.emdash-plugin-block-placeholder {
+					.emdash-plugin-block-slot {
 						border-color: #374151;
 						background: #111827;
 						color: #9ca3af;
+					}
+					.emdash-plugin-block-slot strong {
+						color: #f3f4f6;
+					}
+					.emdash-plugin-block-bar {
+						background: #1f2937;
+						color: #f3f4f6;
+						box-shadow: 0 0 0 1px #374151, 0 4px 6px -1px rgb(0 0 0 / 0.3);
+					}
+					.emdash-plugin-block-handle {
+						color: #9ca3af;
+					}
+					.emdash-plugin-block-bar button:hover {
+						background: #374151;
+					}
+					.emdash-plugin-block-bar button[data-danger] {
+						color: #f87171;
 					}
 				}
 			`}</style>

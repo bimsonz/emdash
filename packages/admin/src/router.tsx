@@ -48,7 +48,6 @@ import { ContentTypeEditor } from "./components/ContentTypeEditor";
 import { ContentTypeList } from "./components/ContentTypeList";
 import { Dashboard } from "./components/Dashboard";
 import { DeviceAuthorizePage } from "./components/DeviceAuthorizePage";
-import { EDIT_PLUGIN_BLOCK_EVENT } from "./components/editor/PluginBlockNode";
 import { EntryLockNotice } from "./components/EntryLockNotice";
 import { InviteAcceptPage } from "./components/InviteAcceptPage";
 import { LoginPage } from "./components/LoginPage";
@@ -1097,7 +1096,6 @@ const contentEditRoute = createRoute({
 	staticData: { fullBleed: true, pageTitle: msg`Edit content` },
 	validateSearch: (search) => ({
 		...(typeof search.field === "string" && { field: search.field }),
-		...(typeof search.block === "string" && { block: search.block }),
 		...(typeof search.locale === "string" && { locale: search.locale }),
 	}),
 });
@@ -1606,30 +1604,6 @@ function ContentEditPage() {
 		collection,
 		collectionFields,
 	]);
-
-	// `?block=<key>` (from the page's visual editor) opens that plugin block's settings. The body's
-	// editor mounts after the item loads, so look for the block for a few seconds.
-	React.useEffect(() => {
-		if (typeof searchParams.block !== "string" || isLoading) return;
-		const key = searchParams.block;
-		let tries = 0;
-		let timeoutId: ReturnType<typeof setTimeout> | undefined;
-		const open = () => {
-			const el = document.querySelector(
-				`[data-plugin-block-key="${key.replace(/["\\]/g, "\\$&")}"]`,
-			);
-			if (!el) {
-				if (++tries < 50) timeoutId = setTimeout(open, 100);
-				return;
-			}
-			el.scrollIntoView({ behavior: "smooth", block: "center" });
-			el.dispatchEvent(new CustomEvent(EDIT_PLUGIN_BLOCK_EVENT));
-			const { block: _, ...preservedSearch } = searchParams;
-			void navigate({ search: preservedSearch as never, replace: true });
-		};
-		open();
-		return () => clearTimeout(timeoutId);
-	}, [searchParams, isLoading, navigate]);
 
 	// Fetch translations when i18n is enabled
 	const { data: translationsData } = useQuery({
