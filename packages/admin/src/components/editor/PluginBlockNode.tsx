@@ -33,16 +33,9 @@ import * as React from "react";
 
 import { cn } from "../../lib/utils";
 import { PluginBlockNode } from "../../portable-text/schema.js";
-import { pluginBlockKey, pluginBlockKeyFromAttrs } from "../../plugin-block-key";
 import { PORTABLE_TEXT_BLOCK_ATTR } from "./portableTextIdentity.js";
 
 const EMPTY_REGISTRY = new Map<string, PluginBlockDef>();
-
-/**
- * Dispatched on a plugin block's element (`[data-plugin-block-key]`) to open its settings, as the
- * Edit button would: how a `?block=` link from the page's visual editor reaches the block.
- */
-export const EDIT_PLUGIN_BLOCK_EVENT = "emdash:edit-plugin-block";
 
 /**
  * Plugin block definition for slash commands
@@ -235,19 +228,6 @@ function PluginBlockNodeView({
 	const canEditUrl = !hasFields && (!!blockDef || hasIdentity);
 	const canEdit = !!blockDef || canEditUrl;
 
-	// The block's content key, as the page's visual editor names it. The stored block rides on the
-	// node from load; a block made in this session falls back to its attributes.
-	const stored: unknown = original;
-	const blockKey =
-		stored && typeof stored === "object"
-			? pluginBlockKey(stored as Record<string, unknown>)
-			: pluginBlockKeyFromAttrs({
-					blockType,
-					id,
-					identityField: id ? "id" : "",
-					data,
-				});
-
 	const [isEditing, setIsEditing] = React.useState(false);
 	const [editValue, setEditValue] = React.useState(id || "");
 	const inputRef = React.useRef<HTMLInputElement>(null);
@@ -282,40 +262,6 @@ function PluginBlockNodeView({
 		}
 	};
 
-	const openEdit = () => {
-		if (!canEdit) return;
-		if (hasFields) {
-			// Open Block Kit modal via editor storage callback
-			const storage = (editor.storage as unknown as Record<string, Record<string, unknown>>)
-				.pluginBlock;
-			const onEdit = storage?.onEditBlock as
-				| ((attrs: {
-						blockType: string;
-						id: string;
-						data: Record<string, unknown>;
-						pos: number;
-				  }) => void)
-				| null;
-			if (onEdit) {
-				const pos = (typeof getPos === "function" ? getPos() : 0) ?? 0;
-				onEdit({ blockType, id, data, pos });
-			}
-		} else {
-			setIsEditing(true);
-		}
-	};
-	const openEditRef = React.useRef(openEdit);
-	openEditRef.current = openEdit;
-
-	const blockRef = React.useRef<HTMLDivElement>(null);
-	React.useEffect(() => {
-		const el = blockRef.current;
-		if (!el) return;
-		const onRequest = () => openEditRef.current();
-		el.addEventListener(EDIT_PLUGIN_BLOCK_EVENT, onRequest);
-		return () => el.removeEventListener(EDIT_PLUGIN_BLOCK_EVENT, onRequest);
-	}, []);
-
 	const handleCopyUrl = () => {
 		void navigator.clipboard.writeText(id);
 	};
@@ -341,7 +287,7 @@ function PluginBlockNodeView({
 			contentEditable={false}
 			data-drag-handle
 		>
-			<div className="relative group" ref={blockRef} data-plugin-block-key={blockKey}>
+			<div className="relative group">
 				{/* Main block content */}
 				<div className="rounded-lg border bg-kumo-base">
 					{/* Header with icon, label, and actions */}
@@ -409,7 +355,28 @@ function PluginBlockNodeView({
 									variant="ghost"
 									shape="square"
 									className="h-8 w-8"
-									onClick={openEdit}
+									onClick={() => {
+										if (hasFields) {
+											// Open Block Kit modal via editor storage callback
+											const storage = (
+												editor.storage as unknown as Record<string, Record<string, unknown>>
+											).pluginBlock;
+											const onEdit = storage?.onEditBlock as
+												| ((attrs: {
+														blockType: string;
+														id: string;
+														data: Record<string, unknown>;
+														pos: number;
+												  }) => void)
+												| null;
+											if (onEdit) {
+												const pos = (typeof getPos === "function" ? getPos() : 0) ?? 0;
+												onEdit({ blockType, id, data, pos });
+											}
+										} else {
+											setIsEditing(true);
+										}
+									}}
 									title={hasFields ? t`Edit` : t`Edit URL`}
 									aria-label={hasFields ? t`Edit` : t`Edit URL`}
 								>
