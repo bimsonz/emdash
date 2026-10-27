@@ -29,6 +29,8 @@ export interface SlashCommandProps {
 	range: Range;
 	/** Opens this editor's image picker at the caret. */
 	openImagePicker: () => void;
+	/** Opens a plugin block's settings, to insert the block at the caret. */
+	openBlockSettings: (type: string) => void;
 }
 
 export interface SlashCommandItem {
@@ -212,16 +214,19 @@ function scoreSlashCommand(
 }
 
 /** The commands to list for a query, best match first, or all of them by category. */
-export function filterSlashCommands(query: string): SlashCommandItem[] {
+export function filterSlashCommands(
+	query: string,
+	commands: SlashCommandItem[] = slashCommands,
+): SlashCommandItem[] {
 	if (!query.trim()) {
 		// The menu groups commands by category, so arrow keys must follow that order.
-		const visible = slashCommands.filter((item) => !item.searchOnly);
+		const visible = commands.filter((item) => !item.searchOnly);
 		const categories = [...new Set(visible.map((item) => item.category))];
 		return visible.toSorted(
 			(a, b) => categories.indexOf(a.category) - categories.indexOf(b.category),
 		);
 	}
-	return slashCommands
+	return commands
 		.map((item, order) => ({
 			item,
 			order,
@@ -257,6 +262,8 @@ export const initialSlashMenuState: SlashMenuState = {
 };
 
 export function createSlashCommandsExtension(options: {
+	/** Every command, when the editor adds its own to `slashCommands`. */
+	getCommands?: () => SlashCommandItem[];
 	onStateChange: React.Dispatch<React.SetStateAction<SlashMenuState>>;
 	getState: () => SlashMenuState;
 	onCommand: (item: SlashCommandItem) => void;
@@ -264,6 +271,7 @@ export function createSlashCommandsExtension(options: {
 	onDismiss: () => void;
 }) {
 	const { onStateChange, getState, onCommand, onDismiss } = options;
+	const filter = (query: string) => filterSlashCommands(query, options.getCommands?.());
 
 	return Extension.create({
 		name: "slashCommands",
@@ -285,7 +293,7 @@ export function createSlashCommandsExtension(options: {
 					startOfLine: true,
 					decorationClass: "emdash-slash-query",
 					command: ({ props }) => onCommand(props),
-					items: ({ query }) => filterSlashCommands(query),
+					items: ({ query }) => filter(query),
 					// Titles such as "Code Block" can be typed whole; a space after no match ends the query.
 					allowSpaces: true,
 					allow: ({ state, range }) => {
@@ -293,7 +301,7 @@ export function createSlashCommandsExtension(options: {
 						const query = state.doc.textBetween(range.from + 1, range.to);
 						return (
 							!WHITESPACE_START_REGEX.test(query) &&
-							(!WHITESPACE_REGEX.test(query) || filterSlashCommands(query).length > 0)
+							(!WHITESPACE_REGEX.test(query) || filter(query).length > 0)
 						);
 					},
 					render: () => ({
