@@ -223,6 +223,7 @@ describe("plugin block modal", () => {
 			await expect.element(option).toBeVisible();
 			(option.element() as HTMLElement).click();
 			await expect.element(field).toHaveValue("/news/recent-improvements");
+			expect(screen.getByRole("option").query()).toBeNull();
 
 			screen.getByRole("button", { name: "Save", exact: true }).element().click();
 			await vi.waitFor(() => expect(savedHref(onChange)).toBe("/news/recent-improvements"));
@@ -238,6 +239,19 @@ describe("plugin block modal", () => {
 
 			screen.getByRole("button", { name: "Save", exact: true }).element().click();
 			await vi.waitFor(() => expect(savedHref(onChange)).toBe("https://example.com/courses"));
+		});
+
+		// A click on Save blurs the field first; results vanishing then would move Save from under it.
+		it("keeps search results showing when the field loses focus", async () => {
+			const onChange = vi.fn<NonNullable<PortableTextEditorProps["onChange"]>>();
+			const { screen, field } = await editCtaBlock(onChange);
+
+			await field.fill("recent");
+			const option = screen.getByRole("option", { name: /Recent improvements/ });
+			await expect.element(option).toBeVisible();
+			(field.element() as HTMLInputElement).blur();
+
+			await expect.element(field).toHaveAttribute("aria-expanded", "true");
 		});
 	});
 });

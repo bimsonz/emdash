@@ -143,7 +143,6 @@ export function LinkDestinationInput({
 	const listboxId = React.useId();
 	const errorId = React.useId();
 	const inputRef = React.useRef<HTMLInputElement>(null);
-	const [focused, setFocused] = React.useState(autoFocus);
 
 	React.useEffect(() => {
 		if (autoFocus) inputRef.current?.focus();
@@ -152,7 +151,10 @@ export function LinkDestinationInput({
 	const { data: manifest } = useQuery({ queryKey: ["manifest"], queryFn: fetchManifest });
 
 	const query = debouncedValue.trim();
-	const searchEnabled = query.length >= MIN_QUERY_LENGTH && !SCHEME_OR_PATH.test(query);
+	const searchEnabled =
+		query.length >= MIN_QUERY_LENGTH &&
+		!SCHEME_OR_PATH.test(query) &&
+		!SCHEME_OR_PATH.test(value.trim());
 	const {
 		data: rawResults,
 		isFetching,
@@ -262,7 +264,7 @@ export function LinkDestinationInput({
 		}
 	};
 
-	const showList = results.length > 0 && focused;
+	const showList = results.length > 0;
 
 	return (
 		<div className={cn("flex min-w-72 flex-col gap-1", className)}>
@@ -286,11 +288,7 @@ export function LinkDestinationInput({
 					value={value}
 					onChange={(e) => onValueChange(e.target.value)}
 					onKeyDown={handleKeyDown}
-					onFocus={() => setFocused(true)}
-					onBlur={() => {
-						setFocused(false);
-						onBlur?.();
-					}}
+					onBlur={onBlur}
 					className="h-8 w-full text-sm pointer-coarse:h-11"
 					disabled={isResolving}
 				/>
@@ -357,7 +355,7 @@ export function LinkDestinationInput({
 					{t`Search failed. Check your connection and try again.`}
 				</p>
 			)}
-			{focused && searchEnabled && !isFetching && !isError && results.length === 0 && (
+			{searchEnabled && !isFetching && !isError && results.length === 0 && (
 				<p className="px-2 py-1 text-xs text-kumo-subtle">{t`No matching content found.`}</p>
 			)}
 		</div>
