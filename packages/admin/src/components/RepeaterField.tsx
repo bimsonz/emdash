@@ -105,7 +105,11 @@ export function RepeaterField({
 			newItem[sf.slug] =
 				sf.type === "boolean"
 					? false
-					: sf.type === "number" || sf.type === "integer" || sf.type === "image"
+					: sf.type === "number" ||
+						  sf.type === "integer" ||
+						  sf.type === "image" ||
+						  sf.type === "select" ||
+						  sf.type === "url"
 						? null
 						: "";
 		}
@@ -389,7 +393,7 @@ function SubFieldInput({ id, subField, value, onChange, timezone }: SubFieldInpu
 					id={id}
 					label={subField.label}
 					value={typeof value === "string" && value ? value : null}
-					onValueChange={(v) => onChange(typeof v === "string" ? v : "")}
+					onValueChange={(v) => onChange(typeof v === "string" ? v : null)}
 					items={options}
 					required={subField.required}
 				>
@@ -432,7 +436,7 @@ function SubFieldInput({ id, subField, value, onChange, timezone }: SubFieldInpu
 					id={id}
 					label={subField.label}
 					value={typeof value === "string" ? value : ""}
-					onChange={(e) => onChange(e.target.value)}
+					onChange={(e) => onChange(e.target.value || null)}
 				/>
 			);
 	}
