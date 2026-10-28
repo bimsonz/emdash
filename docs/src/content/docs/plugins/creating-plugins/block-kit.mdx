@@ -355,6 +355,7 @@ Two behaviors described above currently apply only to sandboxed plugins on admin
 | `link`          | Host-resolved internal or external navigation    |
 | `menu`          | Button that opens a list of choices; each choice dispatches an action |
 | `text_input`    | Single-line or multiline text input          |
+| `url_input`     | A link: a URL, a site-relative path, or a fragment |
 | `number_input`  | Numeric input with min/max                   |
 | `select`        | Dropdown select                              |
 | `toggle`        | On/off switch                                |
@@ -365,6 +366,14 @@ Two behaviors described above currently apply only to sandboxed plugins on admin
 | `radio`         | Single choice from a visible option list     |
 
 The Portable Text field editor also supports `repeater` and `media_picker`. They are not form fields for a sandboxed plugin admin page.
+
+### Link fields in Portable Text blocks
+
+A `url_input` in a Portable Text block's `fields` stores a link as a string, such as a button's destination. In the admin's block form it is the rich text editor's link control: text that looks like a URL or a path is kept as typed, a bare domain such as `example.com` gets `https://`, and other text searches the site's content by title, storing the picked entry's public URL. On the page in the visual editor it is a plain URL field.
+
+```json
+{ "type": "url_input", "action_id": "href", "label": "Button link" }
+```
 
 ### Load select options from a plugin route
 

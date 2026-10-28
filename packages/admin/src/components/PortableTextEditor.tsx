@@ -201,7 +201,11 @@ import { IframeBlockExtension } from "./editor/IframeBlockNode";
 import { ImageExtension, type ImageSettingsHandle } from "./editor/ImageNode";
 import { ImageUploadExtension } from "./editor/ImageUploadExtension.js";
 import { liftPastedBlocks } from "./editor/liftPastedBlocks";
-import { LinkDestinationInput, normalizeLinkHref } from "./editor/LinkDestinationInput";
+import {
+	LinkDestinationField,
+	LinkDestinationInput,
+	normalizeLinkHref,
+} from "./editor/LinkDestinationInput";
 import { MarkdownLinkExtension } from "./editor/MarkdownLinkExtension";
 import { EmDashOrderedList } from "./editor/ordered-list";
 import {
@@ -2798,7 +2802,7 @@ function PluginBlockModal({
 
 /**
  * Renders a single Block Kit field element.
- * Supports text_input, number_input, select (with optional async options), and toggle.
+ * Supports text_input, url_input, number_input, select (with optional async options), and toggle.
  */
 function BlockKitField({
 	field,
@@ -2843,6 +2847,16 @@ function BlockKitField({
 						/>
 					)}
 				</div>
+			);
+		}
+		case "url_input": {
+			return (
+				<LinkDestinationField
+					label={field.label}
+					placeholder={typeof field.placeholder === "string" ? field.placeholder : undefined}
+					value={typeof value === "string" ? value : ""}
+					onChange={(next) => onChange(field.action_id, next)}
+				/>
 			);
 		}
 		case "number_input": {

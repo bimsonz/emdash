@@ -38,6 +38,7 @@ import type {
 	TableBlock,
 	TableColumn,
 	TextInputElement,
+	UrlInputElement,
 	ToggleElement,
 	TabBlock,
 	TabPanel,
@@ -192,6 +193,25 @@ function textInput(
 			initial_value: opts.initialValue,
 		}),
 		...(opts?.multiline !== undefined && { multiline: opts.multiline }),
+	};
+}
+
+function urlInput(
+	actionId: string,
+	label: string,
+	opts?: {
+		placeholder?: string;
+		initialValue?: string;
+	},
+): UrlInputElement {
+	return {
+		type: "url_input",
+		action_id: actionId,
+		label,
+		...(opts?.placeholder !== undefined && { placeholder: opts.placeholder }),
+		...(opts?.initialValue !== undefined && {
+			initial_value: opts.initialValue,
+		}),
 	};
 }
 
@@ -555,6 +575,7 @@ export const blocks = {
 
 export const elements = {
 	textInput,
+	urlInput,
 	numberInput,
 	select,
 	toggle,

@@ -721,6 +721,36 @@ describe("validateBlocks", () => {
 			expect(result.errors[0]!.message).toContain("either 'eq' or 'neq'");
 		});
 
+		it("accepts a url_input", () => {
+			const result = validateBlocks([
+				{
+					type: "actions",
+					elements: [
+						{
+							type: "url_input",
+							action_id: "href",
+							label: "Button link",
+							placeholder: "Search or type a URL",
+							initial_value: "/book",
+						},
+					],
+				},
+			]);
+			expect(result).toEqual({ valid: true, errors: [] });
+		});
+
+		it("url_input initial_value must be a string", () => {
+			const result = validateBlocks([
+				{
+					type: "actions",
+					elements: [{ type: "url_input", action_id: "href", label: "Link", initial_value: 42 }],
+				},
+			]);
+			expect(result.valid).toBe(false);
+			expect(result.errors[0]!.path).toBe("blocks[0].elements[0].initial_value");
+			expect(result.errors[0]!.message).toContain("must be a string");
+		});
+
 		it("media_picker mime_type_filter must be a string", () => {
 			const result = validateBlocks([
 				{

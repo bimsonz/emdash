@@ -25,6 +25,7 @@ const tiles = { _type: "featureGrid", _key: "k-tiles", set: "home", heading: "St
 const video = { _type: "youtube", _key: "k-video", id: "dQw4w9WgXcQ", title: "Intro" };
 const embed = { _type: "embed", _key: "k-embed", url: "https://example.com/x" };
 const loose = { _type: "counter", _key: "k-count", id: 7, label: "Seven" };
+const cta = { _type: "cta", _key: "k-cta", label: "Book", href: "/book" };
 
 function paragraph(key: string, text: string) {
 	return {
@@ -57,6 +58,14 @@ const manifest = {
 							},
 							{ type: "text_input", action_id: "heading", label: "Heading" },
 							{ type: "toggle", action_id: "wide", label: "Full width", initial_value: false },
+						],
+					},
+					{
+						type: "cta",
+						label: "Button",
+						fields: [
+							{ type: "text_input", action_id: "label", label: "Button label" },
+							{ type: "url_input", action_id: "href", label: "Button link" },
 						],
 					},
 					{
@@ -376,6 +385,25 @@ describe("plugin blocks in the inline editor", () => {
 		});
 		outside.remove();
 		expect(puts).toHaveLength(1);
+	});
+
+	it("keeps a typed link, giving a bare domain https when the field is left", async () => {
+		supplyPreview(cta, '<a href="/book">Book</a>');
+		await mount([cta]);
+
+		await click(await settingsButton(blockOf("cta")!));
+		const form = await dialog();
+		const link = field<HTMLInputElement>(form, "Button link");
+		expect(link.value).toBe("/book");
+		await act(async () => {
+			setValue(link, "example.com/courses");
+			link.dispatchEvent(new FocusEvent("focusout", { bubbles: true }));
+		});
+		expect(link.value).toBe("https://example.com/courses");
+		await click(withText(form, "Save"));
+
+		await vi.waitFor(() => expect(puts).toHaveLength(1));
+		expect(puts[0]![0]).toMatchObject({ _type: "cta", href: "https://example.com/courses" });
 	});
 
 	it("leaves the block as it was when its settings are closed", async () => {

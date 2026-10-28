@@ -53,6 +53,18 @@ export interface TextInputElement {
 	multiline?: boolean;
 }
 
+/**
+ * A link destination: a URL, a site-relative path, or a fragment. In the Portable Text block
+ * editor, typing a title instead searches the site's content and stores the picked entry's URL.
+ */
+export interface UrlInputElement {
+	type: "url_input";
+	action_id: string;
+	label: string;
+	placeholder?: string;
+	initial_value?: string;
+}
+
 export interface NumberInputElement {
 	type: "number_input";
 	action_id: string;
@@ -178,6 +190,7 @@ export interface MediaPickerElement {
 export type Element =
 	| ButtonElement
 	| TextInputElement
+	| UrlInputElement
 	| NumberInputElement
 	| SelectElement
 	| ToggleElement
@@ -200,6 +213,7 @@ export type FieldCondition =
 export type FormField = (
 	| ButtonElement
 	| TextInputElement
+	| UrlInputElement
 	| NumberInputElement
 	| SelectElement
 	| ToggleElement
