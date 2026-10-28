@@ -5,13 +5,7 @@ import {
 	PortableTextEditor,
 	type PortableTextEditorProps,
 } from "../../src/components/PortableTextEditor";
-import { apiFetch, fetchManifest, type AdminManifest } from "../../src/lib/api";
 import { render } from "../utils/render";
-
-vi.mock("../../src/lib/api", async (importOriginal) => {
-	const actual = await importOriginal<typeof import("../../src/lib/api")>();
-	return { ...actual, apiFetch: vi.fn(), fetchManifest: vi.fn() };
-});
 
 vi.mock("../../src/components/MediaPickerModal", () => ({
 	MediaPickerModal: () => null,
@@ -37,12 +31,6 @@ const pluginBlocks: NonNullable<PortableTextEditorProps["pluginBlocks"]> = [
 				label: "Heading",
 			},
 		],
-	},
-	{
-		type: "test.cta",
-		pluginId: "test-blocks",
-		label: "Test CTA",
-		fields: [{ type: "url_input", action_id: "href", label: "Button link" }],
 	},
 	{
 		type: "test.cards",
@@ -170,88 +158,6 @@ describe("plugin block modal", () => {
 
 		await vi.waitFor(() => {
 			expect(lastSavedCardsBlock(onChange)).toMatchObject({ heading: "Before", cards: [] });
-		});
-	});
-
-	describe("url_input", () => {
-		async function editCtaBlock(onChange: NonNullable<PortableTextEditorProps["onChange"]>) {
-			vi.mocked(fetchManifest).mockResolvedValue({
-				collections: { news: { label: "News", urlPattern: "/news/{slug}" } },
-			} as unknown as AdminManifest);
-			vi.mocked(apiFetch).mockImplementation((input) => {
-				const target =
-					typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
-				const url = new URL(target, "http://localhost");
-				const items =
-					url.searchParams.get("status") === "draft"
-						? []
-						: [
-								{
-									collection: "news",
-									id: "n1",
-									slug: "recent-improvements",
-									locale: "en",
-									title: "Recent improvements",
-								},
-							];
-				return Promise.resolve(Response.json({ data: { items } }));
-			});
-			const screen = await render(
-				<PortableTextEditor
-					value={[{ _type: "test.cta", _key: "cta-1", href: "/book" }]}
-					onChange={onChange}
-					pluginBlocks={pluginBlocks}
-				/>,
-			);
-			await screen.getByRole("button", { name: "Edit" }).click();
-			const field = screen.getByRole("combobox", { name: "Button link" });
-			await expect.element(field).toHaveValue("/book");
-			return { screen, field };
-		}
-
-		function savedHref(onChange: ReturnType<typeof vi.fn>) {
-			const blocks = onChange.mock.lastCall?.[0] as Array<Record<string, unknown>> | undefined;
-			return blocks?.find((block) => block._type === "test.cta")?.href;
-		}
-
-		it("stores the URL of an entry picked by its title", async () => {
-			const onChange = vi.fn<NonNullable<PortableTextEditorProps["onChange"]>>();
-			const { screen, field } = await editCtaBlock(onChange);
-
-			await field.fill("recent");
-			const option = screen.getByRole("option", { name: /Recent improvements/ });
-			await expect.element(option).toBeVisible();
-			(option.element() as HTMLElement).click();
-			await expect.element(field).toHaveValue("/news/recent-improvements");
-			expect(screen.getByRole("option").query()).toBeNull();
-
-			screen.getByRole("button", { name: "Save", exact: true }).element().click();
-			await vi.waitFor(() => expect(savedHref(onChange)).toBe("/news/recent-improvements"));
-		});
-
-		it("keeps a typed URL, giving a bare domain https when the field is left", async () => {
-			const onChange = vi.fn<NonNullable<PortableTextEditorProps["onChange"]>>();
-			const { screen, field } = await editCtaBlock(onChange);
-
-			await field.fill("example.com/courses");
-			(field.element() as HTMLInputElement).blur();
-			await expect.element(field).toHaveValue("https://example.com/courses");
-
-			screen.getByRole("button", { name: "Save", exact: true }).element().click();
-			await vi.waitFor(() => expect(savedHref(onChange)).toBe("https://example.com/courses"));
-		});
-
-		// A click on Save blurs the field first; results vanishing then would move Save from under it.
-		it("keeps search results showing when the field loses focus", async () => {
-			const onChange = vi.fn<NonNullable<PortableTextEditorProps["onChange"]>>();
-			const { screen, field } = await editCtaBlock(onChange);
-
-			await field.fill("recent");
-			const option = screen.getByRole("option", { name: /Recent improvements/ });
-			await expect.element(option).toBeVisible();
-			(field.element() as HTMLInputElement).blur();
-
-			await expect.element(field).toHaveAttribute("aria-expanded", "true");
 		});
 	});
 });

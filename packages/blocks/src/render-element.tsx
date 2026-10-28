@@ -10,7 +10,6 @@ import { SecretInputElementComponent } from "./elements/secret-input.js";
 import { SelectElementComponent } from "./elements/select.js";
 import { TextInputElementComponent } from "./elements/text-input.js";
 import { ToggleElementComponent } from "./elements/toggle.js";
-import { UrlInputElementComponent } from "./elements/url-input.js";
 import type { ActionElement, BlockInteraction, LinkTargetResolver } from "./types.js";
 
 export function renderElement(
@@ -30,8 +29,6 @@ export function renderElement(
 			return (
 				<TextInputElementComponent element={element} onAction={onAction} onChange={onChange} />
 			);
-		case "url_input":
-			return <UrlInputElementComponent element={element} onAction={onAction} onChange={onChange} />;
 		case "number_input":
 			return (
 				<NumberInputElementComponent element={element} onAction={onAction} onChange={onChange} />

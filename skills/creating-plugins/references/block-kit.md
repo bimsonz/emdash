@@ -80,23 +80,22 @@ routes: {
 
 ## Element Types
 
-| Type           | Description                                                                                 |
-| -------------- | ------------------------------------------------------------------------------------------- |
-| `button`       | Action button with optional confirmation dialog                                             |
-| `link`         | Host-resolved navigation that does not dispatch an action                                   |
-| `menu`         | Button that opens a list of choices; each choice dispatches `action_id` with its `value`    |
-| `text_input`   | Single-line or multiline text input                                                         |
-| `url_input`    | A link (URL, site path or fragment); in Portable Text block fields it also searches content |
-| `number_input` | Numeric input with min/max                                                                  |
-| `select`       | Dropdown select                                                                             |
-| `toggle`       | On/off switch                                                                               |
-| `secret_input` | Masked input for API keys and tokens                                                        |
-| `checkbox`     | Multi-select checkboxes                                                                     |
-| `radio`        | Single-select radio buttons                                                                 |
-| `date_input`   | Date picker                                                                                 |
-| `combobox`     | Searchable dropdown select                                                                  |
-| `repeater`     | Array of records with scalar sub-fields                                                     |
-| `media_picker` | Media-library picker that stores the asset URL                                              |
+| Type           | Description                                                                              |
+| -------------- | ---------------------------------------------------------------------------------------- |
+| `button`       | Action button with optional confirmation dialog                                          |
+| `link`         | Host-resolved navigation that does not dispatch an action                                |
+| `menu`         | Button that opens a list of choices; each choice dispatches `action_id` with its `value` |
+| `text_input`   | Single-line or multiline text input                                                      |
+| `number_input` | Numeric input with min/max                                                               |
+| `select`       | Dropdown select                                                                          |
+| `toggle`       | On/off switch                                                                            |
+| `secret_input` | Masked input for API keys and tokens                                                     |
+| `checkbox`     | Multi-select checkboxes                                                                  |
+| `radio`        | Single-select radio buttons                                                              |
+| `date_input`   | Date picker                                                                              |
+| `combobox`     | Searchable dropdown select                                                               |
+| `repeater`     | Array of records with scalar sub-fields                                                  |
+| `media_picker` | Media-library picker that stores the asset URL                                           |
 
 ## Block Syntax
 

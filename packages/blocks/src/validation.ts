@@ -27,7 +27,6 @@ const ELEMENT_TYPES = new Set([
 	"button",
 	"link",
 	"text_input",
-	"url_input",
 	"number_input",
 	"select",
 	"toggle",
@@ -613,21 +612,6 @@ function validateElement(
 				errors.push({
 					path: `${path}.multiline`,
 					message: "Field 'multiline' must be a boolean",
-				});
-			}
-			break;
-		}
-		case "url_input": {
-			if (value.placeholder !== undefined && typeof value.placeholder !== "string") {
-				errors.push({
-					path: `${path}.placeholder`,
-					message: "Field 'placeholder' must be a string",
-				});
-			}
-			if (value.initial_value !== undefined && typeof value.initial_value !== "string") {
-				errors.push({
-					path: `${path}.initial_value`,
-					message: "Field 'initial_value' must be a string",
 				});
 			}
 			break;

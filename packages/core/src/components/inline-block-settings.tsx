@@ -17,7 +17,6 @@ import {
 import { ArrowDown, ArrowUp, CaretRight, Plus, Trash, X } from "@phosphor-icons/react";
 import * as React from "react";
 
-import { normalizeLinkHref } from "./inline-bubble-menu.js";
 import { InlineMediaPicker } from "./inline-media-picker.js";
 
 /** A plugin block type, as the admin manifest declares it. */
@@ -235,8 +234,6 @@ function BlockField({
 		case "select":
 		case "toggle":
 			return <ScalarField field={field} pluginId={pluginId} value={value} onChange={onChange} />;
-		case "url_input":
-			return <UrlField field={field} value={value} onChange={onChange} />;
 		case "repeater":
 			return <RepeaterField field={field} pluginId={pluginId} value={value} onChange={onChange} />;
 		case "media_picker":
@@ -301,40 +298,6 @@ function TextField({
 					onChange={(event) => onChange(field.action_id, event.target.value)}
 				/>
 			)}
-		</div>
-	);
-}
-
-/** A link destination, tidied when the field loses focus as the editor's own link field reads it. */
-function UrlField({
-	field,
-	value,
-	onChange,
-}: {
-	field: Extract<Element, { type: "url_input" }>;
-	value: unknown;
-	onChange: Change;
-}) {
-	const id = React.useId();
-	const text = typeof value === "string" ? value : "";
-	return (
-		<div className="emdash-inline-ui-field">
-			<label htmlFor={id}>{field.label}</label>
-			<input
-				id={id}
-				type="text"
-				inputMode="url"
-				autoComplete="off"
-				spellCheck={false}
-				dir="ltr"
-				placeholder={field.placeholder ?? "Type or paste a URL"}
-				value={text}
-				onChange={(event) => onChange(field.action_id, event.target.value)}
-				onBlur={() => {
-					const href = normalizeLinkHref(text);
-					if (href !== text) onChange(field.action_id, href);
-				}}
-			/>
 		</div>
 	);
 }
