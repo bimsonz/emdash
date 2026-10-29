@@ -1304,8 +1304,10 @@ function findBlockPreview(key: string): HTMLTemplateElement | null {
 /**
  * A block as the page renders it, running as it runs there: its islands hydrate and its scripts
  * run. The markup goes into a shadow root carrying the page's stylesheets, so it looks as it does
- * on the page and the editor's own text styles (a `.prose h2` rule, say) cannot restyle it. Its
- * links and forms stay put while editing, as links in the text do.
+ * on the page and the editor's own text styles (a `.prose h2` rule, say) cannot restyle it. A part
+ * marked `data-emdash-in-document` stays in the document, drawn in its place through a slot, for a
+ * script that looks for it there. Its links and forms stay put while editing, as links in the
+ * text do.
  */
 function renderBlockPreview(preview: HTMLTemplateElement): HTMLElement {
 	const host = document.createElement("div");
@@ -1322,6 +1324,16 @@ function renderBlockPreview(preview: HTMLTemplateElement): HTMLElement {
 		for (const { name, value } of parsed.attributes) script.setAttribute(name, value);
 		script.textContent = parsed.textContent;
 		parsed.replaceWith(script);
+	}
+	// A third-party embed's script finds its element or its frame through `document`, which does
+	// not reach into a shadow root.
+	let parts = 0;
+	for (const part of content.querySelectorAll("[data-emdash-in-document]")) {
+		const slot = document.createElement("slot");
+		slot.name = `in-document-${++parts}`;
+		part.replaceWith(slot);
+		part.slot = slot.name;
+		host.append(part);
 	}
 	shadow.append(content);
 	shadow.addEventListener("click", (event) => {

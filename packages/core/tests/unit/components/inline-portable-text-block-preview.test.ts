@@ -311,6 +311,23 @@ describe("plugin blocks in the inline editor", () => {
 		expect(submitted.defaultPrevented).toBe(true);
 	});
 
+	it("keeps a part a script finds through the document in the document, drawn in its place", async () => {
+		supplyPreview(
+			tiles,
+			'<section class="booking"><h2>Book</h2><div class="frame"><iframe class="js-embed" data-emdash-in-document></iframe></div></section>',
+		);
+		await mount([tiles]);
+
+		const host = blockOf("featureGrid")!.querySelector(".emdash-plugin-block-content")!;
+		// A third-party embed script looks for its frame in the document, and finds it.
+		const frame = document.querySelector("iframe.js-embed");
+		expect(frame?.parentElement).toBe(host);
+		// The rest of the block stays in the shadow root, and the frame is drawn where it was.
+		expect(document.querySelector("section.booking")).toBeNull();
+		const slot = host.shadowRoot!.querySelector<HTMLSlotElement>("section.booking .frame > slot");
+		expect(slot?.assignedElements()).toEqual([frame]);
+	});
+
 	it("shows a block the page drew nothing for as a slot naming it and what it is set to", async () => {
 		supplyPreview(tiles, "<section>tiles</section>");
 		await mount([tiles, video]);
