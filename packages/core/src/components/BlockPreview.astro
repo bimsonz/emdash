@@ -8,6 +8,10 @@
  * Render one for each plugin block of the body being edited, beside it. Nothing is displayed: the
  * markup waits in a `<template>`, named by the block's content key, until the editor reaches the
  * block. Give it the block as stored (the editable value), since the key is computed from that.
+ *
+ * The editor draws the markup in a shadow root, so the editor's styles cannot reach it, and nor can
+ * a script that looks for it through `document`. Mark a part such a script needs, as a third-party
+ * embed's element or frame, `data-emdash-in-document`: it stays in the document, drawn in its place.
  */
 import { pluginBlockKey } from "@emdash-cms/admin/plugin-block-key";
 
