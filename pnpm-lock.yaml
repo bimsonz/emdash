@@ -2138,9 +2138,6 @@ importers:
       '@tiptap/extension-code-block-lowlight':
         specifier: 'catalog:'
         version: 3.20.0(@tiptap/core@3.32.0(@tiptap/pm@3.32.0))(@tiptap/extension-code-block@3.32.0(@tiptap/core@3.32.0(@tiptap/pm@3.32.0))(@tiptap/pm@3.32.0))(@tiptap/pm@3.32.0)(highlight.js@11.11.2)(lowlight@3.3.0)
-      '@tiptap/extension-focus':
-        specifier: 'catalog:'
-        version: 3.32.0(@tiptap/extensions@3.32.0(@tiptap/core@3.32.0(@tiptap/pm@3.32.0))(@tiptap/pm@3.32.0))
       '@tiptap/extension-image':
         specifier: 'catalog:'
         version: 3.32.0(@tiptap/core@3.32.0(@tiptap/pm@3.32.0))
@@ -21690,9 +21687,9 @@ snapshots:
 
   prosemirror-state@1.4.4:
     dependencies:
-      prosemirror-model: 1.25.4
-      prosemirror-transform: 1.12.0
-      prosemirror-view: 1.41.5
+      prosemirror-model: 1.25.12
+      prosemirror-transform: 1.12.5
+      prosemirror-view: 1.42.9
 
   prosemirror-tables@1.8.5:
     dependencies:
@@ -21720,7 +21717,7 @@ snapshots:
     dependencies:
       prosemirror-model: 1.25.12
       prosemirror-state: 1.4.4
-      prosemirror-transform: 1.12.0
+      prosemirror-transform: 1.12.5
 
   protobufjs@7.6.1:
     dependencies:
