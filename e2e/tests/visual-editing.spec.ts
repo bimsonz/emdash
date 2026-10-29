@@ -59,6 +59,59 @@ async function enableEditMode(page: import("@playwright/test").Page): Promise<vo
 	]);
 }
 
+/**
+ * Creates and publishes a post whose body starts with the seeded post's image, runs `use`, then
+ * deletes the post. The editor opens with that image selected.
+ */
+async function withImageFirstPost(
+	page: import("@playwright/test").Page,
+	token: string,
+	use: (path: string) => Promise<void>,
+): Promise<void> {
+	const headers = { Authorization: `Bearer ${token}`, "X-EmDash-Request": "1" };
+	const seeded = await page.request.get("/_emdash/api/content/posts/post-with-image", { headers });
+	expect(seeded.ok(), await seeded.text()).toBe(true);
+	const { data: seededData } = (await seeded.json()) as {
+		data: { item: { data: { body: Array<{ _type: string }> } } };
+	};
+	const image = seededData.item.data.body.find((block) => block._type === "image");
+	expect(image).toBeDefined();
+	const slug = `image-first-${crypto.randomUUID().slice(0, 8)}`;
+	const created = await page.request.post("/_emdash/api/content/posts", {
+		headers,
+		data: {
+			slug,
+			data: {
+				title: "Post That Starts With An Image",
+				body: [
+					image,
+					...["Text under the image.", "Click in the middle of this line."].map((text, i) => ({
+						_type: "block",
+						_key: `p${i}`,
+						style: "normal",
+						markDefs: [],
+						children: [{ _type: "span", _key: `p${i}-1`, text, marks: [] }],
+					})),
+				],
+			},
+		},
+	});
+	expect(created.ok(), await created.text()).toBe(true);
+	const { data } = (await created.json()) as { data: { item: { id: string } } };
+	const id = data.item.id;
+	try {
+		const published = await page.request.post(`/_emdash/api/content/posts/${id}/publish`, {
+			headers,
+			data: {},
+		});
+		expect(published.ok(), await published.text()).toBe(true);
+		await use(`/posts/${slug}`);
+	} finally {
+		await page.request.delete(`/_emdash/api/content/posts/${id}`, { headers });
+		await page.request.delete(`/_emdash/api/content/posts/${id}/permanent`, { headers });
+	}
+}
+
 /** Answers the editor's saves without storing them, so the seeded post stays as it was. */
 async function stubSaves(page: import("@playwright/test").Page): Promise<void> {
 	await page.route("**/_emdash/api/content/**", (route) =>
@@ -325,6 +378,40 @@ test.describe("Inline Editor", () => {
 		// Should render the image node (TipTap Image extension)
 		const img = editor.locator("img");
 		await expect(img).toBeVisible();
+	});
+
+	test("puts the caret where the first click lands, in a body that starts with an image", async ({
+		page,
+		serverInfo,
+	}) => {
+		await withImageFirstPost(page, serverInfo.token, async (path) => {
+			await gotoWithRetry(page, path);
+			const editor = page.locator(".emdash-inline-editor");
+			const line = editor.getByText("Click in the middle of this line.");
+			await expect(line).toBeVisible({ timeout: 15000 });
+			await expect(editor).not.toBeFocused();
+
+			// Where "mid|dle" is: the browser puts the caret before the character clicked near its start.
+			const at = "Click in the mid".length;
+			const point = await line.evaluate((p, offset) => {
+				const range = document.createRange();
+				range.setStart(p.firstChild!, offset);
+				range.setEnd(p.firstChild!, offset + 1);
+				const { left, width, top, height } = range.getBoundingClientRect();
+				return { x: left + width / 4, y: top + height / 2 };
+			}, at);
+			await page.mouse.click(point.x, point.y);
+
+			await expect(editor).toBeFocused();
+			await expect
+				.poll(() =>
+					page.evaluate(() => {
+						const selection = document.getSelection();
+						return `${selection?.anchorNode?.textContent}@${selection?.anchorOffset}`;
+					}),
+				)
+				.toBe(`Click in the middle of this line.@${at}`);
+		});
 	});
 
 	test("shows slash menu on / keystroke", async ({ page }) => {
