@@ -320,17 +320,35 @@ describe("inline editor: columns on the page", () => {
 
 	it("lays the columns out with the renderer's markup, so the site's styles apply", async () => {
 		const editable = await mount([sidebarLayout]);
+		// Less the editor's own mark for where the caret is.
+		const markup = (element: Element) =>
+			[...element.classList].filter((name) => name !== "has-caret");
 
 		const columns = editable.querySelector(":scope > .emdash-columns");
-		expect([...(columns?.classList ?? [])]).toEqual([
+		expect(markup(columns!)).toEqual([
 			"emdash-columns",
 			"emdash-columns--gap-lg",
 			"emdash-columns--align-top",
 		]);
-		expect(Array.from(columns!.children, (column) => [...column.classList])).toEqual([
+		expect(Array.from(columns!.children, markup)).toEqual([
 			["emdash-column", "emdash-column--span-2"],
 			["emdash-column"],
 		]);
+	});
+
+	it("marks the layout and the column the caret is in, before the editor has focus", async () => {
+		const editable = await mount([twoTextColumns]);
+		const editor = editorOf(editable);
+		const columns = editable.querySelector(".emdash-columns")!;
+		const marked = () =>
+			[columns, ...columns.children].map((element) => element.classList.contains("has-caret"));
+
+		expect(editor.view.hasFocus()).toBe(false);
+		expect(marked()).toEqual([true, true, false]);
+
+		const right = startOf(editor, "Right side.");
+		await act(async () => select(editor, right, right));
+		expect(marked()).toEqual([true, false, true]);
 	});
 
 	it("names the layout and each column, and never saves the names", async () => {
