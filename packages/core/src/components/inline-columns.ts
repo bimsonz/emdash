@@ -132,6 +132,24 @@ function labelsOf(doc: ProseMirrorNode): DecorationSet {
 	return set;
 }
 
+/**
+ * Marks the layouts and columns the caret is in, whose labels show while the editor has focus.
+ * Marked whether or not it has focus: decorations that changed as the editor took focus, which
+ * happens during the click into it, would have ProseMirror redraw and put its old selection back
+ * over the caret the click placed.
+ */
+function caretColumnsOf(doc: ProseMirrorNode, anchor: number): DecorationSet {
+	const decorations: Decoration[] = [];
+	doc.descendants((node, pos) => {
+		if (node.isTextblock || anchor < pos || anchor >= pos + node.nodeSize) return false;
+		if (node.type.name === "columns" || node.type.name === "column") {
+			decorations.push(Decoration.node(pos, pos + node.nodeSize, { class: "has-caret" }));
+		}
+		return true;
+	});
+	return DecorationSet.create(doc, decorations);
+}
+
 /** Labels the layout and its columns, and refuses any change to the layout. */
 export const InlineColumnsLayout = Extension.create({
 	name: "inlineColumnsLayout",
@@ -144,6 +162,12 @@ export const InlineColumnsLayout = Extension.create({
 					!tr.docChanged || layoutOf(tr.doc) === layoutOf(state.doc),
 				props: {
 					decorations: (state) => labelsOf(state.doc),
+				},
+			}),
+			new Plugin({
+				key: new PluginKey("inlineColumnsCaret"),
+				props: {
+					decorations: (state) => caretColumnsOf(state.doc, state.selection.anchor),
 				},
 			}),
 		];
@@ -225,20 +249,22 @@ export const INLINE_COLUMNS_STYLES = `
 		pointer-events: none;
 		user-select: none;
 	}
-	.emdash-inline-editor .emdash-columns:is(:hover, .has-focus)::before {
+	.emdash-inline-editor .emdash-columns:hover::before,
+	.emdash-inline-editor.ProseMirror-focused .emdash-columns.has-caret::before {
 		content: attr(data-emdash-columns-label);
 		inset-block-end: calc(100% + 0.625rem);
 		background: #f3f4f6;
 		color: #4b5563;
 	}
-	.emdash-inline-editor .emdash-columns:has(.emdash-columns:is(:hover, .has-focus))::before {
+	.emdash-inline-editor .emdash-columns:has(.emdash-columns:hover)::before,
+	.emdash-inline-editor.ProseMirror-focused .emdash-columns:has(.emdash-columns.has-caret)::before {
 		content: none;
 	}
-	.emdash-inline-editor .emdash-column.has-focus {
+	.emdash-inline-editor.ProseMirror-focused .emdash-column.has-caret {
 		outline: 2px solid oklch(57.72% 0.2324 260 / 0.55);
 		outline-offset: 0.25rem;
 	}
-	.emdash-inline-editor .emdash-column.has-focus::before {
+	.emdash-inline-editor.ProseMirror-focused .emdash-column.has-caret::before {
 		content: attr(data-emdash-column-label);
 		inset-block-end: auto;
 		inset-block-start: -1.375rem;
@@ -247,14 +273,16 @@ export const INLINE_COLUMNS_STYLES = `
 		background: oklch(57.72% 0.2324 260);
 		color: #fff;
 	}
-	.emdash-inline-editor .emdash-column.has-focus:has(.emdash-column.has-focus) {
+	.emdash-inline-editor.ProseMirror-focused .emdash-column.has-caret:has(.emdash-column.has-caret) {
 		outline: none;
 	}
-	.emdash-inline-editor .emdash-column.has-focus:has(.emdash-column.has-focus)::before {
+	.emdash-inline-editor.ProseMirror-focused
+		.emdash-column.has-caret:has(.emdash-column.has-caret)::before {
 		content: none;
 	}
 	@media (prefers-color-scheme: dark) {
-		.emdash-inline-editor .emdash-columns:is(:hover, .has-focus)::before {
+		.emdash-inline-editor .emdash-columns:hover::before,
+		.emdash-inline-editor.ProseMirror-focused .emdash-columns.has-caret::before {
 			background: #1f2937;
 			color: #d1d5db;
 		}

@@ -1199,8 +1199,16 @@ test.describe("Columns in the inline editor", () => {
 
 			await editor.getByText("The right column holds the aside.").click();
 			const column = editor.locator(".emdash-column").nth(1);
-			await expect(column).toHaveClass(/has-focus/);
+			await expect(column).toHaveClass(/has-caret/);
 			await expect(column).toHaveAttribute("data-emdash-column-label", "Column 2 of 2");
+			await expect
+				.poll(() => column.evaluate((el) => getComputedStyle(el, "::before").content))
+				.toBe('"Column 2 of 2"');
+			// The label shows only while the editor has focus.
+			await page.locator("body").click({ position: { x: 1, y: 1 } });
+			await expect
+				.poll(() => column.evaluate((el) => getComputedStyle(el, "::before").content))
+				.toBe("none");
 		});
 	});
 
