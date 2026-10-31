@@ -232,6 +232,7 @@ import {
 	selectionTouchesTable,
 } from "./editor/TableExtensions.js";
 import { createTableResize } from "./editor/TableResize.js";
+import { TextLinkControl } from "./editor/TextLinkControl";
 import {
 	VideoExtension,
 	isVideoBlock,
@@ -2812,6 +2813,7 @@ function BlockKitField({
 	onChange: (actionId: string, value: unknown) => void;
 }) {
 	const id = React.useId();
+	const textBox = React.useRef<HTMLInputElement & HTMLTextAreaElement>(null);
 	switch (field.type) {
 		case "text_input": {
 			const multiline = !!field.multiline;
@@ -2824,6 +2826,7 @@ function BlockKitField({
 					</label>
 					{multiline ? (
 						<Tag
+							ref={textBox}
 							id={id}
 							aria-labelledby={`${id}-label`}
 							className="flex w-full rounded-md border border-kumo-line bg-transparent px-3 py-2 text-sm ring-offset-background placeholder:text-kumo-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-kumo-ring focus-visible:ring-offset-2 min-h-[80px]"
@@ -2833,6 +2836,7 @@ function BlockKitField({
 						/>
 					) : (
 						<Input
+							ref={textBox}
 							id={id}
 							aria-labelledby={`${id}-label`}
 							type="text"
@@ -2840,6 +2844,13 @@ function BlockKitField({
 							placeholder={placeholder}
 							value={typeof value === "string" ? value : ""}
 							onChange={(e) => onChange(field.action_id, e.target.value)}
+						/>
+					)}
+					{"links" in field && field.links === true && (
+						<TextLinkControl
+							box={textBox}
+							value={typeof value === "string" ? value : ""}
+							onChange={(next) => onChange(field.action_id, next)}
 						/>
 					)}
 				</div>

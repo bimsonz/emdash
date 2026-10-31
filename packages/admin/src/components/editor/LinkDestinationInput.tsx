@@ -367,6 +367,8 @@ export interface LinkDestinationFieldProps {
 	value: string;
 	onChange: (value: string) => void;
 	placeholder?: string;
+	/** Whether the form around the field refused the address, until it changes. */
+	refused?: boolean;
 }
 
 /**
@@ -378,6 +380,7 @@ export function LinkDestinationField({
 	value,
 	onChange,
 	placeholder,
+	refused = false,
 }: LinkDestinationFieldProps) {
 	const id = React.useId();
 	const [invalid, setInvalid] = React.useState(false);
@@ -400,7 +403,7 @@ export function LinkDestinationField({
 				placeholder={placeholder}
 				className="min-w-0"
 				value={value}
-				invalid={invalid}
+				invalid={invalid || refused}
 				onValueChange={(next) => {
 					setInvalid(false);
 					onChange(next);
