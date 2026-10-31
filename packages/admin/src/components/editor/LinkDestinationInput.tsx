@@ -15,6 +15,7 @@ import { i18n } from "@lingui/core";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react/macro";
 import { useQuery } from "@tanstack/react-query";
+import { isAllowedUri } from "@tiptap/extension-link";
 import * as React from "react";
 
 import { apiFetch, fetchContent, fetchManifest, throwResponseError } from "../../lib/api";
@@ -107,11 +108,18 @@ export interface LinkDestinationInputProps {
 	onSubmit: () => void;
 	/** Called with the resolved public URL of the picked entry. */
 	onPick: (href: string) => void;
-	/** Called when the user presses Escape. */
-	onEscape: () => void;
+	/** Called when the user presses Escape. Without it, Escape is left to the surrounding UI. */
+	onEscape?: () => void;
 	/** Whether the URL last applied was refused, until it changes. */
 	invalid?: boolean;
 	className?: string;
+	/** Defaults to true, for a popover that opens on the field. */
+	autoFocus?: boolean;
+	id?: string;
+	/** A visible label's id, which then names the field in place of its own aria-label. */
+	labelledBy?: string;
+	placeholder?: string;
+	onBlur?: () => void;
 }
 
 export function LinkDestinationInput({
@@ -122,6 +130,11 @@ export function LinkDestinationInput({
 	onEscape,
 	invalid = false,
 	className,
+	autoFocus = true,
+	id,
+	labelledBy,
+	placeholder,
+	onBlur,
 }: LinkDestinationInputProps) {
 	const { t } = useLingui();
 	const debouncedValue = useDebouncedValue(value, 300);
@@ -132,13 +145,16 @@ export function LinkDestinationInput({
 	const inputRef = React.useRef<HTMLInputElement>(null);
 
 	React.useEffect(() => {
-		inputRef.current?.focus();
-	}, []);
+		if (autoFocus) inputRef.current?.focus();
+	}, [autoFocus]);
 
 	const { data: manifest } = useQuery({ queryKey: ["manifest"], queryFn: fetchManifest });
 
 	const query = debouncedValue.trim();
-	const searchEnabled = query.length >= MIN_QUERY_LENGTH && !SCHEME_OR_PATH.test(query);
+	const searchEnabled =
+		query.length >= MIN_QUERY_LENGTH &&
+		!SCHEME_OR_PATH.test(query) &&
+		!SCHEME_OR_PATH.test(value.trim());
 	const {
 		data: rawResults,
 		isFetching,
@@ -242,7 +258,7 @@ export function LinkDestinationInput({
 			} else {
 				onSubmit();
 			}
-		} else if (e.key === "Escape") {
+		} else if (e.key === "Escape" && onEscape) {
 			e.preventDefault();
 			onEscape();
 		}
@@ -265,11 +281,14 @@ export function LinkDestinationInput({
 					aria-autocomplete="list"
 					aria-invalid={invalid || undefined}
 					aria-describedby={invalid ? errorId : undefined}
-					placeholder={t`Search or type a URL`}
-					aria-label={t`Search or type a URL`}
+					id={id}
+					placeholder={placeholder ?? t`Search or type a URL`}
+					aria-label={labelledBy ? undefined : t`Search or type a URL`}
+					aria-labelledby={labelledBy}
 					value={value}
 					onChange={(e) => onValueChange(e.target.value)}
 					onKeyDown={handleKeyDown}
+					onBlur={onBlur}
 					className="h-8 w-full text-sm pointer-coarse:h-11"
 					disabled={isResolving}
 				/>
@@ -339,6 +358,60 @@ export function LinkDestinationInput({
 			{searchEnabled && !isFetching && !isError && results.length === 0 && (
 				<p className="px-2 py-1 text-xs text-kumo-subtle">{t`No matching content found.`}</p>
 			)}
+		</div>
+	);
+}
+
+export interface LinkDestinationFieldProps {
+	label: string;
+	value: string;
+	onChange: (value: string) => void;
+	placeholder?: string;
+}
+
+/**
+ * The link control as a form field. A picked entry's URL is stored at once; typed text is tidied with
+ * `normalizeLinkHref` on Enter or when the field loses focus.
+ */
+export function LinkDestinationField({
+	label,
+	value,
+	onChange,
+	placeholder,
+}: LinkDestinationFieldProps) {
+	const id = React.useId();
+	const [invalid, setInvalid] = React.useState(false);
+
+	const commit = () => {
+		const href = normalizeLinkHref(value);
+		if (href !== value) onChange(href);
+		setInvalid(href !== "" && !isAllowedUri(href));
+	};
+
+	return (
+		<div>
+			<label id={`${id}-label`} htmlFor={id} className="mb-1.5 block text-sm font-medium">
+				{label}
+			</label>
+			<LinkDestinationInput
+				id={id}
+				labelledBy={`${id}-label`}
+				autoFocus={false}
+				placeholder={placeholder}
+				className="min-w-0"
+				value={value}
+				invalid={invalid}
+				onValueChange={(next) => {
+					setInvalid(false);
+					onChange(next);
+				}}
+				onPick={(href) => {
+					setInvalid(false);
+					onChange(href);
+				}}
+				onSubmit={commit}
+				onBlur={commit}
+			/>
 		</div>
 	);
 }
