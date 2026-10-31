@@ -128,7 +128,7 @@ const RELATIVE_PATH_REGEX = /^(?:\.{1,2}\/|[^./]+\/)/;
  * so `example.com` doesn't become a link relative to the page it's on. The
  * admin editor's link field reads what's typed the same way.
  */
-function normalizeLinkHref(value: string): string {
+export function normalizeLinkHref(value: string): string {
 	const trimmed = value.trim();
 	if (HOST_WITH_PORT_REGEX.test(trimmed)) return `https://${trimmed}`;
 	if (SCHEME_OR_PATH_REGEX.test(trimmed) || RELATIVE_PATH_REGEX.test(trimmed)) return trimmed;

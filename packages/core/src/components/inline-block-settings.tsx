@@ -18,6 +18,7 @@ import { ArrowDown, ArrowUp, CaretRight, Plus, Trash, X } from "@phosphor-icons/
 import * as React from "react";
 
 import { InlineMediaPicker } from "./inline-media-picker.js";
+import { TextLinkControl } from "./inline-text-links.js";
 
 /** A plugin block type, as the admin manifest declares it. */
 export interface BlockDefinition {
@@ -277,12 +278,14 @@ function TextField({
 	onChange: Change;
 }) {
 	const id = React.useId();
+	const box = React.useRef<HTMLInputElement & HTMLTextAreaElement>(null);
 	const text = typeof value === "string" ? value : "";
 	return (
 		<div className="emdash-inline-ui-field">
 			<label htmlFor={id}>{field.label}</label>
 			{field.multiline ? (
 				<textarea
+					ref={box}
 					id={id}
 					rows={3}
 					placeholder={field.placeholder}
@@ -291,11 +294,19 @@ function TextField({
 				/>
 			) : (
 				<input
+					ref={box}
 					id={id}
 					type="text"
 					placeholder={field.placeholder}
 					value={text}
 					onChange={(event) => onChange(field.action_id, event.target.value)}
+				/>
+			)}
+			{"links" in field && field.links === true && (
+				<TextLinkControl
+					box={box}
+					value={text}
+					onChange={(next) => onChange(field.action_id, next)}
 				/>
 			)}
 		</div>
@@ -817,6 +828,17 @@ export const INLINE_BLOCK_SETTINGS_STYLES = `
 	.emdash-inline-ui-field textarea {
 		min-height: 80px;
 		resize: vertical;
+	}
+	.emdash-inline-ui-text-link {
+		display: grid;
+		gap: 8px;
+		margin-top: 8px;
+	}
+	.emdash-inline-ui-text-link-actions {
+		display: flex;
+		justify-content: flex-end;
+		gap: 8px;
+		margin-top: 6px;
 	}
 	.emdash-inline-ui-field ::placeholder {
 		color: var(--emdash-ui-placeholder);
