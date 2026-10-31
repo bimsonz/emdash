@@ -24,6 +24,7 @@ import type { MediaItem } from "../lib/api/media.js";
 import { fromDatetimeLocalInputValue, toDatetimeLocalInputValue } from "../lib/datetime-local.js";
 import { cn } from "../lib/utils.js";
 import { CaretNext } from "./ArrowIcons.js";
+import { LinkDestinationField } from "./editor/LinkDestinationInput.js";
 import {
 	ImageFieldRenderer,
 	type ImageFieldValue,
@@ -512,6 +513,14 @@ function SubFieldInput({
 					}
 					onChange={(v) => onChange(v)}
 					required={subField.required}
+				/>
+			);
+		case "url":
+			return (
+				<LinkDestinationField
+					label={subField.label}
+					value={typeof value === "string" ? value : ""}
+					onChange={(next) => onChange(next || null)}
 				/>
 			);
 		default:
