@@ -17,13 +17,19 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { plural } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react/macro";
-import { Plus, Trash, DotsSixVertical, CaretDown } from "@phosphor-icons/react";
+import { Plus, Trash, DotsSixVertical, CaretDown, Images } from "@phosphor-icons/react";
 import * as React from "react";
 
+import type { MediaItem } from "../lib/api/media.js";
 import { fromDatetimeLocalInputValue, toDatetimeLocalInputValue } from "../lib/datetime-local.js";
 import { cn } from "../lib/utils.js";
 import { CaretNext } from "./ArrowIcons.js";
-import { ImageFieldRenderer, type ImageFieldValue } from "./ImageFieldRenderer.js";
+import {
+	ImageFieldRenderer,
+	type ImageFieldValue,
+	mediaItemToImageFieldValue,
+} from "./ImageFieldRenderer.js";
+import { MediaPickerModal } from "./MediaPickerModal.js";
 
 interface RepeaterSubFieldDef {
 	slug: string;
@@ -72,6 +78,11 @@ export function RepeaterField({
 	const rawItems = Array.isArray(value) ? value : [];
 	const [items, setItems] = React.useState<RepeaterItem[]>(() => ensureKeys(rawItems));
 	const [collapsedItems, setCollapsedItems] = React.useState<Set<string>>(new Set());
+	const [pickingImages, setPickingImages] = React.useState(false);
+
+	// Several images can only become rows when it's clear which sub-field each one fills.
+	const imageFields = subFields.filter((sf) => sf.type === "image");
+	const imageField = imageFields.length === 1 ? imageFields[0] : undefined;
 
 	// Sync from external value changes.
 	// Preserve each item's _key by position so round-trips through onChange
@@ -98,9 +109,8 @@ export function RepeaterField({
 		onChange(stripKeys(updated));
 	};
 
-	const handleAdd = () => {
-		if (maxItems && items.length >= maxItems) return;
-		const newItem: RepeaterItem = { _key: `item-${Date.now()}` };
+	const emptyItem = (key: string) => {
+		const newItem: RepeaterItem = { _key: key };
 		for (const sf of subFields) {
 			newItem[sf.slug] =
 				sf.type === "boolean"
@@ -113,7 +123,22 @@ export function RepeaterField({
 						? null
 						: "";
 		}
-		emitChange([...items, newItem]);
+		return newItem;
+	};
+
+	const handleAdd = () => {
+		if (maxItems && items.length >= maxItems) return;
+		emitChange([...items, emptyItem(`item-${Date.now()}`)]);
+	};
+
+	const handleAddImages = (media: MediaItem[]) => {
+		if (!imageField) return;
+		const room = maxItems ? maxItems - items.length : media.length;
+		const added = media.slice(0, room).map((picked, i) => ({
+			...emptyItem(`item-${Date.now()}-${i}`),
+			[imageField.slug]: mediaItemToImageFieldValue(picked),
+		}));
+		emitChange([...items, ...added]);
 	};
 
 	const handleRemove = (key: string) => {
@@ -160,9 +185,21 @@ export function RepeaterField({
 					)}
 				</label>
 				{canAdd && (
-					<Button variant="outline" size="sm" icon={<Plus />} onClick={handleAdd}>
-						{t`Add Item`}
-					</Button>
+					<div className="flex items-center gap-2">
+						{imageField && (
+							<Button
+								variant="outline"
+								size="sm"
+								icon={<Images />}
+								onClick={() => setPickingImages(true)}
+							>
+								{t`Add Images`}
+							</Button>
+						)}
+						<Button variant="outline" size="sm" icon={<Plus />} onClick={handleAdd}>
+							{t`Add Item`}
+						</Button>
+					</div>
 				)}
 			</div>
 
@@ -207,6 +244,18 @@ export function RepeaterField({
 						</div>
 					</SortableContext>
 				</DndContext>
+			)}
+
+			{imageField && (
+				<MediaPickerModal
+					open={pickingImages}
+					onOpenChange={setPickingImages}
+					multiple
+					onSelect={() => {}}
+					onSelectMany={handleAddImages}
+					mimeTypeFilters={["image/"]}
+					title={t`Add Images`}
+				/>
 			)}
 		</div>
 	);
