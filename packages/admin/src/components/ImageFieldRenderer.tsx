@@ -82,7 +82,7 @@ export function mediaDisplayUrl(value: ImageFieldValue | string | undefined): st
 	return undefined;
 }
 
-function mediaItemToImageFieldValue(item: MediaItem): ImageFieldValue {
+export function mediaItemToImageFieldValue(item: MediaItem): ImageFieldValue {
 	const provider = canonicalMediaProviderId(item.provider);
 	const isLocalProvider = provider === "local";
 	const isDirectUrl = provider === "external";
