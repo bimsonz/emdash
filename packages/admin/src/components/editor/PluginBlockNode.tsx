@@ -220,9 +220,10 @@ function PluginBlockNodeView({
 		registry,
 	);
 
-	// Check if this block type has fields defined in the registry
+	// A declared `fields` array, even an empty one, makes a Block Kit block, edited in its dialog;
+	// only a block with no `fields` at all is a URL embed. The dialog reads it the same way.
 	const blockDef = registry.get(blockType);
-	const hasFields = blockDef?.fields && blockDef.fields.length > 0;
+	const hasFields = Array.isArray(blockDef?.fields);
 	const original = node.attrs[PORTABLE_TEXT_BLOCK_ATTR] as Record<string, unknown> | null;
 	const hasIdentity = !!id || typeof original?.id === "string" || typeof original?.url === "string";
 	const canEditUrl = !hasFields && (!!blockDef || hasIdentity);
