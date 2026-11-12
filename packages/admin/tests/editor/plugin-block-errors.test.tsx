@@ -169,6 +169,14 @@ describe("plugin block modal errors", () => {
 		await vi.waitFor(() => expect(savedBlock(onChange, "test.divider")).toBeDefined());
 	});
 
+	it("edits a block that declares no fields in its dialog, not as a URL", async () => {
+		const { screen, dialog } = await editBlock({ _type: "test.divider" });
+
+		await expect.element(dialog).toHaveAccessibleDescription("This block has nothing to fill in.");
+		expect(dialog.getByRole("textbox").query()).toBeNull();
+		expect(screen.getByRole("button", { name: "Edit URL" }).query()).toBeNull();
+	});
+
 	it("points at a number outside the field's range", async () => {
 		const { dialog, onChange } = await editBlock({
 			_type: "test.hero",
