@@ -23,6 +23,12 @@ const { adapterGET, transform, images } = vi.hoisted(() => {
 
 vi.mock("@astrojs/cloudflare/image-transform-endpoint", () => ({ GET: adapterGET }));
 vi.mock("cloudflare:workers", () => ({ env: { IMAGES: images } }));
+// The endpoint reads the image service and the route cache provider from the consumer's Astro
+// build (#4911); mocked as tests/media/image-endpoint.test.ts mocks them.
+vi.mock("astro:assets", () => ({
+	imageConfig: { service: { entrypoint: "@astrojs/cloudflare/image-service-workerd" } },
+}));
+vi.mock("virtual:emdash/config", () => ({ default: {} }));
 
 const { GET } = await import("../src/image-endpoint.js");
 
@@ -38,11 +44,15 @@ const storage = {
 	}),
 };
 
-/** Request the endpoint the way Astro's image service does. */
+/**
+ * Request the endpoint the way Astro's image service does: serialized by `URLSearchParams`, which is
+ * also the canonical form the endpoint answers without a redirect (#4911).
+ */
 function request(params: string): Promise<Response> {
 	const href = encodeURIComponent("/_emdash/api/media/file/01J5ABC.webp");
+	const query = new URLSearchParams(`href=${href}&${params}`).toString();
 	const ctx = {
-		request: new Request(`https://example.com/_image?href=${href}&${params}`),
+		request: new Request(`https://example.com/_image?${query}`),
 		locals: { emdash: { storage } },
 	} as unknown as APIContext;
 	return GET(ctx) as Promise<Response>;
