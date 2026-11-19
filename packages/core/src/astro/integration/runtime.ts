@@ -248,8 +248,22 @@ export interface EmDashConfig {
 	 * Cloudflare Access). Set to `false` to leave Astro's image endpoint
 	 * untouched -- media then renders as a plain `<img>` unless your image
 	 * service can fetch it over HTTP.
+	 *
+	 * `true` and `{}` mean the default above. Pass `{ signedUrls: true }` to
+	 * also sign image transform URLs for stored media and refuse unsigned ones.
+	 * Signing applies to the stock image services; with a custom runtime image
+	 * service it logs a build-time warning and the site behaves as if signing
+	 * were off.
 	 */
-	images?: boolean;
+	images?:
+		| boolean
+		| {
+				/**
+				 * Sign image transform URLs for stored media and refuse unsigned ones.
+				 * Applies to the stock image services. Default `false`.
+				 */
+				signedUrls?: boolean;
+		  };
 	/**
 	 * Trusted plugins to load (run in main isolate)
 	 *

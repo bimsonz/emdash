@@ -107,3 +107,17 @@ describe("emdash() config validation", () => {
 		);
 	});
 });
+
+describe("images option", () => {
+	it.each([true, false, {}, { signedUrls: true }, { signedUrls: false }])(
+		"accepts %j",
+		(images) => {
+			expect(validateConfigShape({ images })).toEqual([]);
+			expect(() => build({ images })()).not.toThrow();
+		},
+	);
+
+	it.each([{ signedUrls: "yes" }, { other: 1 }, "yes"])("rejects %j", (images) => {
+		expect(() => build({ images })()).toThrow(/images/);
+	});
+});
