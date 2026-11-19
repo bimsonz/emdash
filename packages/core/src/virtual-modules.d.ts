@@ -35,9 +35,12 @@ declare module "virtual:emdash/config" {
 		sessionCookieName?: string;
 		/** `routePattern` of the image endpoint EmDash installed; absent when it installed none. */
 		imageEndpointRoute?: string;
-		/** Whether stored-media transform URLs are signed (`images: { signedUrls: true }`). */
+		/** Whether image transform URLs are signed and required (`images: { signedUrls: true }`). */
 		imageSigning?: boolean;
-		/** Runtime image service for signing; filled in when signing is on. */
+		/**
+		 * The stock runtime image service `emdash/image-service` replaced, recorded
+		 * when signing is on. The image endpoints treat it as the configured service.
+		 */
 		imageRuntimeService?: { entrypoint: string; config: Record<string, unknown> };
 	}
 
@@ -233,6 +236,15 @@ declare module "virtual:emdash/rooms" {
 	 * otherwise, which gives every join single-editor mode.
 	 */
 	export const createRoomHost: CreateRoomHostFn | null;
+}
+
+declare module "virtual:emdash/stock-image-service" {
+	/**
+	 * The stock runtime image service `emdash/image-service` delegates to when
+	 * `images: { signedUrls: true }` replaced it (`imageRuntimeService`).
+	 */
+	const service: import("astro").LocalImageService;
+	export default service;
 }
 
 declare module "virtual:emdash/admin-loader" {

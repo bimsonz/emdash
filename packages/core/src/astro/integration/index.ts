@@ -49,6 +49,7 @@ import { loadDevEnv } from "./dev-env.js";
 import { startDevSchedulerBridge } from "./dev-scheduler-bridge.js";
 import { createDebouncedTypegenRefresh, listenForDevTypegenRefresh } from "./dev-typegen.js";
 import { notoSans } from "./font-provider.js";
+import { wrapImageService } from "./image-service-wrap.js";
 import { imageSigningEnabled, imagesEnabled } from "./images-option.js";
 import {
 	hasUserDefinedPublicRoute,
@@ -780,6 +781,26 @@ export function emdash(config: EmDashConfig = {}): AstroIntegration {
 					serializableConfig.imageEndpointRoute = imageEndpointRoutePattern(
 						astroConfig.image?.endpoint?.route,
 					);
+				}
+
+				// Sign transform URLs where the stock runtime service builds them. The
+				// adapter's setup hook has already set `image.service`. Only EmDash's
+				// endpoint checks signatures, so without it the site runs unsigned.
+				if (imageSigningEnabled(resolvedConfig.images)) {
+					const signing = imageEndpoint
+						? wrapImageService(astroConfig.image?.service)
+						: {
+								warning:
+									"images.signedUrls needs the image endpoint EmDash installs, which this " +
+									"site does not use, so image URLs are not signed.",
+							};
+					if ("warning" in signing) {
+						logger.warn(signing.warning);
+						serializableConfig.imageSigning = false;
+					} else {
+						imageConfig.service = signing.service;
+						serializableConfig.imageRuntimeService = signing.original;
+					}
 				}
 
 				updateConfig({

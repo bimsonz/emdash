@@ -118,7 +118,11 @@ export const GET: APIRoute = async (ctx) => {
 	// it (bundled assets via ASSETS, allowed remote via fetch).
 	if (!key || !storage) return adapterGET(ctx);
 
-	const stockService = config.service.entrypoint === "@astrojs/cloudflare/image-service-workerd";
+	// Under images.signedUrls the configured service is EmDash's signing wrapper
+	// around the recorded stock one.
+	const serviceEntrypoint =
+		virtualConfig?.imageRuntimeService?.entrypoint ?? config.service.entrypoint;
+	const stockService = serviceEntrypoint === "@astrojs/cloudflare/image-service-workerd";
 	if (stockService) {
 		const canonical = canonicalTransformSearch(
 			url,

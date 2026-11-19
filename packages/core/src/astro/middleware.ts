@@ -1365,7 +1365,12 @@ export const onRequest = defineMiddleware(async (context, next) => {
 	};
 
 	try {
-		const response = await runWithContext({ editMode: false, queryRecorder, metrics }, run);
+		// `astro dev` renders a prerendered route per request, so only a build prerenders.
+		const prerendering = context.isPrerendered && !import.meta.env.DEV;
+		const response = await runWithContext(
+			{ editMode: false, prerendering, queryRecorder, metrics },
+			run,
+		);
 		applyBuildValidator(context);
 		keepUnsharedResponsesOutOfRouteCache(context, response);
 		return response;

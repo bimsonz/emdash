@@ -56,6 +56,8 @@ import {
 	RESOLVED_VIRTUAL_ROOMS_ID,
 	VIRTUAL_ROOM_ENGINE_ID,
 	RESOLVED_VIRTUAL_ROOM_ENGINE_ID,
+	VIRTUAL_STOCK_IMAGE_SERVICE_ID,
+	RESOLVED_VIRTUAL_STOCK_IMAGE_SERVICE_ID,
 	generateSeedModule,
 	generateWaitUntilModule,
 	generateSchedulerModule,
@@ -75,6 +77,7 @@ import {
 	generateSandboxedPluginsModule,
 	generateMediaProvidersModule,
 	generateBlockComponentsModule,
+	generateStockImageServiceModule,
 } from "./virtual-modules.js";
 
 const VIRTUAL_ADMIN_LOADER_ID = "virtual:emdash/admin-loader";
@@ -298,6 +301,9 @@ export function createVirtualModulesPlugin(options: VitePluginOptions): Plugin {
 			if (id === VIRTUAL_ROOM_ENGINE_ID) {
 				return RESOLVED_VIRTUAL_ROOM_ENGINE_ID;
 			}
+			if (id === VIRTUAL_STOCK_IMAGE_SERVICE_ID) {
+				return RESOLVED_VIRTUAL_STOCK_IMAGE_SERVICE_ID;
+			}
 		},
 		load(id: string) {
 			if (id === RESOLVED_ADMIN_ENTRY_ID) {
@@ -436,6 +442,10 @@ export function createVirtualModulesPlugin(options: VitePluginOptions): Plugin {
 			}
 			if (id === RESOLVED_VIRTUAL_ROOM_ENGINE_ID) {
 				return generateRoomEngineModule(resolvedConfig.coEditing === true);
+			}
+			// The stock runtime image service `emdash/image-service` signs over.
+			if (id === RESOLVED_VIRTUAL_STOCK_IMAGE_SERVICE_ID) {
+				return generateStockImageServiceModule(serializableConfig.imageRuntimeService);
 			}
 		},
 	};

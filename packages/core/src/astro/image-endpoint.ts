@@ -104,7 +104,11 @@ export const GET: APIRoute = async (ctx) => {
 	const service = await getConfiguredImageService();
 	if (!("transform" in service)) return genericGET(ctx);
 
-	const isStockService = imageConfig.service?.entrypoint === "astro/assets/services/sharp";
+	// Under images.signedUrls the configured service is EmDash's signing wrapper
+	// around the recorded stock one.
+	const serviceEntrypoint =
+		virtualConfig?.imageRuntimeService?.entrypoint ?? imageConfig.service?.entrypoint;
+	const isStockService = serviceEntrypoint === "astro/assets/services/sharp";
 	if (isStockService) {
 		const canonical = canonicalTransformSearch(
 			url,
