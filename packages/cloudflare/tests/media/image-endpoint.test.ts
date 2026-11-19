@@ -2,7 +2,11 @@ import type { APIContext } from "astro";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 const { fakeEnv, adapterGET, imageConfig, virtualConfig } = vi.hoisted(() => ({
-	virtualConfig: {} as { routeCacheProvider?: string },
+	virtualConfig: {} as {
+		routeCacheProvider?: string;
+		imageSigning?: boolean;
+		imageStoragePublicUrl?: string;
+	},
 	fakeEnv: {} as Record<string, unknown>,
 	adapterGET: vi.fn(async () => new Response("adapter", { status: 418 })),
 	imageConfig: {
@@ -14,9 +18,18 @@ vi.mock("virtual:emdash/config", () => ({ default: virtualConfig }));
 vi.mock("cloudflare:workers", () => ({ env: fakeEnv }));
 vi.mock("astro:assets", () => ({ imageConfig }));
 vi.mock("@astrojs/cloudflare/image-transform-endpoint", () => ({ GET: adapterGET }));
+vi.mock("../../../core/src/loader.js", () => ({ getDb: vi.fn(async () => ({})) }));
+vi.mock("../../../core/src/config/secrets.js", () => ({
+	resolveSecretsCached: vi.fn(async () => ({ imageSigningSecrets: ["secret-a"] })),
+}));
+// Core source is imported through a variable specifier so tsgo does not compile
+// it under this package's stricter options.
+const { CORE_SRC } = vi.hoisted(() => ({
+	CORE_SRC: new URL("../../../core/src/media/", import.meta.url).pathname,
+}));
 vi.mock(
 	"emdash/media/image-endpoint",
-	async () => import("../../../core/src/media/image-endpoint.js"),
+	async () => import(/* @vite-ignore */ `${CORE_SRC}image-endpoint.js`),
 );
 
 import { GET } from "../../src/image-endpoint.js";
@@ -80,6 +93,8 @@ afterEach(() => {
 	delete imageConfig.assetQueryParams;
 	imageConfig.service.entrypoint = "@astrojs/cloudflare/image-service-workerd";
 	delete virtualConfig.routeCacheProvider;
+	delete virtualConfig.imageSigning;
+	delete virtualConfig.imageStoragePublicUrl;
 	vi.clearAllMocks();
 });
 
@@ -416,5 +431,91 @@ describe("cloudflare image endpoint storage body", () => {
 		const { response, body } = await request({ contentType: "image/png", query: "w=100&f=webp" });
 		expect(response.status).toBe(500);
 		expect(body.cancelled()).toBe(true);
+	});
+});
+
+describe("Cloudflare image endpoint with signed image URLs", () => {
+	const HREF = "/_emdash/api/media/file/photo.jpg";
+	const PUBLIC = "https://media.example.com/uploads";
+
+	async function signedPath(href = HREF): Promise<string> {
+		const { importImageSigningKeys, signTransformUrl } = (await import(
+			/* @vite-ignore */ `${CORE_SRC}image-signature.js`
+		)) as {
+			importImageSigningKeys(secrets: string[]): Promise<CryptoKey[]>;
+			signTransformUrl(url: URL, key: CryptoKey): Promise<string>;
+		};
+		const [key] = await importImageSigningKeys(["secret-a"]);
+		return signTransformUrl(
+			new URL(`https://example.test/_image?href=${encodeURIComponent(href)}&w=640`),
+			key!,
+		);
+	}
+
+	function signedContext(path: string) {
+		const { ctx, storage, input } = context("");
+		ctx.request = new Request(`https://example.test${path}`);
+		return { ctx, storage, input };
+	}
+
+	it("refuses an unsigned stored-media request without reading storage or transforming", async () => {
+		const { images } = installImages();
+		const { ctx, storage } = signedContext(`/_image?href=${encodeURIComponent(HREF)}&w=640`);
+
+		virtualConfig.imageSigning = true;
+		const response = await GET(ctx as never);
+
+		expect(response.status).toBe(403);
+		expect(response.headers.get("Cache-Control")).toContain("no-store");
+		expect(((await response.json()) as { error: { code: string } }).error.code).toBe(
+			"IMAGE_SIGNATURE_INVALID",
+		);
+		expect(storage.download).not.toHaveBeenCalled();
+		expect(images.input).not.toHaveBeenCalled();
+		expect(ctx.cache.set).not.toHaveBeenCalled();
+	});
+
+	it("serves a signed request", async () => {
+		const { images } = installImages();
+		virtualConfig.imageSigning = true;
+		const { ctx } = signedContext(await signedPath());
+		const response = await GET(ctx as never);
+		expect(response.status).toBe(200);
+		expect(images.input).toHaveBeenCalledTimes(1);
+	});
+
+	it("redirects a reordered signed request and keeps the signature", async () => {
+		virtualConfig.imageSigning = true;
+		const path = await signedPath();
+		const sig = new URL(path, "https://example.test").searchParams.get("_emdash_sig")!;
+		const { ctx, storage } = signedContext(
+			`/_image?w=640&_emdash_sig=${sig}&href=${encodeURIComponent(HREF)}`,
+		);
+		const response = await GET(ctx as never);
+		expect(response.status).toBe(301);
+		expect(response.headers.get("Location")).toBe(path);
+		expect(storage.download).not.toHaveBeenCalled();
+	});
+
+	it("checks a publicUrl href before the adapter endpoint runs", async () => {
+		virtualConfig.imageSigning = true;
+		virtualConfig.imageStoragePublicUrl = PUBLIC;
+		const href = `${PUBLIC}/photo.jpg`;
+
+		const refused = signedContext(`/_image?href=${encodeURIComponent(href)}&w=640`);
+		expect((await GET(refused.ctx as never)).status).toBe(403);
+		expect(adapterGET).not.toHaveBeenCalled();
+
+		const allowed = signedContext(await signedPath(href));
+		expect((await GET(allowed.ctx as never)).status).toBe(418);
+		expect(adapterGET).toHaveBeenCalledTimes(1);
+	});
+
+	it("redirects a signed URL to its unsigned canonical form when signing is off", async () => {
+		const { ctx, storage } = signedContext(await signedPath());
+		const response = await GET(ctx as never);
+		expect(response.status).toBe(301);
+		expect(response.headers.get("Location")).toBe(`/_image?href=${encodeURIComponent(HREF)}&w=640`);
+		expect(storage.download).not.toHaveBeenCalled();
 	});
 });

@@ -19,11 +19,14 @@ import { env } from "cloudflare:workers";
 import type { Storage } from "emdash";
 import {
 	cacheMediaResponse,
+	checkImageSignature,
 	canonicalTransformRedirect,
 	canonicalTransformSearch,
 	getTransformFingerprint,
+	IMAGE_SIGNATURE_PARAM,
 	isCacheableMediaSource,
 	matchInternalMediaKey,
+	matchStoredMediaHref,
 	MUTABLE_MEDIA_CACHE_CONTROL,
 	originalMediaHeaders,
 	parseTransformParams,
@@ -156,21 +159,36 @@ function isNotFound(error: unknown): boolean {
 
 export const GET: APIRoute = async (ctx) => {
 	const url = new URL(ctx.request.url);
-	const key = matchInternalMediaKey(url.searchParams.get("href"));
+	const href = url.searchParams.get("href");
+	const key = matchInternalMediaKey(href);
+	const signing = virtualConfig?.imageSigning === true;
 	// App.Locals.emdash is augmented by `emdash/locals`, not loaded in this
 	// package's compilation; narrow to the field we need.
 	// eslint-disable-next-line typescript/no-unsafe-type-assertion -- App.Locals augmentation lives in the emdash package
 	const storage = (ctx.locals as { emdash?: { storage?: Storage | null } }).emdash?.storage;
 
+	// Astro adds the adapter's assetQueryParams; the public `astro:assets` type omits it.
+	const config: typeof imageConfig & { assetQueryParams?: URLSearchParams } = imageConfig;
+
+	// Stored media needs a valid signature (or a Contributor+ session) before
+	// anything is read or transformed, including `publicUrl` media that the
+	// adapter's endpoint serves.
+	if (signing && matchStoredMediaHref(href, virtualConfig?.imageStoragePublicUrl)) {
+		const refusal = await checkImageSignature(ctx, url, config.assetQueryParams);
+		if (refusal) return refusal;
+	}
+
 	// Not EmDash media, or storage unavailable: let the adapter's endpoint handle
 	// it (bundled assets via ASSETS, allowed remote via fetch).
 	if (!key || !storage) return adapterGET(ctx);
 
-	// Astro adds the adapter's assetQueryParams; the public `astro:assets` type omits it.
-	const config: typeof imageConfig & { assetQueryParams?: URLSearchParams } = imageConfig;
 	const stockService = config.service.entrypoint === "@astrojs/cloudflare/image-service-workerd";
 	if (stockService) {
-		const canonical = canonicalTransformSearch(url, config.assetQueryParams);
+		const canonical = canonicalTransformSearch(
+			url,
+			config.assetQueryParams,
+			signing ? [IMAGE_SIGNATURE_PARAM] : [],
+		);
 		if (canonical !== null) return canonicalTransformRedirect(url, canonical);
 	}
 
@@ -243,7 +261,7 @@ export const GET: APIRoute = async (ctx) => {
 		if (
 			stockService &&
 			virtualConfig?.routeCacheProvider !== "memory" &&
-			isCacheableMediaSource(url.searchParams.get("href"), url)
+			isCacheableMediaSource(href, url)
 		) {
 			cacheMediaResponse(ctx.cache, key);
 		}

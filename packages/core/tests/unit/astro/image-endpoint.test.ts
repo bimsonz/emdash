@@ -11,9 +11,20 @@ const imageConfig = vi.hoisted(() => ({
 	assetQueryParams: undefined as URLSearchParams | undefined,
 	service: { entrypoint: "astro/assets/services/sharp", config: {} },
 }));
-const virtualConfig = vi.hoisted(() => ({}) as { routeCacheProvider?: string });
+const virtualConfig = vi.hoisted(
+	() =>
+		({}) as {
+			routeCacheProvider?: string;
+			imageSigning?: boolean;
+			imageStoragePublicUrl?: string;
+		},
+);
 
 vi.mock("virtual:emdash/config", () => ({ default: virtualConfig }));
+vi.mock("../../../src/loader.js", () => ({ getDb: vi.fn(async () => ({})) }));
+vi.mock("../../../src/config/secrets.js", () => ({
+	resolveSecretsCached: vi.fn(async () => ({ imageSigningSecrets: ["secret-a"] })),
+}));
 
 vi.mock("astro:assets", () => ({
 	getConfiguredImageService: vi.fn(() =>
@@ -41,6 +52,7 @@ vi.mock("astro/assets/endpoint/generic", () => ({
 
 import { GET } from "../../../src/astro/image-endpoint.js";
 import { MUTABLE_MEDIA_CACHE_CONTROL } from "../../../src/media/image-endpoint.js";
+import { importImageSigningKeys, signTransformUrl } from "../../../src/media/image-signature.js";
 
 function routeCache() {
 	return { enabled: true, set: vi.fn() };
@@ -83,6 +95,8 @@ describe("GET /_image over EmDash media", () => {
 		imageConfig.assetQueryParams = undefined;
 		imageConfig.service.entrypoint = "astro/assets/services/sharp";
 		delete virtualConfig.routeCacheProvider;
+		delete virtualConfig.imageSigning;
+		delete virtualConfig.imageStoragePublicUrl;
 	});
 
 	it("serves a transformed image with weak validators", async () => {
@@ -465,5 +479,105 @@ describe("GET /_image over EmDash media", () => {
 		expect(response.headers.get("Content-Type")).toBe("image/png");
 		expect(new Uint8Array(await response.arrayBuffer())).toEqual(new Uint8Array([1, 2, 3]));
 		expect(logger.warn).toHaveBeenCalledWith("could not optimize");
+	});
+
+	describe("with signed image URLs on", () => {
+		const HREF = "/_emdash/api/media/file/key.png";
+		const PUBLIC = "https://media.example.com/uploads";
+
+		async function signedPath(href = HREF): Promise<string> {
+			const [key] = await importImageSigningKeys(["secret-a"]);
+			return signTransformUrl(
+				new URL(`http://localhost/_image?href=${encodeURIComponent(href)}&w=150`),
+				key!,
+			);
+		}
+
+		beforeEach(() => {
+			virtualConfig.imageSigning = true;
+		});
+
+		it("refuses an unsigned stored-media request without reading storage", async () => {
+			const download = pngDownload();
+			const cache = routeCache();
+			const request = new Request(`http://localhost/_image?href=${encodeURIComponent(HREF)}&w=150`);
+
+			const response = await GET(buildContext(request, { download }, cache));
+
+			expect(response.status).toBe(403);
+			expect(response.headers.get("Cache-Control")).toContain("no-store");
+			expect(((await response.json()) as { error: { code: string } }).error.code).toBe(
+				"IMAGE_SIGNATURE_INVALID",
+			);
+			expect(download).not.toHaveBeenCalled();
+			expect(transform).not.toHaveBeenCalled();
+			expect(cache.set).not.toHaveBeenCalled();
+		});
+
+		it("refuses an unsigned non-canonical request instead of redirecting it", async () => {
+			const request = new Request(`http://localhost/_image?w=150&href=${encodeURIComponent(HREF)}`);
+			const response = await GET(buildContext(request, { download: pngDownload() }));
+			expect(response.status).toBe(403);
+		});
+
+		it("serves a signed request", async () => {
+			transform.mockResolvedValue({ data: new Uint8Array([4, 5, 6]), format: "webp" });
+			const request = new Request(`http://localhost${await signedPath()}`);
+			const response = await GET(buildContext(request, { download: pngDownload() }));
+			expect(response.status).toBe(200);
+			expect(transform).toHaveBeenCalledTimes(1);
+		});
+
+		it("redirects a reordered signed request and keeps the signature", async () => {
+			const path = await signedPath();
+			const search = new URL(path, "http://localhost").searchParams;
+			const reordered = `w=150&${new URLSearchParams([["_emdash_sig", search.get("_emdash_sig")!]])}&href=${encodeURIComponent(HREF)}`;
+			const download = pngDownload();
+			const response = await GET(
+				buildContext(new Request(`http://localhost/_image?${reordered}`), { download }),
+			);
+			expect(response.status).toBe(301);
+			expect(response.headers.get("Location")).toBe(path);
+			expect(download).not.toHaveBeenCalled();
+		});
+
+		it("checks a publicUrl href before the stock endpoint runs", async () => {
+			virtualConfig.imageStoragePublicUrl = PUBLIC;
+			const { GET: genericGET } = await import("astro/assets/endpoint/generic");
+			vi.mocked(genericGET).mockClear();
+			const href = `${PUBLIC}/key.png`;
+			const request = new Request(`http://localhost/_image?href=${encodeURIComponent(href)}&w=150`);
+
+			const refused = await GET(buildContext(request, { download: pngDownload() }));
+			expect(refused.status).toBe(403);
+			expect(genericGET).not.toHaveBeenCalled();
+
+			const signed = new Request(`http://localhost${await signedPath(href)}`);
+			const allowed = await GET(buildContext(signed, { download: pngDownload() }));
+			expect(allowed.status).toBe(200);
+			expect(genericGET).toHaveBeenCalledTimes(1);
+		});
+
+		it("leaves unrelated hrefs alone", async () => {
+			const request = new Request("http://localhost/_image?href=%2F_astro%2Fa.png&w=150");
+			const response = await GET(buildContext(request, { download: pngDownload() }));
+			expect(response.status).toBe(200);
+			expect(await response.text()).toBe("generic");
+		});
+	});
+
+	it("redirects a signed URL to its unsigned canonical form when signing is off", async () => {
+		const [key] = await importImageSigningKeys(["secret-a"]);
+		const path = await signTransformUrl(
+			new URL("http://localhost/_image?href=%2F_emdash%2Fapi%2Fmedia%2Ffile%2Fkey.png&w=150"),
+			key!,
+		);
+		const download = pngDownload();
+		const response = await GET(buildContext(new Request(`http://localhost${path}`), { download }));
+		expect(response.status).toBe(301);
+		expect(response.headers.get("Location")).toBe(
+			"/_image?href=%2F_emdash%2Fapi%2Fmedia%2Ffile%2Fkey.png&w=150",
+		);
+		expect(download).not.toHaveBeenCalled();
 	});
 });
