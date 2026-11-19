@@ -1,8 +1,10 @@
 import { describe, it, expect, vi } from "vitest";
 
+import { ImageSigningSecretRequiredError } from "../../../src/media/image-signing-error.js";
 import {
 	RESPONSIVE_BREAKPOINTS,
 	buildResponsiveImage,
+	canOptimizeImage,
 	formatContentType,
 	gallerySizes,
 	responsiveSizes,
@@ -175,7 +177,64 @@ describe("buildResponsiveImage", () => {
 		};
 		expect(await buildResponsiveImage(getImage, { src: ABS, width: 800, height: 600 })).toBeNull();
 	});
+
+	it.each(signingErrors())(
+		"lets the missing build signing secret (%s) fail the render",
+		async (_kind, error) => {
+			const getImage: GetImage = async () => {
+				throw error;
+			};
+			await expect(
+				buildResponsiveImage(getImage, { src: ABS, width: 800, height: 600 }),
+			).rejects.toBe(error);
+		},
+	);
 });
+
+describe("canOptimizeImage", () => {
+	const ABS = "https://cdn.example.com/a.jpg";
+
+	it("is true when the service rewrites the URL", async () => {
+		const getImage: GetImage = async () => ({ src: "/_image?href=x" });
+		expect(await canOptimizeImage(getImage, { src: ABS, width: 800, height: 600 })).toBe(true);
+	});
+
+	it("is false when getImage throws (no service available)", async () => {
+		const getImage: GetImage = async () => {
+			throw new Error("no image service");
+		};
+		expect(await canOptimizeImage(getImage, { src: ABS, width: 800, height: 600 })).toBe(false);
+	});
+
+	it.each(signingErrors())(
+		"lets the missing build signing secret (%s) fail the render",
+		async (_kind, error) => {
+			const getImage: GetImage = async () => {
+				throw error;
+			};
+			await expect(canOptimizeImage(getImage, { src: ABS, width: 800, height: 600 })).rejects.toBe(
+				error,
+			);
+		},
+	);
+});
+
+/**
+ * The error as this module's copy of the class makes it, and as another copy
+ * does: the image components load this module from source while the image
+ * service comes from the built package.
+ */
+function signingErrors(): Array<[string, Error]> {
+	const otherCopy = Object.defineProperty(
+		new Error("from another module copy"),
+		Symbol.for("emdash:image-signing-secret-required"),
+		{ value: true },
+	);
+	return [
+		["this copy", new ImageSigningSecretRequiredError()],
+		["another copy", otherCopy],
+	];
+}
 
 describe("formatContentType", () => {
 	it("maps transform formats to their MIME types", () => {
