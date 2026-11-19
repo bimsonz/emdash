@@ -558,6 +558,29 @@ describe("GET /_image over EmDash media", () => {
 			expect(genericGET).toHaveBeenCalledTimes(1);
 		});
 
+		it("refuses href variants that still resolve to stored media without calling the stock endpoint", async () => {
+			virtualConfig.imageStoragePublicUrl = PUBLIC;
+			const { GET: genericGET } = await import("astro/assets/endpoint/generic");
+			vi.mocked(genericGET).mockClear();
+			const download = pngDownload();
+			const hrefs = [
+				"/_emdash/api/media/file/key.png/",
+				"/_emdash/api/media/file/%6bey.png",
+				"http://localhost/_emdash/api/media/file/key.png/",
+				"https://media.example.com:8443/uploads/key.png",
+			];
+			for (const href of hrefs) {
+				const request = new Request(
+					`http://localhost/_image?href=${encodeURIComponent(href)}&w=150`,
+				);
+				const response = await GET(buildContext(request, { download }));
+				expect(response.status, href).toBe(403);
+			}
+			expect(genericGET).not.toHaveBeenCalled();
+			expect(download).not.toHaveBeenCalled();
+			expect(transform).not.toHaveBeenCalled();
+		});
+
 		it("leaves unrelated hrefs alone", async () => {
 			const request = new Request("http://localhost/_image?href=%2F_astro%2Fa.png&w=150");
 			const response = await GET(buildContext(request, { download: pngDownload() }));

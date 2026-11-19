@@ -330,31 +330,70 @@ export function matchInternalMediaKey(href: string | null | undefined): string |
 	return key;
 }
 
-const TRAILING_SLASHES = /\/+$/;
+const MAX_DECODE_ITERATIONS = 10;
 
 /**
- * True when `href` names stored media: the internal media route, or the
- * storage adapter's `publicUrl` followed by a key. Both are parsed as URLs and
- * compared on origin and path segments, so look-alike hosts, sibling prefixes
- * and `..` tricks never match; a `publicUrl` that is not http(s) matches nothing.
+ * The pathname as a router would reach a route: percent-decoded until stable
+ * (as Astro's `validateAndDecodePathname`, but also decoding `%2F`), repeated
+ * slashes collapsed, `.` and `..` resolved, lower-cased. `null` when it cannot
+ * be normalised (excess encoding depth), which callers treat as a match.
+ */
+function normalizeRoutedPath(pathname: string): string | null {
+	let current = pathname;
+	for (let i = 0; ; i++) {
+		if (i > MAX_DECODE_ITERATIONS) return null;
+		let next: string;
+		try {
+			next = decodeURIComponent(current);
+		} catch {
+			break;
+		}
+		if (next === current) break;
+		current = next;
+	}
+	const segments: string[] = [];
+	for (const segment of current.replaceAll("\\", "/").toLowerCase().split("/")) {
+		if (segment === "" || segment === ".") continue;
+		if (segment === "..") segments.pop();
+		else segments.push(segment);
+	}
+	return `/${segments.join("/")}`;
+}
+
+/**
+ * True when `href` may resolve to stored media: the internal media route or the
+ * storage adapter's `publicUrl` followed by a key. This is the gate's question,
+ * so it accepts a superset of what the endpoints could resolve: the path is
+ * normalised like a router would (decoding, `//`, dot segments, case), the
+ * internal route matches on any host, and `publicUrl` matches on hostname and
+ * path prefix only (port and protocol ignored, as Astro's remote patterns do).
+ * Look-alike hosts and sibling prefixes do not match; a `publicUrl` that is not
+ * http(s) matches nothing.
  */
 export function matchStoredMediaHref(href: string | null | undefined, publicUrl?: string): boolean {
 	if (!href) return false;
-	if (matchInternalMediaKey(href) !== null) return true;
-	if (!publicUrl) return false;
-	let prefix: URL;
 	let target: URL;
 	try {
+		target = new URL(href, "http://localhost");
+	} catch {
+		return false;
+	}
+	if (target.protocol !== "https:" && target.protocol !== "http:") return false;
+	const path = normalizeRoutedPath(target.pathname);
+	if (path === null) return true;
+	if (path.startsWith(INTERNAL_MEDIA_PREFIX.toLowerCase())) return true;
+	if (!publicUrl) return false;
+	let prefix: URL;
+	try {
 		prefix = new URL(publicUrl);
-		target = new URL(href);
 	} catch {
 		return false;
 	}
 	if (prefix.protocol !== "https:" && prefix.protocol !== "http:") return false;
-	if (target.origin !== prefix.origin) return false;
-	const base = prefix.pathname.replace(TRAILING_SLASHES, "");
-	if (!target.pathname.startsWith(`${base}/`)) return false;
-	return target.pathname.length > base.length + 1;
+	if (target.hostname.toLowerCase() !== prefix.hostname.toLowerCase()) return false;
+	const base = normalizeRoutedPath(prefix.pathname);
+	if (base === null) return false;
+	return path.startsWith(base === "/" ? "/" : `${base}/`) && path !== base;
 }
 
 /** Type guard for {@link ImageTransformFormat}. */

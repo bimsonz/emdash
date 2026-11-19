@@ -21,6 +21,24 @@ import {
 	importImageSigningKeys,
 } from "./image-signature.js";
 
+/** The storage key of a stored-media href, for the debug log. */
+function storageKeyForLog(href: string | null, publicUrl?: string): string {
+	if (!href) return "(no href)";
+	const internal = matchInternalMediaKey(href);
+	if (internal) return internal;
+	try {
+		const path = new URL(href, "http://localhost").pathname;
+		const base = publicUrl ? new URL(publicUrl).pathname.replace(TRAILING_SLASHES, "") : "";
+		return path.toLowerCase().startsWith(`${base.toLowerCase()}/`)
+			? path.slice(base.length + 1)
+			: path;
+	} catch {
+		return href;
+	}
+}
+
+const TRAILING_SLASHES = /\/+$/;
+
 /**
  * Returns `null` to continue, or the `403` / `503` response to send. Neither
  * response sets cache intent.
@@ -58,7 +76,10 @@ export async function checkImageSignature(
 	if (await hasValidTransformSignature(url, keys, assetQueryParams)) return null;
 
 	const reason = url.searchParams.has(IMAGE_SIGNATURE_PARAM) ? "invalid" : "missing";
-	console.debug(`[emdash] image signature ${reason}:`, matchInternalMediaKey(href) ?? href);
+	console.debug(
+		`[emdash] image signature ${reason}:`,
+		storageKeyForLog(href, virtualConfig.imageStoragePublicUrl),
+	);
 	return apiError(
 		ErrorCode.IMAGE_SIGNATURE_INVALID,
 		"This image URL is not signed or its signature is invalid",
