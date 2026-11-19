@@ -37,8 +37,6 @@ declare module "virtual:emdash/config" {
 		imageEndpointRoute?: string;
 		/** Whether stored-media transform URLs are signed (`images: { signedUrls: true }`). */
 		imageSigning?: boolean;
-		/** Storage adapter `publicUrl`, no trailing slash; absent when the adapter has none. */
-		imageStoragePublicUrl?: string;
 		/** Runtime image service for signing; filled in when signing is on. */
 		imageRuntimeService?: { entrypoint: string; config: Record<string, unknown> };
 	}

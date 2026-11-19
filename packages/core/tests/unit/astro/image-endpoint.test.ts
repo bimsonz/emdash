@@ -16,7 +16,6 @@ const virtualConfig = vi.hoisted(
 		({}) as {
 			routeCacheProvider?: string;
 			imageSigning?: boolean;
-			imageStoragePublicUrl?: string;
 		},
 );
 
@@ -96,7 +95,6 @@ describe("GET /_image over EmDash media", () => {
 		imageConfig.service.entrypoint = "astro/assets/services/sharp";
 		delete virtualConfig.routeCacheProvider;
 		delete virtualConfig.imageSigning;
-		delete virtualConfig.imageStoragePublicUrl;
 	});
 
 	it("serves a transformed image with weak validators", async () => {
@@ -483,7 +481,6 @@ describe("GET /_image over EmDash media", () => {
 
 	describe("with signed image URLs on", () => {
 		const HREF = "/_emdash/api/media/file/key.png";
-		const PUBLIC = "https://media.example.com/uploads";
 
 		async function signedPath(href = HREF): Promise<string> {
 			const [key] = await importImageSigningKeys(["secret-a"]);
@@ -541,25 +538,7 @@ describe("GET /_image over EmDash media", () => {
 			expect(download).not.toHaveBeenCalled();
 		});
 
-		it("checks a publicUrl href before the stock endpoint runs", async () => {
-			virtualConfig.imageStoragePublicUrl = PUBLIC;
-			const { GET: genericGET } = await import("astro/assets/endpoint/generic");
-			vi.mocked(genericGET).mockClear();
-			const href = `${PUBLIC}/key.png`;
-			const request = new Request(`http://localhost/_image?href=${encodeURIComponent(href)}&w=150`);
-
-			const refused = await GET(buildContext(request, { download: pngDownload() }));
-			expect(refused.status).toBe(403);
-			expect(genericGET).not.toHaveBeenCalled();
-
-			const signed = new Request(`http://localhost${await signedPath(href)}`);
-			const allowed = await GET(buildContext(signed, { download: pngDownload() }));
-			expect(allowed.status).toBe(200);
-			expect(genericGET).toHaveBeenCalledTimes(1);
-		});
-
-		it("refuses href variants that still resolve to stored media without calling the stock endpoint", async () => {
-			virtualConfig.imageStoragePublicUrl = PUBLIC;
+		it("refuses every unsigned href form, whatever it resolves to, without reaching the stock endpoint", async () => {
 			const { GET: genericGET } = await import("astro/assets/endpoint/generic");
 			vi.mocked(genericGET).mockClear();
 			const download = pngDownload();
@@ -568,6 +547,12 @@ describe("GET /_image over EmDash media", () => {
 				"/_emdash/api/media/file/%6bey.png",
 				"http://localhost/_emdash/api/media/file/key.png/",
 				"https://media.example.com:8443/uploads/key.png",
+				"https:/_emdash/api/media/file/abc.jpg",
+				"http:media.example.com/uploads/a.jpg",
+				"/blog/_emdash/api/media/file/abc.jpg",
+				"/old-redirect",
+				"/_astro/foo.hash.jpg",
+				"https://cdn.example.com/a.jpg",
 			];
 			for (const href of hrefs) {
 				const request = new Request(
@@ -576,16 +561,23 @@ describe("GET /_image over EmDash media", () => {
 				const response = await GET(buildContext(request, { download }));
 				expect(response.status, href).toBe(403);
 			}
+			const noHref = await GET(
+				buildContext(new Request("http://localhost/_image?w=150"), { download }),
+			);
+			expect(noHref.status).toBe(403);
 			expect(genericGET).not.toHaveBeenCalled();
 			expect(download).not.toHaveBeenCalled();
 			expect(transform).not.toHaveBeenCalled();
 		});
 
-		it("leaves unrelated hrefs alone", async () => {
-			const request = new Request("http://localhost/_image?href=%2F_astro%2Fa.png&w=150");
+		it("hands a signed non-media href to the stock endpoint", async () => {
+			const { GET: genericGET } = await import("astro/assets/endpoint/generic");
+			vi.mocked(genericGET).mockClear();
+			const request = new Request(`http://localhost${await signedPath("/_astro/a.png")}`);
 			const response = await GET(buildContext(request, { download: pngDownload() }));
 			expect(response.status).toBe(200);
 			expect(await response.text()).toBe("generic");
+			expect(genericGET).toHaveBeenCalledTimes(1);
 		});
 	});
 

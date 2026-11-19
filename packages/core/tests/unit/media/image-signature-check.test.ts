@@ -3,7 +3,7 @@ import type { APIContext } from "astro";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const { virtualConfig, getDb, resolveSecretsCached, requestContext } = vi.hoisted(() => ({
-	virtualConfig: {} as { imageSigning?: boolean; imageStoragePublicUrl?: string },
+	virtualConfig: {} as { imageSigning?: boolean },
 	getDb: vi.fn(),
 	resolveSecretsCached: vi.fn(),
 	requestContext: { current: undefined as { db?: unknown } | undefined },
@@ -42,7 +42,6 @@ describe("checkImageSignature", () => {
 	beforeEach(() => {
 		_clearImageSigningKeyCacheForTesting();
 		virtualConfig.imageSigning = true;
-		delete virtualConfig.imageStoragePublicUrl;
 		requestContext.current = undefined;
 		getDb.mockResolvedValue({});
 		resolveSecretsCached.mockResolvedValue({ imageSigningSecrets: ["secret-a"] });
@@ -166,21 +165,43 @@ describe("checkImageSignature", () => {
 		);
 	});
 
-	it("logs the reason and key at debug without the expected MAC", async () => {
+	it("logs the reason and the href at debug without the expected MAC", async () => {
 		const url = new URL(`${ORIGIN}/_image?${BASE}`);
 		await checkImageSignature(ctx(), url);
 		const debug = vi.mocked(console.debug);
 		expect(debug).toHaveBeenCalledTimes(1);
-		expect(debug.mock.calls[0]).toEqual(["[emdash] image signature missing:", "abc.jpg"]);
+		expect(debug.mock.calls[0]).toEqual(["[emdash] image signature missing:", HREF]);
 	});
 
-	it("logs the storage key, not the supplied href, for publicUrl media", async () => {
-		virtualConfig.imageStoragePublicUrl = "https://media.example.com/uploads";
-		const href = encodeURIComponent("https://media.example.com/uploads/key.jpg");
-		await checkImageSignature(ctx(), new URL(`${ORIGIN}/_image?href=${href}&w=1`));
-		expect(vi.mocked(console.debug).mock.calls[0]).toEqual([
-			"[emdash] image signature missing:",
-			"key.jpg",
-		]);
+	it("refuses an unsigned href that is not stored media", async () => {
+		for (const href of ["/_astro/foo.hash.jpg", "https://cdn.example.com/a.jpg"]) {
+			const url = new URL(`${ORIGIN}/_image?href=${encodeURIComponent(href)}&w=100`);
+			await refusal(await checkImageSignature(ctx(), url), 403, "IMAGE_SIGNATURE_INVALID");
+		}
+	});
+
+	it("refuses a request with no href and no signature", async () => {
+		await refusal(
+			await checkImageSignature(ctx(), new URL(`${ORIGIN}/_image?w=100`)),
+			403,
+			"IMAGE_SIGNATURE_INVALID",
+		);
+	});
+
+	it("continues for a signed href that is not stored media", async () => {
+		const [key] = await importImageSigningKeys(["secret-a"]);
+		const path = await signTransformUrl(
+			new URL(`${ORIGIN}/_image?href=${encodeURIComponent("/_astro/foo.hash.jpg")}&w=100`),
+			key!,
+		);
+		expect(await checkImageSignature(ctx(), new URL(path, ORIGIN))).toBeNull();
+	});
+
+	it("logs the reason and the href truncated to 200 characters", async () => {
+		const long = `/${"a".repeat(300)}.jpg`;
+		await checkImageSignature(ctx(), new URL(`${ORIGIN}/_image?href=${encodeURIComponent(long)}`));
+		const [message, logged] = vi.mocked(console.debug).mock.calls[0] as [string, string];
+		expect(message).toBe("[emdash] image signature missing:");
+		expect(logged).toBe(long.slice(0, 200));
 	});
 });
