@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
 
+import {
+	imageSigningEnabled,
+	imagesEnabled,
+} from "../../../../src/astro/integration/images-option.js";
 import { buildSerializableConfig, emdash } from "../../../../src/astro/integration/index.js";
 
 describe("buildSerializableConfig", () => {
@@ -14,5 +18,34 @@ describe("updateCheck option", () => {
 			/updateCheck\.minimumReleaseAge.*soon/,
 		);
 		expect(() => emdash({ updateCheck: { minimumReleaseAge: "48h" } })).not.toThrow();
+	});
+});
+
+describe("image signing config", () => {
+	it("serializes imageSigning only for signedUrls: true", () => {
+		expect(buildSerializableConfig({ images: { signedUrls: true } }).imageSigning).toBe(true);
+		for (const images of [undefined, true, false, {}, { signedUrls: false }]) {
+			expect(buildSerializableConfig({ images }).imageSigning).toBe(false);
+		}
+	});
+
+	it("treats an images object as enabled", () => {
+		expect(imagesEnabled({ signedUrls: true })).toBe(true);
+		expect(imagesEnabled({})).toBe(true);
+		expect(imagesEnabled(undefined)).toBe(true);
+		expect(imagesEnabled(false)).toBe(false);
+		expect(imageSigningEnabled({ signedUrls: true })).toBe(true);
+		expect(imageSigningEnabled(true)).toBe(false);
+	});
+
+	it("serializes the storage public URL without a trailing slash", () => {
+		const storage = { entrypoint: "x", config: { publicUrl: "https://media.example.com/" } };
+		expect(buildSerializableConfig({ storage }).imageStoragePublicUrl).toBe(
+			"https://media.example.com",
+		);
+		expect(buildSerializableConfig({}).imageStoragePublicUrl).toBeUndefined();
+		expect(
+			buildSerializableConfig({ storage: { entrypoint: "x", config: {} } }).imageStoragePublicUrl,
+		).toBeUndefined();
 	});
 });
