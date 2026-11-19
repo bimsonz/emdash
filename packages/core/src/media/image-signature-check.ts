@@ -1,9 +1,9 @@
 /**
  * Verification of signed image transform URLs in the image endpoints.
  *
- * Runs before any storage read or transform. A request for stored media that
- * carries no valid `_emdash_sig` is refused unless the requester is a
- * Contributor or above (who can already read every upload).
+ * Runs before any storage read, adapter handoff or transform, on every image
+ * request. A request without a valid `_emdash_sig` is refused unless the
+ * requester is a Contributor or above (who can already read every upload).
  */
 
 import { hasPermission, type RoleLevel } from "@emdash-cms/auth";
@@ -14,30 +14,11 @@ import { ErrorCode } from "../api/errors.js";
 import { resolveSecretsCached } from "../config/secrets.js";
 import { getDb } from "../loader.js";
 import { getRequestContext } from "../request-context.js";
-import { matchInternalMediaKey } from "./image-endpoint.js";
 import {
 	hasValidTransformSignature,
 	IMAGE_SIGNATURE_PARAM,
 	importImageSigningKeys,
 } from "./image-signature.js";
-
-/** The storage key of a stored-media href, for the debug log. */
-function storageKeyForLog(href: string | null, publicUrl?: string): string {
-	if (!href) return "(no href)";
-	const internal = matchInternalMediaKey(href);
-	if (internal) return internal;
-	try {
-		const path = new URL(href, "http://localhost").pathname;
-		const base = publicUrl ? new URL(publicUrl).pathname.replace(TRAILING_SLASHES, "") : "";
-		return path.toLowerCase().startsWith(`${base.toLowerCase()}/`)
-			? path.slice(base.length + 1)
-			: path;
-	} catch {
-		return href;
-	}
-}
-
-const TRAILING_SLASHES = /\/+$/;
 
 /**
  * Returns `null` to continue, or the `403` / `503` response to send. Neither
@@ -76,10 +57,7 @@ export async function checkImageSignature(
 	if (await hasValidTransformSignature(url, keys, assetQueryParams)) return null;
 
 	const reason = url.searchParams.has(IMAGE_SIGNATURE_PARAM) ? "invalid" : "missing";
-	console.debug(
-		`[emdash] image signature ${reason}:`,
-		storageKeyForLog(href, virtualConfig.imageStoragePublicUrl),
-	);
+	console.debug(`[emdash] image signature ${reason}:`, (href ?? "(no href)").slice(0, 200));
 	return apiError(
 		ErrorCode.IMAGE_SIGNATURE_INVALID,
 		"This image URL is not signed or its signature is invalid",

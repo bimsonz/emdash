@@ -3,7 +3,6 @@ import { describe, it, expect } from "vitest";
 import {
 	canonicalTransformSearch,
 	matchInternalMediaKey,
-	matchStoredMediaHref,
 	isSafeTransformKey,
 	parseTransformParams,
 	resolveTransformQuality,
@@ -389,92 +388,6 @@ describe("canonicalTransformSearch", () => {
 	it("accepts its own output, so a redirect never loops", () => {
 		const target = canonicalOf(`w=150&href=${href}&x=1`)!;
 		expect(canonicalOf(target)).toBeNull();
-	});
-});
-
-describe("matchStoredMediaHref", () => {
-	const PUBLIC = "https://media.example.com/uploads";
-
-	it("matches the internal media route", () => {
-		expect(matchStoredMediaHref("/_emdash/api/media/file/a.jpg")).toBe(true);
-		expect(matchStoredMediaHref("https://site.example/_emdash/api/media/file/a.jpg")).toBe(true);
-	});
-
-	it("matches the storage publicUrl followed by a key", () => {
-		expect(matchStoredMediaHref(`${PUBLIC}/a.jpg`, PUBLIC)).toBe(true);
-		expect(matchStoredMediaHref(`${PUBLIC}/a.jpg`, `${PUBLIC}/`)).toBe(true);
-		expect(
-			matchStoredMediaHref("https://media.example.com/a.jpg", "https://media.example.com"),
-		).toBe(true);
-	});
-
-	it("matches every form a router or remote fetch could resolve to stored media", () => {
-		const internal = [
-			"/_emdash/api/media/file/abc.jpg/",
-			"/_emdash/api/media/file/%61bc.jpg",
-			"/_emdash/api/media/file/%2561bc.jpg",
-			"/_emdash/api/media/file//abc.jpg",
-			"/_emdash//api/media/file/abc.jpg",
-			"/_EMDASH/api/media/file/abc.jpg",
-			"/_emdash/api/media/file/a/b.jpg",
-			"/_emdash/api/media/file/x/../abc.jpg",
-			"/_emdash/api/media/%66ile/abc.jpg",
-			"/_emdash/api/media/%252566ile/abc.jpg",
-			"https://site.example/_emdash/api/media/file/abc.jpg/",
-			"https://other.example/_emdash/api/media/file/abc.jpg",
-		];
-		for (const href of internal) expect(matchStoredMediaHref(href), href).toBe(true);
-		const publicForms = [
-			"https://media.example.com:8443/uploads/a.jpg",
-			"http://media.example.com/uploads/a.jpg",
-			"https://MEDIA.example.com/UPLOADS/a.jpg",
-			"https://media.example.com/uploads//a.jpg",
-			"https://media.example.com/uploads/%61.jpg",
-			"https://media.example.com/uploads/x/../a.jpg",
-			"https://media.example.com/uploads/a.jpg/",
-		];
-		for (const href of publicForms) expect(matchStoredMediaHref(href, PUBLIC), href).toBe(true);
-		expect(
-			matchStoredMediaHref("https://media.example.com:2053/a.jpg", "https://media.example.com"),
-		).toBe(true);
-	});
-
-	it("matches a path it cannot normalise rather than letting it through", () => {
-		let deep = "a/b";
-		for (let i = 0; i < 12; i++) deep = encodeURIComponent(deep);
-		expect(matchStoredMediaHref(`/x/${deep}`)).toBe(true);
-	});
-
-	it("refuses look-alike hosts, sibling prefixes and non-media paths", () => {
-		const cases = [
-			"https://media.example.com.evil.net/uploads/a.jpg",
-			"https://media.example.comx/uploads/a.jpg",
-			"https://user@media.example.com@evil.net/uploads/a.jpg",
-			"https://media.example.com/uploadsx/a.jpg",
-			"https://media.example.com/uploads/../private/a.jpg",
-			"https://media.example.com/uploads/%2e%2e/private/a.jpg",
-			"https://media.example.com/uploads/",
-			"https://media.example.com/uploads",
-			"/uploads/a.jpg",
-			"/_emdash/api/media/file/",
-			"/_emdash/api/media/files/a.jpg",
-			"/_astro/a.png",
-		];
-		for (const href of cases) expect(matchStoredMediaHref(href, PUBLIC), href).toBe(false);
-	});
-
-	it("matches nothing from an unusable publicUrl", () => {
-		for (const publicUrl of [
-			undefined,
-			"",
-			"not a url",
-			"ftp://media.example.com",
-			"javascript:1",
-		]) {
-			expect(matchStoredMediaHref("https://media.example.com/a.jpg", publicUrl)).toBe(false);
-		}
-		expect(matchStoredMediaHref(null, PUBLIC)).toBe(false);
-		expect(matchStoredMediaHref("javascript:1", PUBLIC)).toBe(false);
 	});
 });
 

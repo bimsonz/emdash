@@ -25,7 +25,6 @@ import {
 	IMAGE_SIGNATURE_PARAM,
 	isCacheableMediaSource,
 	matchInternalMediaKey,
-	matchStoredMediaHref,
 	MUTABLE_MEDIA_CACHE_CONTROL,
 	originalMediaHeaders,
 	validatorHeaders,
@@ -89,10 +88,11 @@ export const GET: APIRoute = async (ctx) => {
 	// Astro adds the adapter's assetQueryParams; the public astro:assets type omits it.
 	const config: typeof imageConfig & { assetQueryParams?: URLSearchParams } = imageConfig;
 
-	// Stored media needs a valid signature (or a Contributor+ session) before
-	// anything is read or transformed, including `publicUrl` media that the
-	// stock endpoint serves.
-	if (signing && matchStoredMediaHref(href, virtualConfig?.imageStoragePublicUrl)) {
+	// With signing on, every image request needs a valid signature (or a
+	// Contributor+ session) before anything is read, handed to the stock
+	// endpoint or transformed, whatever `href` is: redirects, a site `base`
+	// and scheme-only hrefs can all reach stored media past any href check.
+	if (signing) {
 		const refusal = await checkImageSignature(ctx, url, config.assetQueryParams);
 		if (refusal) return refusal;
 	}

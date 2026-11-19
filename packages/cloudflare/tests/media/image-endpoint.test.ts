@@ -5,7 +5,6 @@ const { fakeEnv, adapterGET, imageConfig, virtualConfig } = vi.hoisted(() => ({
 	virtualConfig: {} as {
 		routeCacheProvider?: string;
 		imageSigning?: boolean;
-		imageStoragePublicUrl?: string;
 	},
 	fakeEnv: {} as Record<string, unknown>,
 	adapterGET: vi.fn(async () => new Response("adapter", { status: 418 })),
@@ -94,7 +93,6 @@ afterEach(() => {
 	imageConfig.service.entrypoint = "@astrojs/cloudflare/image-service-workerd";
 	delete virtualConfig.routeCacheProvider;
 	delete virtualConfig.imageSigning;
-	delete virtualConfig.imageStoragePublicUrl;
 	vi.clearAllMocks();
 });
 
@@ -436,7 +434,6 @@ describe("cloudflare image endpoint storage body", () => {
 
 describe("Cloudflare image endpoint with signed image URLs", () => {
 	const HREF = "/_emdash/api/media/file/photo.jpg";
-	const PUBLIC = "https://media.example.com/uploads";
 
 	async function signedPath(href = HREF): Promise<string> {
 		const { importImageSigningKeys, signTransformUrl } = (await import(
@@ -497,29 +494,20 @@ describe("Cloudflare image endpoint with signed image URLs", () => {
 		expect(storage.download).not.toHaveBeenCalled();
 	});
 
-	it("checks a publicUrl href before the adapter endpoint runs", async () => {
-		virtualConfig.imageSigning = true;
-		virtualConfig.imageStoragePublicUrl = PUBLIC;
-		const href = `${PUBLIC}/photo.jpg`;
-
-		const refused = signedContext(`/_image?href=${encodeURIComponent(href)}&w=640`);
-		expect((await GET(refused.ctx as never)).status).toBe(403);
-		expect(adapterGET).not.toHaveBeenCalled();
-
-		const allowed = signedContext(await signedPath(href));
-		expect((await GET(allowed.ctx as never)).status).toBe(418);
-		expect(adapterGET).toHaveBeenCalledTimes(1);
-	});
-
-	it("refuses href variants that still resolve to stored media without calling the adapter", async () => {
+	it("refuses every unsigned href form, whatever it resolves to, without reaching the adapter", async () => {
 		const { images } = installImages();
 		virtualConfig.imageSigning = true;
-		virtualConfig.imageStoragePublicUrl = PUBLIC;
 		const hrefs = [
 			"/_emdash/api/media/file/photo.jpg/",
 			"/_emdash/api/media/file/%70hoto.jpg",
 			"https://example.test/_emdash/api/media/file/photo.jpg/",
 			"https://media.example.com:8443/uploads/photo.jpg",
+			"https:/_emdash/api/media/file/abc.jpg",
+			"http:media.example.com/uploads/a.jpg",
+			"/blog/_emdash/api/media/file/abc.jpg",
+			"/old-redirect",
+			"/_astro/foo.hash.jpg",
+			"https://cdn.example.com/a.jpg",
 		];
 		for (const href of hrefs) {
 			const { ctx, storage } = signedContext(`/_image?href=${encodeURIComponent(href)}&w=640`);
@@ -527,8 +515,17 @@ describe("Cloudflare image endpoint with signed image URLs", () => {
 			expect(response.status, href).toBe(403);
 			expect(storage.download).not.toHaveBeenCalled();
 		}
+		const { ctx } = signedContext("/_image?w=640");
+		expect((await GET(ctx as never)).status).toBe(403);
 		expect(adapterGET).not.toHaveBeenCalled();
 		expect(images.input).not.toHaveBeenCalled();
+	});
+
+	it("hands a signed non-media href to the adapter endpoint", async () => {
+		virtualConfig.imageSigning = true;
+		const { ctx } = signedContext(await signedPath("/_astro/a.png"));
+		expect((await GET(ctx as never)).status).toBe(418);
+		expect(adapterGET).toHaveBeenCalledTimes(1);
 	});
 
 	it("redirects a signed URL to its unsigned canonical form when signing is off", async () => {

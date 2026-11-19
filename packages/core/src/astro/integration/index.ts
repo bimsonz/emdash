@@ -144,20 +144,6 @@ export function resolveBuildTimeSiteUrl(configuredSiteUrl: string | undefined): 
 	return getEnvSiteUrl();
 }
 
-const TRAILING_SLASHES = /\/+$/;
-
-/** The storage adapter's `publicUrl`, as configured; shared by the remote patterns and the signing config. */
-export function readStoragePublicUrl(
-	storage: { config?: unknown } | undefined,
-): string | undefined {
-	const config = storage?.config;
-	const publicUrl =
-		config && typeof config === "object"
-			? (config as { publicUrl?: unknown }).publicUrl
-			: undefined;
-	return typeof publicUrl === "string" && publicUrl ? publicUrl : undefined;
-}
-
 /**
  * Build `image.remotePatterns` entries so Astro will optimize EmDash media.
  *
@@ -186,8 +172,12 @@ export function buildImageRemotePatterns(
 ): ImageRemotePattern[] {
 	const patterns: ImageRemotePattern[] = [];
 
-	const publicUrl = readStoragePublicUrl(storage);
-	if (publicUrl) {
+	const config = storage?.config;
+	const publicUrl =
+		config && typeof config === "object"
+			? (config as { publicUrl?: unknown }).publicUrl
+			: undefined;
+	if (typeof publicUrl === "string" && publicUrl) {
 		try {
 			const url = new URL(publicUrl);
 			// Only authorize http(s) hosts — a `file:`/`ftp:` URL is not a media
@@ -257,10 +247,6 @@ export function buildSerializableConfig(resolvedConfig: EmDashConfig): Record<st
 		updateCheck: resolvedConfig.updateCheck,
 		objectCacheEnabled: resolvedConfig.objectCache !== undefined,
 		imageSigning: imageSigningEnabled(resolvedConfig.images),
-		imageStoragePublicUrl: readStoragePublicUrl(resolvedConfig.storage)?.replace(
-			TRAILING_SLASHES,
-			"",
-		),
 		// Filled in by the integration when signing is on.
 		imageRuntimeService: undefined,
 	};

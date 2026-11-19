@@ -37,15 +37,4 @@ describe("image signing config", () => {
 		expect(imageSigningEnabled({ signedUrls: true })).toBe(true);
 		expect(imageSigningEnabled(true)).toBe(false);
 	});
-
-	it("serializes the storage public URL without a trailing slash", () => {
-		const storage = { entrypoint: "x", config: { publicUrl: "https://media.example.com/" } };
-		expect(buildSerializableConfig({ storage }).imageStoragePublicUrl).toBe(
-			"https://media.example.com",
-		);
-		expect(buildSerializableConfig({}).imageStoragePublicUrl).toBeUndefined();
-		expect(
-			buildSerializableConfig({ storage: { entrypoint: "x", config: {} } }).imageStoragePublicUrl,
-		).toBeUndefined();
-	});
 });
