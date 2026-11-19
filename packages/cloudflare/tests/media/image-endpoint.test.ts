@@ -511,6 +511,26 @@ describe("Cloudflare image endpoint with signed image URLs", () => {
 		expect(adapterGET).toHaveBeenCalledTimes(1);
 	});
 
+	it("refuses href variants that still resolve to stored media without calling the adapter", async () => {
+		const { images } = installImages();
+		virtualConfig.imageSigning = true;
+		virtualConfig.imageStoragePublicUrl = PUBLIC;
+		const hrefs = [
+			"/_emdash/api/media/file/photo.jpg/",
+			"/_emdash/api/media/file/%70hoto.jpg",
+			"https://example.test/_emdash/api/media/file/photo.jpg/",
+			"https://media.example.com:8443/uploads/photo.jpg",
+		];
+		for (const href of hrefs) {
+			const { ctx, storage } = signedContext(`/_image?href=${encodeURIComponent(href)}&w=640`);
+			const response = await GET(ctx as never);
+			expect(response.status, href).toBe(403);
+			expect(storage.download).not.toHaveBeenCalled();
+		}
+		expect(adapterGET).not.toHaveBeenCalled();
+		expect(images.input).not.toHaveBeenCalled();
+	});
+
 	it("redirects a signed URL to its unsigned canonical form when signing is off", async () => {
 		const { ctx, storage } = signedContext(await signedPath());
 		const response = await GET(ctx as never);

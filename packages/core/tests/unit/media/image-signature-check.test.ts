@@ -173,4 +173,14 @@ describe("checkImageSignature", () => {
 		expect(debug).toHaveBeenCalledTimes(1);
 		expect(debug.mock.calls[0]).toEqual(["[emdash] image signature missing:", "abc.jpg"]);
 	});
+
+	it("logs the storage key, not the supplied href, for publicUrl media", async () => {
+		virtualConfig.imageStoragePublicUrl = "https://media.example.com/uploads";
+		const href = encodeURIComponent("https://media.example.com/uploads/key.jpg");
+		await checkImageSignature(ctx(), new URL(`${ORIGIN}/_image?href=${href}&w=1`));
+		expect(vi.mocked(console.debug).mock.calls[0]).toEqual([
+			"[emdash] image signature missing:",
+			"key.jpg",
+		]);
+	});
 });
