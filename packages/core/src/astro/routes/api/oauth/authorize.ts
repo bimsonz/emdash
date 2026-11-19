@@ -24,6 +24,7 @@ import {
 import { lookupOAuthClient, validateClientRedirectUri } from "#api/handlers/oauth-clients.js";
 import { getPublicOrigin } from "#api/public-url.js";
 import { isValidScope } from "#auth/api-tokens.js";
+import { timingSafeEqualString } from "#utils/constant-time.js";
 
 export const prerender = false;
 
@@ -239,21 +240,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
 	);
 	if (!formCsrf || !cookieCsrf) return csrfError;
 
-	// Constant-time comparison: hash both values to fixed-length 32-byte digests,
-	// then XOR every byte pair. This avoids crypto.subtle.timingSafeEqual which is
-	// a Cloudflare Workers extension and doesn't exist in Node.js.
-	// The SHA-256 pre-hash ensures fixed length, eliminating length-leaking.
-	const csrfEncoder = new TextEncoder();
-	const [csrfHashA, csrfHashB] = await Promise.all([
-		crypto.subtle.digest("SHA-256", csrfEncoder.encode(formCsrf)),
-		crypto.subtle.digest("SHA-256", csrfEncoder.encode(cookieCsrf)),
-	]);
-	const a = new Uint8Array(csrfHashA);
-	const b = new Uint8Array(csrfHashB);
-	let diff = 0;
-	// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion -- tsgo needs these
-	for (let i = 0; i < a.length; i++) diff |= a[i]! ^ b[i]!;
-	if (diff !== 0) return csrfError;
+	if (!(await timingSafeEqualString(formCsrf, cookieCsrf))) return csrfError;
 
 	const action = field("action");
 	const redirectUri = field("redirect_uri");
