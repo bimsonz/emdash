@@ -170,7 +170,10 @@ describe("checkImageSignature", () => {
 		await checkImageSignature(ctx(), url);
 		const debug = vi.mocked(console.debug);
 		expect(debug).toHaveBeenCalledTimes(1);
-		expect(debug.mock.calls[0]).toEqual(["[emdash] image signature missing:", HREF]);
+		expect(debug.mock.calls[0]).toEqual([
+			"[emdash] image signature missing:",
+			JSON.stringify(HREF),
+		]);
 	});
 
 	it("refuses an unsigned href that is not stored media", async () => {
@@ -202,6 +205,14 @@ describe("checkImageSignature", () => {
 		await checkImageSignature(ctx(), new URL(`${ORIGIN}/_image?href=${encodeURIComponent(long)}`));
 		const [message, logged] = vi.mocked(console.debug).mock.calls[0] as [string, string];
 		expect(message).toBe("[emdash] image signature missing:");
-		expect(logged).toBe(long.slice(0, 200));
+		expect(logged).toBe(JSON.stringify(long.slice(0, 200)));
+	});
+
+	it("escapes control characters in the logged href so a request cannot forge log lines", async () => {
+		const query = new URLSearchParams({ href: "a\nb" });
+		await checkImageSignature(ctx(), new URL(`${ORIGIN}/_image?${query}`));
+		const [, logged] = vi.mocked(console.debug).mock.calls[0] as [string, string];
+		expect(logged).not.toContain("\n");
+		expect(logged).toBe(JSON.stringify("a\nb"));
 	});
 });

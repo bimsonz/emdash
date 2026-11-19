@@ -48,7 +48,10 @@ export async function checkImageSignature(
 	if (await hasValidTransformSignature(url, keys, assetQueryParams)) return null;
 
 	const reason = url.searchParams.has(IMAGE_SIGNATURE_PARAM) ? "invalid" : "missing";
-	console.debug(`[emdash] image signature ${reason}:`, (href ?? "(no href)").slice(0, 200));
+	console.debug(
+		`[emdash] image signature ${reason}:`,
+		href === null ? "(no href)" : JSON.stringify(href.slice(0, 200)),
+	);
 	return apiError(
 		ErrorCode.IMAGE_SIGNATURE_INVALID,
 		"This image URL is not signed or its signature is invalid",
