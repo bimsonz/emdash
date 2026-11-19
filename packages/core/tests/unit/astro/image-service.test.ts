@@ -17,7 +17,10 @@ vi.mock("virtual:emdash/config", () => ({
 	default: { imageSigning: true, imageRuntimeService: ORIGINAL },
 }));
 vi.mock("../../../src/loader.js", () => ({ getDb }));
-vi.mock("../../../src/config/secrets.js", () => ({ resolveSecretsCached }));
+vi.mock("../../../src/config/secrets.js", async (importOriginal) => ({
+	...(await importOriginal<typeof import("../../../src/config/secrets.js")>()),
+	resolveSecretsCached,
+}));
 /**
  * Astro's `baseService.getURL` (`astro/dist/assets/services/service.js`), with
  * `BASE_URL` fixed at `/`: Astro's dist reads `import.meta.env`, which is
@@ -122,9 +125,11 @@ describe("emdash/image-service", () => {
 		globalThis.astroAsset = { imageService: service } as typeof globalThis.astroAsset;
 		getDb.mockResolvedValue({ singleton: true });
 		resolveSecretsCached.mockResolvedValue({ imageSigningSecrets: ["secret-a"] });
+		vi.stubEnv("EMDASH_IMAGE_SECRET", undefined);
 	});
 
 	afterEach(() => {
+		vi.unstubAllEnvs();
 		vi.clearAllMocks();
 	});
 
@@ -171,13 +176,74 @@ describe("emdash/image-service", () => {
 			expect(resolveSecretsCached).not.toHaveBeenCalled();
 		});
 
-		it("leaves URLs unsigned while prerendering, without a secret", async () => {
-			const image = await inRequest(() => render(MEDIA), { prerendering: true });
+		describe("while prerendering", () => {
+			const prerendering = { prerendering: true };
+			const options = { src: MEDIA, width: 800, height: 600, format: "webp" };
 
-			expect(image.src).toBe(await stock.getURL.mock.results[0]!.value);
-			expect(image.srcSet.attribute).not.toContain(IMAGE_SIGNATURE_PARAM);
-			expect(resolveSecretsCached).not.toHaveBeenCalled();
-			expect(getDb).not.toHaveBeenCalled();
+			it("leaves a URL Astro replaces with a generated file unsigned, without a secret", async () => {
+				globalThis.astroAsset!.addStaticImage = vi.fn();
+
+				const url = await inRequest(
+					() => service.getURL(options, imageConfig() as never, logger),
+					prerendering,
+				);
+
+				expect(url).toBe(await stock.getURL.mock.results[0]!.value);
+				expect(url).not.toContain(IMAGE_SIGNATURE_PARAM);
+				expect(resolveSecretsCached).not.toHaveBeenCalled();
+				expect(getDb).not.toHaveBeenCalled();
+			});
+
+			it("signs URLs that ship in the HTML with the first EMDASH_IMAGE_SECRET", async () => {
+				vi.stubEnv("EMDASH_IMAGE_SECRET", " new , old ");
+
+				const image = await inRequest(() => render(MEDIA), prerendering);
+
+				const urls = [image.src, ...image.srcSet.values.map((value) => value.url)];
+				expect(image.srcSet.values).toHaveLength(2);
+				for (const url of urls) {
+					expect(await verifies(url, ["new"])).toBe(true);
+					expect(await verifies(url, ["old"])).toBe(false);
+				}
+				// The build's database holds a different generated secret.
+				expect(resolveSecretsCached).not.toHaveBeenCalled();
+				expect(getDb).not.toHaveBeenCalled();
+			});
+
+			it.each([undefined, "", " , "])(
+				"fails the build rather than ship unsigned URLs when EMDASH_IMAGE_SECRET is %j",
+				async (secret) => {
+					vi.stubEnv("EMDASH_IMAGE_SECRET", secret);
+
+					const rendering = inRequest(() => render(MEDIA), prerendering);
+
+					await expect(rendering).rejects.toThrow(
+						"Prerendered pages contain image transform URLs that must be signed",
+					);
+					await expect(rendering).rejects.toThrow(/EMDASH_IMAGE_SECRET.*same value/);
+					await expect(rendering).rejects.toThrow(/compile/);
+					expect(resolveSecretsCached).not.toHaveBeenCalled();
+				},
+			);
+
+			it("returns a source the stock service would not transform as it is, without a secret", async () => {
+				const notAllowed = "https://elsewhere.example/photo.jpg";
+
+				const image = await inRequest(() => render(notAllowed), prerendering);
+
+				expect(image.src).toBe(notAllowed);
+			});
+		});
+
+		// `astro dev` renders a prerendered route per request: the middleware
+		// records prerendering=false, so the request's secret signs as usual.
+		it("signs a dev render of a prerendered route with the request's secret", async () => {
+			vi.stubEnv("EMDASH_IMAGE_SECRET", "env-only");
+
+			const image = await inRequest(() => render(MEDIA), { prerendering: false });
+
+			expect(await verifies(image.src, ["secret-a"])).toBe(true);
+			expect(resolveSecretsCached).toHaveBeenCalled();
 		});
 
 		it("returns a source the stock service would not transform as it is", async () => {

@@ -7,7 +7,9 @@
  * `imageConfig.service`. `getURL` also signs each transform URL it builds while
  * EmDash renders a request, so the image endpoint can refuse URLs it did not
  * build. Astro awaits `getURL` for an image's `src` and for each `srcset`
- * candidate, so both are signed.
+ * candidate, so both are signed. While prerendering, a URL Astro replaces with
+ * a generated file stays unsigned; one that ships in the HTML is signed with
+ * `EMDASH_IMAGE_SECRET`.
  */
 
 import type { LocalImageService } from "astro";
@@ -15,7 +17,10 @@ import virtualConfig from "virtual:emdash/config";
 import stockImageService from "virtual:emdash/stock-image-service";
 
 import { signTransformUrl } from "../media/image-signature.js";
-import { resolveImageSigningKeys } from "../media/image-signing-keys.js";
+import {
+	resolveBuildImageSigningKey,
+	resolveImageSigningKeys,
+} from "../media/image-signing-keys.js";
 import { getRequestContext } from "../request-context.js";
 
 type ImageConfig = Parameters<LocalImageService["getURL"]>[1];
@@ -50,13 +55,25 @@ function signingImageService(
 		...stock,
 		async getURL(options, imageConfig, logger) {
 			const url = await stock.getURL(options, stockConfig(imageConfig), logger);
-			// Sign only while rendering a request. Prerendering at build needs no secret.
+			// Sign only while EmDash renders a request or prerenders a page.
 			const context = getRequestContext();
-			if (!context || context.prerendering) return url;
+			if (!context) return url;
 			// A source the stock service won't transform comes back as it is. It
 			// doesn't address the image endpoint, so there is nothing to sign.
 			if (url === options.src) return url;
-			const [signingKey] = await resolveImageSigningKeys();
+			let signingKey: CryptoKey;
+			if (context.prerendering) {
+				// Astro's getImage (astro/dist/assets/internal.js:157) replaces the URL
+				// with a generated file when `isLocalService(service) &&
+				// globalThis.astroAsset.addStaticImage && !(isRemoteImage(src) &&
+				// url === src)`. This service is local and the untransformed source
+				// returned above, so `addStaticImage` decides. Such a URL is discarded.
+				if (globalThis.astroAsset?.addStaticImage) return url;
+				// Otherwise the URL ships in the prerendered HTML.
+				signingKey = await resolveBuildImageSigningKey();
+			} else {
+				[signingKey] = await resolveImageSigningKeys();
+			}
 			return signTransformUrl(
 				new URL(url, PLACEHOLDER_ORIGIN),
 				signingKey,

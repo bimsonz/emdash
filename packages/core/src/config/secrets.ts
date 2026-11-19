@@ -357,7 +357,7 @@ export async function resolveSecrets(options: ResolveSecretsOptions): Promise<Re
 		env.AUTH_SECRET,
 	);
 
-	const imageEnvOverride = parseSecretList(env.EMDASH_IMAGE_SECRET);
+	const imageEnvOverride = readImageSigningSecretsFromEnv(env);
 
 	const [previewSecret, ipSalt, imageSecret] = await Promise.all([
 		previewEnvOverride !== null
@@ -382,6 +382,17 @@ export async function resolveSecrets(options: ResolveSecretsOptions): Promise<Re
 		imageSigningSecrets: imageSecret.values,
 		imageSigningSecretSource: imageSecret.source,
 	};
+}
+
+/**
+ * The image signing secrets from `EMDASH_IMAGE_SECRET` (comma-separated, first
+ * signs), or `null` when it is unset or blank. Reads `process.env` unless an
+ * env is given. Never consults the database.
+ */
+export function readImageSigningSecretsFromEnv(
+	env: SecretsEnv = readDefaultEnv(),
+): string[] | null {
+	return parseSecretList(env.EMDASH_IMAGE_SECRET);
 }
 
 /**

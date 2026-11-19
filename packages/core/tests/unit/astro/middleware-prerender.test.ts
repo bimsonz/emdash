@@ -514,7 +514,7 @@ describe("astro middleware prerendered routes", () => {
 		expect(headersGet).not.toHaveBeenCalled();
 	});
 
-	// The image service reads this to leave transform URLs unsigned at build.
+	// The image service reads this to choose how it signs at build.
 	// `astro dev` marks a prerendered route isPrerendered but renders it per
 	// request, without replacing its image URLs, so that is not prerendering.
 	it.each([
