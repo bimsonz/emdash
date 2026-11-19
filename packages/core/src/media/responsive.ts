@@ -9,6 +9,7 @@
  * resolves inside an Astro project, not in this precompiled package).
  */
 
+import { isImageSigningSecretRequiredError } from "./image-signing-error.js";
 import type { EmbedOptions } from "./types.js";
 
 /** Standard responsive breakpoints. Matches CDN-provider srcset generation. */
@@ -126,7 +127,9 @@ export async function canOptimizeImage(
 	try {
 		const result = await getImage(opts);
 		return Boolean(result.src && result.src !== opts.src);
-	} catch {
+	} catch (error) {
+		// A build must not ship the original in place of an image it can't sign.
+		if (isImageSigningSecretRequiredError(error)) throw error;
 		return false;
 	}
 }
@@ -152,7 +155,8 @@ export interface ResponsiveImage {
  *  - dimensions are unknown (avoids an inferSize fetch on every render),
  *  - the URL is relative (a same-origin proxy/public asset Astro won't optimize),
  *  - the host isn't authorized (the service passed the URL through unchanged),
- *  - no image service is configured / `getImage` throws.
+ *  - no image service is configured / `getImage` throws, except for
+ *    `ImageSigningSecretRequiredError`, which fails the build.
  */
 export async function buildResponsiveImage(
 	getImage: GetImage,
@@ -187,7 +191,9 @@ export async function buildResponsiveImage(
 			srcset: result.srcSet?.attribute || undefined,
 			sizes,
 		};
-	} catch {
+	} catch (error) {
+		// A build must not ship the original in place of an image it can't sign.
+		if (isImageSigningSecretRequiredError(error)) throw error;
 		return null;
 	}
 }

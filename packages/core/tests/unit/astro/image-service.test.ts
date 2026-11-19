@@ -85,6 +85,7 @@ import {
 	IMAGE_SIGNATURE_PARAM,
 	importImageSigningKeys,
 } from "../../../src/media/image-signature.js";
+import { isImageSigningSecretRequiredError } from "../../../src/media/image-signing-error.js";
 import { type EmDashRequestContext, runWithContext } from "../../../src/request-context.js";
 
 const ORIGIN = "https://site.example";
@@ -215,13 +216,22 @@ describe("emdash/image-service", () => {
 				async (secret) => {
 					vi.stubEnv("EMDASH_IMAGE_SECRET", secret);
 
-					const rendering = inRequest(() => render(MEDIA), prerendering);
+					const error: unknown = await inRequest(() => render(MEDIA), prerendering).then(
+						() => undefined,
+						(rejection: unknown) => rejection,
+					);
 
-					await expect(rendering).rejects.toThrow(
+					if (!isImageSigningSecretRequiredError(error)) {
+						throw new Error(`expected the build signing error, got ${String(error)}`);
+					}
+					const { message } = error;
+					expect(message).toContain(
 						"Prerendered pages contain image transform URLs that must be signed",
 					);
-					await expect(rendering).rejects.toThrow(/EMDASH_IMAGE_SECRET.*same value/);
-					await expect(rendering).rejects.toThrow(/compile/);
+					expect(message).toMatch(
+						/EMDASH_IMAGE_SECRET to the same value for the build and at runtime/,
+					);
+					expect(message).not.toMatch(/compile/);
 					expect(resolveSecretsCached).not.toHaveBeenCalled();
 				},
 			);

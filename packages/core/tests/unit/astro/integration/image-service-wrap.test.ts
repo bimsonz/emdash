@@ -1,7 +1,10 @@
 import type { AstroIntegration } from "astro";
 import { describe, expect, it, vi } from "vitest";
 
-import { wrapImageService } from "../../../../src/astro/integration/image-service-wrap.js";
+import {
+	planImageSigning,
+	wrapImageService,
+} from "../../../../src/astro/integration/image-service-wrap.js";
 import { emdash, type EmDashConfig } from "../../../../src/astro/integration/index.js";
 import {
 	RESOLVED_VIRTUAL_CONFIG_ID,
@@ -56,10 +59,85 @@ describe("wrapImageService", () => {
 	});
 });
 
+/**
+ * The Vite plugin through which @astrojs/cloudflare 14 serializes its resolved
+ * config, reduced to the export EmDash reads (`dist/vite-plugin-config.js`).
+ */
+function cloudflareConfigPlugin(compileImageConfig: unknown) {
+	return {
+		name: "virtual:astro-cloudflare:config",
+		load: {
+			handler() {
+				return [
+					`export const compileImageConfig = ${JSON.stringify(compileImageConfig)};`,
+					"export const isPrerender = false;",
+				].join("\n");
+			},
+		},
+	};
+}
+
+const compileImageConfig = (transformWithBinding: boolean) => ({
+	base: "/",
+	imageServiceEntrypoint: WORKERD,
+	buildAssets: "_astro",
+	transformWithBinding,
+});
+
+describe("planImageSigning", () => {
+	const workerd = { entrypoint: WORKERD, config: {} };
+	const plan = (vitePlugins: unknown, isCloudflare = true) =>
+		planImageSigning({ endpointInstalled: true, isCloudflare, service: workerd, vitePlugins });
+
+	it("wraps under the Cloudflare adapter's default runtime image mode", () => {
+		expect(plan([[cloudflareConfigPlugin(null)]])).toEqual({
+			service: { entrypoint: "emdash/image-service" },
+			original: workerd,
+		});
+	});
+
+	// The binding build transforms through the Images binding and never loads
+	// the configured service.
+	it("wraps under the binding build", () => {
+		expect(plan([cloudflareConfigPlugin(compileImageConfig(true))])).toHaveProperty("original");
+	});
+
+	// `{ build: "compile" | "custom" }`: the adapter imports the configured
+	// service by path in Node at build, outside Vite.
+	it("refuses the compile and custom image modes with a warning", () => {
+		const result = plan([[cloudflareConfigPlugin(compileImageConfig(false))]]);
+
+		expect(result).toEqual({ warning: expect.stringContaining("compile") });
+	});
+
+	it("wraps when the adapter's resolved config can't be read", () => {
+		expect(plan([{ name: "other" }])).toHaveProperty("original");
+		expect(plan(undefined)).toHaveProperty("original");
+	});
+
+	it("ignores the plugin under another adapter", () => {
+		expect(plan([cloudflareConfigPlugin(compileImageConfig(false))], false)).toHaveProperty(
+			"original",
+		);
+	});
+
+	it("refuses without EmDash's image endpoint", () => {
+		expect(
+			planImageSigning({
+				endpointInstalled: false,
+				isCloudflare: false,
+				service: workerd,
+				vitePlugins: [],
+			}),
+		).toEqual({ warning: expect.stringContaining("image endpoint") });
+	});
+});
+
 /** Runs `astro:config:setup` and returns what Astro and the runtime would receive. */
 async function setupWith(
 	config: EmDashConfig,
 	image: { service?: { entrypoint: string; config?: Record<string, unknown> }; endpoint?: object },
+	astro: { adapter?: { name: string }; vite?: { plugins?: unknown[] } } = {},
 ) {
 	const setup = emdash(config).hooks["astro:config:setup"] as NonNullable<
 		AstroIntegration["hooks"]["astro:config:setup"]
@@ -76,6 +154,7 @@ async function setupWith(
 			trailingSlash: "ignore",
 			integrations: [{ name: "@astrojs/react", hooks: {} }],
 			image,
+			...astro,
 		},
 		logger: { debug: vi.fn(), error: vi.fn(), info: vi.fn(), warn },
 		injectRoute: vi.fn(),
@@ -142,6 +221,22 @@ describe("emdash() image service with images.signedUrls", () => {
 		const result = await setupWith(
 			{ images: { signedUrls: true } },
 			{ service: sharp, endpoint: { entrypoint: "./src/my-endpoint.ts" } },
+		);
+
+		expect(result.service).toBeUndefined();
+		expect(result.runtimeConfig.imageSigning).toBe(false);
+		expect(result.runtimeConfig.imageRuntimeService).toBeUndefined();
+		expect(result.warn).toHaveBeenCalledWith(expect.stringContaining("images.signedUrls"));
+	});
+
+	it("turns signing off under the Cloudflare adapter's compile image mode, and says so", async () => {
+		const result = await setupWith(
+			{ images: { signedUrls: true } },
+			{ service: { entrypoint: WORKERD, config: {} } },
+			{
+				adapter: { name: "@astrojs/cloudflare" },
+				vite: { plugins: [[cloudflareConfigPlugin(compileImageConfig(false))]] },
+			},
 		);
 
 		expect(result.service).toBeUndefined();
