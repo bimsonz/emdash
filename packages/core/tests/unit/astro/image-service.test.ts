@@ -231,6 +231,7 @@ describe("emdash/image-service", () => {
 					expect(message).toMatch(
 						/EMDASH_IMAGE_SECRET to the same value for the build and at runtime/,
 					);
+					expect(message).toContain("secrets.required");
 					expect(message).not.toMatch(/compile/);
 					expect(resolveSecretsCached).not.toHaveBeenCalled();
 				},
