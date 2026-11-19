@@ -5,6 +5,7 @@ const { fakeEnv, adapterGET, imageConfig, virtualConfig } = vi.hoisted(() => ({
 	virtualConfig: {} as {
 		routeCacheProvider?: string;
 		imageSigning?: boolean;
+		imageRuntimeService?: { entrypoint: string; config: Record<string, unknown> };
 	},
 	fakeEnv: {} as Record<string, unknown>,
 	adapterGET: vi.fn(async () => new Response("adapter", { status: 418 })),
@@ -93,6 +94,7 @@ afterEach(() => {
 	imageConfig.service.entrypoint = "@astrojs/cloudflare/image-service-workerd";
 	delete virtualConfig.routeCacheProvider;
 	delete virtualConfig.imageSigning;
+	delete virtualConfig.imageRuntimeService;
 	vi.clearAllMocks();
 });
 
@@ -222,6 +224,51 @@ describe("Cloudflare image endpoint", () => {
 		expect(storage.download).not.toHaveBeenCalled();
 		expect(images.input).not.toHaveBeenCalled();
 		expect(ctx.cache.set).not.toHaveBeenCalled();
+	});
+
+	describe("under the signing image service", () => {
+		const workerd = { entrypoint: "@astrojs/cloudflare/image-service-workerd", config: {} };
+
+		it("redirects a non-canonical query as the workerd service would", async () => {
+			imageConfig.service.entrypoint = "emdash/image-service";
+			virtualConfig.imageRuntimeService = workerd;
+			const { images } = installImages();
+			const { ctx, storage } = context("x=1&w=120");
+
+			const response = await GET(ctx as never);
+
+			expect(response.status).toBe(301);
+			expect(response.headers.get("Location")).toBe(
+				"/_image?href=%2F_emdash%2Fapi%2Fmedia%2Ffile%2Fphoto.jpg&w=120",
+			);
+			expect(storage.download).not.toHaveBeenCalled();
+			expect(images.input).not.toHaveBeenCalled();
+		});
+
+		it("caches a transformed variant as the workerd service would", async () => {
+			imageConfig.service.entrypoint = "emdash/image-service";
+			virtualConfig.imageRuntimeService = workerd;
+			installImages();
+			const { ctx } = context("w=120");
+
+			const response = await GET(ctx as never);
+
+			expect(response.status).toBe(200);
+			expect(ctx.cache.set).toHaveBeenCalledWith(
+				expect.objectContaining({ tags: ["emdash:media:photo.jpg"] }),
+			);
+		});
+
+		it("treats it as custom when no stock service was recorded", async () => {
+			imageConfig.service.entrypoint = "emdash/image-service";
+			installImages();
+			const { ctx } = context("x=1&w=120");
+
+			const response = await GET(ctx as never);
+
+			expect(response.status).toBe(200);
+			expect(ctx.cache.set).not.toHaveBeenCalled();
+		});
 	});
 
 	it("serves a URL that ends in the adapter's asset query params without redirecting", async () => {

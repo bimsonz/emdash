@@ -82,6 +82,9 @@ export const RESOLVED_VIRTUAL_ROOMS_ID = "\0" + VIRTUAL_ROOMS_ID;
 export const VIRTUAL_ROOM_ENGINE_ID = "virtual:emdash/room-engine";
 export const RESOLVED_VIRTUAL_ROOM_ENGINE_ID = "\0" + VIRTUAL_ROOM_ENGINE_ID;
 
+export const VIRTUAL_STOCK_IMAGE_SERVICE_ID = "virtual:emdash/stock-image-service";
+export const RESOLVED_VIRTUAL_STOCK_IMAGE_SERVICE_ID = "\0" + VIRTUAL_STOCK_IMAGE_SERVICE_ID;
+
 /**
  * Generates the config virtual module.
  */
@@ -524,6 +527,24 @@ export function generateEnvModule(adapterName: string | undefined): string {
 		return `export { env } from "cloudflare:workers";`;
 	}
 	return `export const env = undefined;`;
+}
+
+/**
+ * Generates the stock image service module: the runtime image service that
+ * `emdash/image-service` delegates to, as the integration recorded it in
+ * `imageRuntimeService` when `images: { signedUrls: true }` replaced it.
+ */
+export function generateStockImageServiceModule(recorded: unknown): string {
+	const entrypoint =
+		typeof recorded === "object" && recorded !== null && "entrypoint" in recorded
+			? recorded.entrypoint
+			: undefined;
+	if (typeof entrypoint !== "string") {
+		const message =
+			"[emdash] No stock image service was recorded: emdash/image-service is installed by EmDash for images.signedUrls, not configured directly.";
+		return `throw new Error(${JSON.stringify(message)});`;
+	}
+	return `export { default } from ${JSON.stringify(entrypoint)};`;
 }
 
 /**

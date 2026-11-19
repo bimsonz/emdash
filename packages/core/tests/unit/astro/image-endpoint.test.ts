@@ -16,6 +16,7 @@ const virtualConfig = vi.hoisted(
 		({}) as {
 			routeCacheProvider?: string;
 			imageSigning?: boolean;
+			imageRuntimeService?: { entrypoint: string; config: Record<string, unknown> };
 		},
 );
 
@@ -95,6 +96,7 @@ describe("GET /_image over EmDash media", () => {
 		imageConfig.service.entrypoint = "astro/assets/services/sharp";
 		delete virtualConfig.routeCacheProvider;
 		delete virtualConfig.imageSigning;
+		delete virtualConfig.imageRuntimeService;
 	});
 
 	it("serves a transformed image with weak validators", async () => {
@@ -282,6 +284,55 @@ describe("GET /_image over EmDash media", () => {
 		expect(download).not.toHaveBeenCalled();
 		expect(transform).not.toHaveBeenCalled();
 		expect(cache.set).not.toHaveBeenCalled();
+	});
+
+	describe("under the signing image service", () => {
+		beforeEach(() => {
+			imageConfig.service.entrypoint = "emdash/image-service";
+		});
+
+		it("redirects a non-canonical query as sharp would", async () => {
+			virtualConfig.imageRuntimeService = { entrypoint: "astro/assets/services/sharp", config: {} };
+			const download = pngDownload();
+			const request = new Request(
+				"http://localhost/_image?w=150&href=%2F_emdash%2Fapi%2Fmedia%2Ffile%2Fkey.png&v=2",
+			);
+
+			const response = await GET(buildContext(request, { download }));
+
+			expect(response.status).toBe(301);
+			expect(response.headers.get("Location")).toBe(
+				"/_image?href=%2F_emdash%2Fapi%2Fmedia%2Ffile%2Fkey.png&w=150",
+			);
+			expect(download).not.toHaveBeenCalled();
+		});
+
+		it("caches a transformed variant as sharp would", async () => {
+			virtualConfig.imageRuntimeService = { entrypoint: "astro/assets/services/sharp", config: {} };
+			transform.mockResolvedValue({ data: new Uint8Array([4, 5, 6]), format: "webp" });
+			const cache = routeCache();
+			const request = new Request(
+				"http://localhost/_image?href=%2F_emdash%2Fapi%2Fmedia%2Ffile%2Fkey.png&w=150",
+			);
+
+			const response = await GET(buildContext(request, { download: pngDownload() }, cache));
+
+			expect(response.status).toBe(200);
+			expect(cache.set).toHaveBeenCalledOnce();
+		});
+
+		it("treats it as custom when no stock service was recorded", async () => {
+			transform.mockResolvedValue({ data: new Uint8Array([4, 5, 6]), format: "webp" });
+			const cache = routeCache();
+			const request = new Request(
+				"http://localhost/_image?w=150&href=%2F_emdash%2Fapi%2Fmedia%2Ffile%2Fkey.png",
+			);
+
+			const response = await GET(buildContext(request, { download: pngDownload() }, cache));
+
+			expect(response.status).toBe(200);
+			expect(cache.set).not.toHaveBeenCalled();
+		});
 	});
 
 	it("preserves adapter asset parameters without redirecting a canonical image URL", async () => {

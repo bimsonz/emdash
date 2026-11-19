@@ -67,6 +67,13 @@ export interface EmDashRequestContext {
 	/** Whether the current request is in visual editing mode */
 	editMode: boolean;
 	/**
+	 * Astro is prerendering this page at build time: `context.isPrerendered`
+	 * outside `astro dev`, which renders prerendered routes per request. Image
+	 * transform URLs are left unsigned then, so a build needs no image signing
+	 * secret. Set by the runtime middleware.
+	 */
+	prerendering?: boolean;
+	/**
 	 * The response may be stored by Astro's route cache.
 	 *
 	 * Cache hits never execute the Worker. A request that reaches rendering is

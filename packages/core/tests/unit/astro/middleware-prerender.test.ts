@@ -513,6 +513,35 @@ describe("astro middleware prerendered routes", () => {
 		expect(cookies.get).not.toHaveBeenCalled();
 		expect(headersGet).not.toHaveBeenCalled();
 	});
+
+	// The image service reads this to leave transform URLs unsigned at build.
+	// `astro dev` marks a prerendered route isPrerendered but renders it per
+	// request, without replacing its image URLs, so that is not prerendering.
+	it.each([
+		[true, false, true],
+		[true, true, false],
+		[false, false, false],
+		[false, true, false],
+	])(
+		"records isPrerendered=%s with DEV=%s as prerendering=%s",
+		async (isPrerendered, dev, expected) => {
+			vi.stubEnv("DEV", dev);
+			for (const path of ["/", "/robots.txt"]) {
+				resetSetupVerified();
+				const { context } = createRequestContext({ url: `https://example.com${path}` });
+				context.isPrerendered = isPrerendered;
+				let seen: ReturnType<typeof getRequestContext>;
+
+				await onRequest(context as Parameters<typeof onRequest>[0], async () => {
+					seen = getRequestContext();
+					return new Response("ok");
+				});
+
+				expect(seen, path).toBeDefined();
+				expect(seen!.prerendering, path).toBe(expected);
+			}
+		},
+	);
 });
 
 describe("astro middleware anonymous session reads", () => {

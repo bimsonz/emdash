@@ -109,6 +109,8 @@ export default defineConfig({
 		// Image-endpoint helpers (portable) + the Node image endpoint
 		"src/media/image-endpoint.ts",
 		"src/astro/image-endpoint.ts",
+		// Signing image service (images.signedUrls), loaded via virtual:image-service
+		"src/astro/image-service.ts",
 		// Runtime exports (depends on virtual modules - for live.config.ts)
 		"src/runtime.ts",
 		// Seed engine

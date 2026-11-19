@@ -11,14 +11,8 @@ import type { APIContext } from "astro";
 
 import { apiError } from "../api/error.js";
 import { ErrorCode } from "../api/errors.js";
-import { resolveSecretsCached } from "../config/secrets.js";
-import { getDb } from "../loader.js";
-import { getRequestContext } from "../request-context.js";
-import {
-	hasValidTransformSignature,
-	IMAGE_SIGNATURE_PARAM,
-	importImageSigningKeys,
-} from "./image-signature.js";
+import { hasValidTransformSignature, IMAGE_SIGNATURE_PARAM } from "./image-signature.js";
+import { resolveImageSigningKeys } from "./image-signing-keys.js";
 
 /**
  * Returns `null` to continue, or the `403` / `503` response to send. Neither
@@ -41,10 +35,7 @@ export async function checkImageSignature(
 	const href = url.searchParams.get("href");
 	let keys: CryptoKey[];
 	try {
-		const db = getRequestContext()?.db ?? (await getDb());
-		// eslint-disable-next-line typescript/no-unsafe-type-assertion -- RequestContext.db is unknown to avoid circular deps
-		const secrets = await resolveSecretsCached(db as Parameters<typeof resolveSecretsCached>[0]);
-		keys = await importImageSigningKeys(secrets.imageSigningSecrets);
+		keys = await resolveImageSigningKeys();
 	} catch {
 		// Fail closed: without the secret nothing can be verified.
 		return apiError(
