@@ -15,7 +15,9 @@ export class ImageSigningSecretRequiredError extends Error {
 	constructor() {
 		super(
 			"[emdash] Prerendered pages contain image transform URLs that must be signed " +
-				"(images.signedUrls). Set EMDASH_IMAGE_SECRET to the same value for the build and at runtime.",
+				"(images.signedUrls). Set EMDASH_IMAGE_SECRET to the same value for the build and at runtime. " +
+				"On Cloudflare the prerender reads the Worker's environment, not the build shell: " +
+				"list EMDASH_IMAGE_SECRET under secrets.required in your Wrangler config and export it when you build.",
 		);
 		this.name = "ImageSigningSecretRequiredError";
 		Object.defineProperty(this, BRAND, { value: true });
