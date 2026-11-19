@@ -20,6 +20,11 @@
  *   HMAC secret for signing preview URLs. Generated and persisted on first
  *   need if no env override is set. Replaces the previous empty-string
  *   fallback which silently disabled preview-token verification.
+ * - `EMDASH_IMAGE_SECRET` (optional) / DB-stored `emdash:image_secret` —
+ *   HMAC secret for signing image transform URLs. Comma-separated for
+ *   rotation: the first value signs, every value verifies. Generated and
+ *   persisted on first need if no env override is set. Separate from the
+ *   preview secret and from `EMDASH_ENCRYPTION_KEY`.
  *
  * The `EMDASH_AUTH_SECRET` env var is consulted only as a legacy fallback
  * source for the IP salt — that's the only path the prior code actually
@@ -66,6 +71,9 @@ export const IP_SALT_OPTION_KEY = "emdash:ip_salt";
 /** Options-table key for the persisted preview HMAC secret. */
 export const PREVIEW_SECRET_OPTION_KEY = "emdash:preview_secret";
 
+/** Options-table key for the persisted image-URL signing secret. */
+export const IMAGE_SECRET_OPTION_KEY = "emdash:image_secret";
+
 /** Length in bytes of generated values. 32 bytes = 256 bits. */
 const GENERATED_SECRET_BYTES = 32;
 
@@ -98,6 +106,13 @@ export interface ResolvedSecrets {
 	ipSalt: string;
 	/** Source of `ipSalt`. */
 	ipSaltSource: "env" | "db";
+	/**
+	 * HMAC secrets for image transform URLs. Always non-empty after
+	 * resolution; the first value signs, every value verifies.
+	 */
+	imageSigningSecrets: string[];
+	/** Source of `imageSigningSecrets`. */
+	imageSigningSecretSource: "env" | "db";
 }
 
 /** Inputs for `resolveSecrets`. */
@@ -134,6 +149,11 @@ export interface SecretsEnv {
 	/** Legacy alias; new docs point at EMDASH_PREVIEW_SECRET. */
 	PREVIEW_SECRET?: string;
 	EMDASH_IP_SALT?: string;
+	/**
+	 * Comma-separated image-URL signing secrets. The first signs; every
+	 * value verifies. Read from `process.env` only.
+	 */
+	EMDASH_IMAGE_SECRET?: string;
 	/**
 	 * Legacy fallback. Prior code derived the IP salt from
 	 * `EMDASH_AUTH_SECRET || AUTH_SECRET || "emdash-ip-salt"`. We preserve
@@ -337,13 +357,21 @@ export async function resolveSecrets(options: ResolveSecretsOptions): Promise<Re
 		env.AUTH_SECRET,
 	);
 
-	const [previewSecret, ipSalt] = await Promise.all([
+	const imageEnvOverride = parseSecretList(env.EMDASH_IMAGE_SECRET);
+
+	const [previewSecret, ipSalt, imageSecret] = await Promise.all([
 		previewEnvOverride !== null
 			? Promise.resolve({ value: previewEnvOverride, source: "env" as const })
 			: ensureGeneratedOption(repo, PREVIEW_SECRET_OPTION_KEY),
 		ipSaltEnvOverride !== null
 			? Promise.resolve({ value: ipSaltEnvOverride, source: "env" as const })
 			: ensureGeneratedOption(repo, IP_SALT_OPTION_KEY),
+		imageEnvOverride !== null
+			? Promise.resolve({ values: imageEnvOverride, source: "env" as const })
+			: ensureGeneratedOption(repo, IMAGE_SECRET_OPTION_KEY).then((generated) => ({
+					values: [generated.value],
+					source: generated.source,
+				})),
 	]);
 
 	return {
@@ -351,6 +379,8 @@ export async function resolveSecrets(options: ResolveSecretsOptions): Promise<Re
 		previewSecretSource: previewSecret.source,
 		ipSalt: ipSalt.value,
 		ipSaltSource: ipSalt.source,
+		imageSigningSecrets: imageSecret.values,
+		imageSigningSecretSource: imageSecret.source,
 	};
 }
 
@@ -521,6 +551,20 @@ function pickFirstNonEmpty(...values: (string | undefined)[]): string | null {
 	return null;
 }
 
+/**
+ * Split a comma-separated secret list, trimming entries and dropping empty
+ * ones. Returns `null` when nothing usable remains, so a blank value is
+ * treated as unset.
+ */
+function parseSecretList(raw: string | undefined): string[] | null {
+	if (!raw) return null;
+	const values = raw
+		.split(",")
+		.map((value) => value.trim())
+		.filter((value) => value.length > 0);
+	return values.length > 0 ? values : null;
+}
+
 const BASE64URL_CHARSET_PATTERN = /^[A-Za-z0-9_-]+$/;
 
 /**
@@ -568,6 +612,7 @@ function readDefaultEnv(): SecretsEnv {
 		EMDASH_PREVIEW_SECRET: proc.EMDASH_PREVIEW_SECRET,
 		PREVIEW_SECRET: proc.PREVIEW_SECRET,
 		EMDASH_IP_SALT: proc.EMDASH_IP_SALT,
+		EMDASH_IMAGE_SECRET: proc.EMDASH_IMAGE_SECRET,
 		EMDASH_AUTH_SECRET: proc.EMDASH_AUTH_SECRET,
 		AUTH_SECRET: proc.AUTH_SECRET,
 	};
