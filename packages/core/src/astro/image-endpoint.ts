@@ -18,11 +18,14 @@ import virtualConfig from "virtual:emdash/config";
 
 import {
 	cacheMediaResponse,
+	checkImageSignature,
 	canonicalTransformRedirect,
 	canonicalTransformSearch,
 	getTransformFingerprint,
+	IMAGE_SIGNATURE_PARAM,
 	isCacheableMediaSource,
 	matchInternalMediaKey,
+	matchStoredMediaHref,
 	MUTABLE_MEDIA_CACHE_CONTROL,
 	originalMediaHeaders,
 	validatorHeaders,
@@ -78,8 +81,21 @@ function notModifiedResponse(
 
 export const GET: APIRoute = async (ctx) => {
 	const url = new URL(ctx.request.url);
-	const key = matchInternalMediaKey(url.searchParams.get("href"));
+	const href = url.searchParams.get("href");
+	const key = matchInternalMediaKey(href);
+	const signing = virtualConfig?.imageSigning === true;
 	const storage = ctx.locals.emdash?.storage;
+
+	// Astro adds the adapter's assetQueryParams; the public astro:assets type omits it.
+	const config: typeof imageConfig & { assetQueryParams?: URLSearchParams } = imageConfig;
+
+	// Stored media needs a valid signature (or a Contributor+ session) before
+	// anything is read or transformed, including `publicUrl` media that the
+	// stock endpoint serves.
+	if (signing && matchStoredMediaHref(href, virtualConfig?.imageStoragePublicUrl)) {
+		const refusal = await checkImageSignature(ctx, url, config.assetQueryParams);
+		if (refusal) return refusal;
+	}
 
 	// Not EmDash media, or storage unavailable: let the stock endpoint handle it
 	// (bundled assets, allowed remote, `publicUrl` media).
@@ -88,11 +104,13 @@ export const GET: APIRoute = async (ctx) => {
 	const service = await getConfiguredImageService();
 	if (!("transform" in service)) return genericGET(ctx);
 
-	// Astro adds the adapter's assetQueryParams; the public astro:assets type omits it.
-	const config: typeof imageConfig & { assetQueryParams?: URLSearchParams } = imageConfig;
 	const isStockService = imageConfig.service?.entrypoint === "astro/assets/services/sharp";
 	if (isStockService) {
-		const canonical = canonicalTransformSearch(url, config.assetQueryParams);
+		const canonical = canonicalTransformSearch(
+			url,
+			config.assetQueryParams,
+			signing ? [IMAGE_SIGNATURE_PARAM] : [],
+		);
 		if (canonical !== null) return canonicalTransformRedirect(url, canonical);
 	}
 
@@ -150,7 +168,7 @@ export const GET: APIRoute = async (ctx) => {
 		if (
 			isStockService &&
 			virtualConfig?.routeCacheProvider !== "memory" &&
-			isCacheableMediaSource(url.searchParams.get("href"), url)
+			isCacheableMediaSource(href, url)
 		) {
 			cacheMediaResponse(ctx.cache, key);
 		}

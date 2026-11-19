@@ -3,6 +3,7 @@ import { describe, it, expect } from "vitest";
 import {
 	canonicalTransformSearch,
 	matchInternalMediaKey,
+	matchStoredMediaHref,
 	isSafeTransformKey,
 	parseTransformParams,
 	resolveTransformQuality,
@@ -388,5 +389,64 @@ describe("canonicalTransformSearch", () => {
 	it("accepts its own output, so a redirect never loops", () => {
 		const target = canonicalOf(`w=150&href=${href}&x=1`)!;
 		expect(canonicalOf(target)).toBeNull();
+	});
+});
+
+describe("matchStoredMediaHref", () => {
+	const PUBLIC = "https://media.example.com/uploads";
+
+	it("matches the internal media route", () => {
+		expect(matchStoredMediaHref("/_emdash/api/media/file/a.jpg")).toBe(true);
+		expect(matchStoredMediaHref("https://site.example/_emdash/api/media/file/a.jpg")).toBe(true);
+	});
+
+	it("matches the storage publicUrl followed by a key", () => {
+		expect(matchStoredMediaHref(`${PUBLIC}/a.jpg`, PUBLIC)).toBe(true);
+		expect(matchStoredMediaHref(`${PUBLIC}/a.jpg`, `${PUBLIC}/`)).toBe(true);
+		expect(
+			matchStoredMediaHref("https://media.example.com/a.jpg", "https://media.example.com"),
+		).toBe(true);
+	});
+
+	it("refuses look-alike hosts, prefixes and traversal", () => {
+		const cases = [
+			"https://media.example.com.evil.net/uploads/a.jpg",
+			"https://media.example.comx/uploads/a.jpg",
+			"https://media.example.com:8443/uploads/a.jpg",
+			"http://media.example.com/uploads/a.jpg",
+			"https://user@media.example.com@evil.net/uploads/a.jpg",
+			"https://media.example.com/uploadsx/a.jpg",
+			"https://media.example.com/uploads/../private/a.jpg",
+			"https://media.example.com/uploads/%2e%2e/private/a.jpg",
+			"https://media.example.com/uploads/",
+			"https://media.example.com/uploads",
+			"/uploads/a.jpg",
+		];
+		for (const href of cases) expect(matchStoredMediaHref(href, PUBLIC), href).toBe(false);
+	});
+
+	it("matches nothing for an unusable publicUrl", () => {
+		for (const publicUrl of [
+			undefined,
+			"",
+			"not a url",
+			"ftp://media.example.com",
+			"javascript:1",
+		]) {
+			expect(matchStoredMediaHref("https://media.example.com/a.jpg", publicUrl)).toBe(false);
+		}
+		expect(matchStoredMediaHref(null, PUBLIC)).toBe(false);
+	});
+});
+
+describe("canonicalTransformSearch extra names", () => {
+	it("keeps extra names last, after the adapter's asset parameters", () => {
+		const url = new URL("https://x.test/_image?_emdash_sig=abc&dpl=1&w=5&href=%2Fa");
+		expect(canonicalTransformSearch(url, new URLSearchParams({ dpl: "" }), ["_emdash_sig"])).toBe(
+			"href=%2Fa&w=5&dpl=1&_emdash_sig=abc",
+		);
+		expect(canonicalTransformSearch(url, new URLSearchParams({ dpl: "" }))).toBe(
+			"href=%2Fa&w=5&dpl=1",
+		);
 	});
 });

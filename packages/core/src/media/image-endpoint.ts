@@ -16,6 +16,11 @@ import mime from "mime/lite";
 
 import { INTERNAL_MEDIA_PREFIX } from "./normalize.js";
 
+// The signing and check modules import this one; their exports are only used
+// at call time, so the import cycle is safe.
+export { checkImageSignature } from "./image-signature-check.js";
+export { IMAGE_SIGNATURE_PARAM } from "./image-signature.js";
+
 /** Output formats the wrapped endpoint can produce on Cloudflare. */
 export const ALLOWED_TRANSFORM_FORMATS = ["webp", "avif", "jpeg", "png"] as const;
 
@@ -147,8 +152,9 @@ export function canonicalTransformQuery(
 export function canonicalTransformSearch(
 	url: URL,
 	assetQueryParams?: URLSearchParams,
+	extraNames: readonly string[] = [],
 ): string | null {
-	const query = canonicalTransformQuery(url, assetQueryParams);
+	const query = canonicalTransformQuery(url, assetQueryParams, extraNames);
 	// Compared as serialized text: Workers Cache keys on the raw URL, so an
 	// equal query with different percent-encoding would be a separate entry.
 	return query === url.search.slice(1) ? null : query;
@@ -322,6 +328,33 @@ export function matchInternalMediaKey(href: string | null | undefined): string |
 	const key = pathname.slice(INTERNAL_MEDIA_PREFIX.length);
 	if (!key || !isSafeTransformKey(key)) return null;
 	return key;
+}
+
+const TRAILING_SLASHES = /\/+$/;
+
+/**
+ * True when `href` names stored media: the internal media route, or the
+ * storage adapter's `publicUrl` followed by a key. Both are parsed as URLs and
+ * compared on origin and path segments, so look-alike hosts, sibling prefixes
+ * and `..` tricks never match; a `publicUrl` that is not http(s) matches nothing.
+ */
+export function matchStoredMediaHref(href: string | null | undefined, publicUrl?: string): boolean {
+	if (!href) return false;
+	if (matchInternalMediaKey(href) !== null) return true;
+	if (!publicUrl) return false;
+	let prefix: URL;
+	let target: URL;
+	try {
+		prefix = new URL(publicUrl);
+		target = new URL(href);
+	} catch {
+		return false;
+	}
+	if (prefix.protocol !== "https:" && prefix.protocol !== "http:") return false;
+	if (target.origin !== prefix.origin) return false;
+	const base = prefix.pathname.replace(TRAILING_SLASHES, "");
+	if (!target.pathname.startsWith(`${base}/`)) return false;
+	return target.pathname.length > base.length + 1;
 }
 
 /** Type guard for {@link ImageTransformFormat}. */

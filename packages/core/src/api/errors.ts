@@ -382,6 +382,12 @@ export const ErrorCode = {
 	BACKUP_DELETE_ERROR: "BACKUP_DELETE_ERROR",
 	BACKUP_DOWNLOAD_ERROR: "BACKUP_DOWNLOAD_ERROR",
 
+	// Signed image URLs
+	/** An unsigned or wrongly signed image transform URL for stored media. */
+	IMAGE_SIGNATURE_INVALID: "IMAGE_SIGNATURE_INVALID",
+	/** Signing is on but the verification secret cannot be read (no database on this request). */
+	IMAGE_SIGNING_UNAVAILABLE: "IMAGE_SIGNING_UNAVAILABLE",
+
 	// Search
 	SEARCH_UNAVAILABLE: "SEARCH_UNAVAILABLE",
 	SEARCH_ERROR: "SEARCH_ERROR",
@@ -493,6 +499,7 @@ export function mapErrorStatus(code: string | undefined): number {
 
 		// 403 Forbidden
 		case ErrorCode.FORBIDDEN:
+		case ErrorCode.IMAGE_SIGNATURE_INVALID:
 		case ErrorCode.CSRF_REJECTED:
 		case ErrorCode.ACCOUNT_DISABLED:
 		case ErrorCode.COMMENTS_DISABLED:
@@ -592,6 +599,7 @@ export function mapErrorStatus(code: string | undefined): number {
 
 		// 503 Service Unavailable
 		case ErrorCode.SEARCH_UNAVAILABLE:
+		case ErrorCode.IMAGE_SIGNING_UNAVAILABLE:
 		case ErrorCode.MARKETPLACE_UNAVAILABLE:
 		case ErrorCode.MARKETPLACE_NOT_CONFIGURED:
 		case ErrorCode.SANDBOX_NOT_AVAILABLE:
