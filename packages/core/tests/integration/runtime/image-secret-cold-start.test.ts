@@ -19,6 +19,7 @@ import {
 	resolveImageSigningSecrets,
 } from "../../../src/config/secrets.js";
 import { OptionsRepository } from "../../../src/database/repositories/options.js";
+import { markRequestScopedDb } from "../../../src/database/request-scoped.js";
 import type { Database as EmDashDatabase } from "../../../src/database/types.js";
 import { EmDashRuntime } from "../../../src/emdash-runtime.js";
 import type { RuntimeDependencies } from "../../../src/emdash-runtime.js";
@@ -180,6 +181,40 @@ describe("EmDashRuntime.create — image signing secret", () => {
 			} finally {
 				await teardownTestDatabase(isolated);
 			}
+		});
+
+		// The Durable Object preview sets its database without `dbIsIsolated`.
+		it("leaves emdash:image_secret out and primes nothing inside another database's request", async () => {
+			const previewDb = await setupTestDatabase();
+			try {
+				const keys = await siteOptionKeys(() =>
+					runWithContext({ editMode: false, db: previewDb }, () =>
+						EmDashRuntime.create(createDeps(sqlite)),
+					),
+				);
+				expect(keys).not.toContain(IMAGE_SECRET_OPTION_KEY);
+				await expect(resolveImageSigningSecrets({ getDb: noQuery })).rejects.toThrow(
+					"should not need a query",
+				);
+				expect(await new OptionsRepository(previewDb).get(IMAGE_SECRET_OPTION_KEY)).toBeNull();
+			} finally {
+				await teardownTestDatabase(previewDb);
+			}
+		});
+
+		it("asks for emdash:image_secret inside a request on a request-scoped view of the configured database", async () => {
+			const view = new Kysely<EmDashDatabase>({ dialect: new SqliteDialect({ database: sqlite }) });
+			markRequestScopedDb(view);
+			const keys = await siteOptionKeys(() =>
+				runWithContext({ editMode: false, db: view }, () =>
+					EmDashRuntime.create(createDeps(sqlite)),
+				),
+			);
+			expect(keys).toContain(IMAGE_SECRET_OPTION_KEY);
+			expect(await resolveImageSigningSecrets({ getDb: noQuery })).toEqual({
+				secrets: [await storedSecret(sqlite)],
+				source: "db",
+			});
 		});
 	});
 });
