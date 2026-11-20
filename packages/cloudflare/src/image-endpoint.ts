@@ -6,8 +6,9 @@
  * adapter (the R2 binding) and resizes them with the Cloudflare `IMAGES`
  * binding -- no HTTP fetch, so it works behind Cloudflare Access and with
  * `global_fetch_strictly_public`. Every other image is delegated to the
- * adapter's stock transform endpoint unchanged (bundled assets via the `ASSETS`
- * binding, allowed-remote via fetch).
+ * adapter's stock transform endpoint unchanged, or under `images.signedUrls`
+ * with only the parameters the signature covers (bundled assets via the
+ * `ASSETS` binding, allowed-remote via fetch).
  */
 
 // @astrojs/cloudflare's binding-mode transform endpoint; resolved in the consumer.
@@ -17,7 +18,7 @@ import type { APIRoute } from "astro";
 import { imageConfig } from "astro:assets";
 import { env } from "cloudflare:workers";
 import type { Storage } from "emdash";
-import { checkImageSignature } from "emdash/internal/image-signing";
+import { checkImageSignature, withSignedParameters } from "emdash/internal/image-signing";
 import {
 	cacheMediaResponse,
 	canonicalTransformRedirect,
@@ -116,7 +117,9 @@ export const GET: APIRoute = async (ctx) => {
 
 	// Not EmDash media, or storage unavailable: let the adapter's endpoint handle
 	// it (bundled assets via ASSETS, allowed remote via fetch).
-	if (!key || !storage) return adapterGET(ctx);
+	if (!key || !storage) {
+		return adapterGET(signing ? withSignedParameters(ctx, url, config.assetQueryParams) : ctx);
+	}
 
 	// Under images.signedUrls the configured service is EmDash's signing wrapper
 	// around the recorded stock one.

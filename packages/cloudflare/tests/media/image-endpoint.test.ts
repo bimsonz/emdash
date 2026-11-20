@@ -299,6 +299,7 @@ describe("Cloudflare image endpoint", () => {
 
 		expect(response.status).toBe(418);
 		expect(adapterGET).toHaveBeenCalledOnce();
+		expect((adapterGET.mock.calls[0] as unknown[])[0]).toBe(ctx);
 		expect(storage.download).not.toHaveBeenCalled();
 		expect(ctx.cache.set).not.toHaveBeenCalled();
 	});
@@ -488,17 +489,22 @@ describe("cloudflare image endpoint storage body", () => {
 describe("Cloudflare image endpoint with signed image URLs", () => {
 	const HREF = "/_emdash/api/media/file/photo.jpg";
 
-	async function signedPath(href = HREF): Promise<string> {
+	async function signedPath(href = HREF, assetQueryParams?: URLSearchParams): Promise<string> {
 		const { importImageSigningKeys, signTransformUrl } = (await import(
 			/* @vite-ignore */ `${CORE_SRC}image-signature.js`
 		)) as {
 			importImageSigningKeys(secrets: string[]): Promise<CryptoKey[]>;
-			signTransformUrl(url: URL, key: CryptoKey): Promise<string>;
+			signTransformUrl(
+				url: URL,
+				key: CryptoKey,
+				assetQueryParams?: URLSearchParams,
+			): Promise<string>;
 		};
 		const [key] = await importImageSigningKeys(["secret-a"]);
 		return signTransformUrl(
 			new URL(`https://example.test/_image?href=${encodeURIComponent(href)}&w=640`),
 			key!,
+			assetQueryParams,
 		);
 	}
 
@@ -579,6 +585,47 @@ describe("Cloudflare image endpoint with signed image URLs", () => {
 		const { ctx } = signedContext(await signedPath("/_astro/a.png"));
 		expect((await GET(ctx as never)).status).toBe(418);
 		expect(adapterGET).toHaveBeenCalledTimes(1);
+	});
+
+	it.each([
+		["a bundled image", "foo=1", "/_astro/a.png"],
+		["a remote image", "blur=5", "https://images.example.com/a.jpg"],
+		["a bundled image", "w=4000", "/_astro/a.png"],
+	])("hands %s to the adapter endpoint without the unsigned %s", async (_kind, unsigned, href) => {
+		virtualConfig.imageSigning = true;
+		const path = await signedPath(href);
+		const { ctx } = signedContext(`${path}&${unsigned}`);
+		ctx.request = new Request(ctx.request.url, { headers: { Accept: "image/avif" } });
+
+		expect((await GET(ctx as never)).status).toBe(418);
+
+		const [handed] = adapterGET.mock.calls[0] as unknown as [APIContext];
+		expect(handed.request.url).toBe(`https://example.test${path}`);
+		expect(handed.url.href).toBe(`https://example.test${path}`);
+		expect(handed.request.headers.get("Accept")).toBe("image/avif");
+		expect(handed.locals).toBe(ctx.locals);
+	});
+
+	it.each([
+		["stored media", HREF],
+		["a bundled image", "/_astro/a.png"],
+		["a remote image", "https://images.example.com/a.jpg"],
+	])("serves a signed URL for %s as it was rendered, without a redirect", async (_kind, href) => {
+		const { images } = installImages();
+		virtualConfig.imageSigning = true;
+		imageConfig.assetQueryParams = new URLSearchParams({ dpl: "abc" });
+		const { ctx } = signedContext(await signedPath(href, imageConfig.assetQueryParams));
+
+		const response = await GET(ctx as never);
+
+		expect(response.headers.has("Location")).toBe(false);
+		if (href === HREF) {
+			expect(response.status).toBe(200);
+			expect(images.input).toHaveBeenCalledOnce();
+		} else {
+			expect(response.status).toBe(418);
+			expect((adapterGET.mock.calls[0] as unknown[])[0]).toBe(ctx);
+		}
 	});
 
 	it("redirects a signed URL to its unsigned canonical form when signing is off", async () => {

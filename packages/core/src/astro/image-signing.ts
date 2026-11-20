@@ -23,6 +23,7 @@ import {
 } from "../config/secrets.js";
 import type { Database } from "../database/types.js";
 import { getDb } from "../loader.js";
+import { canonicalTransformSearch } from "../media/image-endpoint.js";
 import {
 	hasValidTransformSignature,
 	IMAGE_SIGNATURE_PARAM,
@@ -131,4 +132,27 @@ export async function checkImageSignature(ctx: APIContext, url: URL): Promise<Re
 		"This image URL is not signed or its signature is invalid",
 		403,
 	);
+}
+
+/**
+ * The context to hand a request on to the stock image endpoint under signing.
+ * Its URL carries only the signed parameters in canonical form, the adapter's
+ * `assetQueryParams` and the signature, so the stock endpoint never reads a
+ * parameter the signature leaves out. A request already in that form is
+ * returned as it is.
+ */
+export function withSignedParameters(
+	ctx: APIContext,
+	url: URL,
+	assetQueryParams?: URLSearchParams,
+): APIContext {
+	const search = canonicalTransformSearch(url, assetQueryParams, [IMAGE_SIGNATURE_PARAM]);
+	if (search === null) return ctx;
+	const signedUrl = new URL(`${url.pathname}?${search}`, url);
+	// Astro's context getters close over its render state rather than `this`,
+	// so every other property still comes from the original context.
+	return Object.create(ctx, {
+		request: { value: new Request(signedUrl, ctx.request) },
+		url: { value: signedUrl },
+	});
 }

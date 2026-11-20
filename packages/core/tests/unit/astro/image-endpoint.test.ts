@@ -351,12 +351,16 @@ describe("GET /_image over EmDash media", () => {
 	});
 
 	it("leaves non-EmDash images to Astro's endpoint without redirecting", async () => {
+		const { GET: genericGET } = await import("astro/assets/endpoint/generic");
+		vi.mocked(genericGET).mockClear();
 		const request = new Request("http://localhost/_image?w=150&href=%2F_astro%2Flogo.png&v=2");
+		const ctx = buildContext(request, { download: pngDownload() });
 
-		const response = await GET(buildContext(request, { download: pngDownload() }));
+		const response = await GET(ctx);
 
 		expect(response.status).toBe(200);
 		expect(await response.text()).toBe("generic");
+		expect(vi.mocked(genericGET).mock.calls[0]![0]).toBe(ctx);
 	});
 
 	it("does not cache a failed transform", async () => {
@@ -630,6 +634,49 @@ describe("GET /_image over EmDash media", () => {
 			expect(response.status).toBe(200);
 			expect(await response.text()).toBe("generic");
 			expect(genericGET).toHaveBeenCalledTimes(1);
+		});
+
+		it.each([
+			["a bundled image", "foo=1", "/_astro/a.png"],
+			["a remote image", "blur=5", "https://images.example.com/a.jpg"],
+			["a bundled image", "w=4000", "/_astro/a.png"],
+		])("hands %s to the stock endpoint without the unsigned %s", async (_kind, unsigned, href) => {
+			const { GET: genericGET } = await import("astro/assets/endpoint/generic");
+			vi.mocked(genericGET).mockClear();
+			const path = await signedPath(href);
+			const request = new Request(`http://localhost${path}&${unsigned}`, {
+				headers: { Accept: "image/avif" },
+			});
+			const ctx = buildContext(request, { download: pngDownload() });
+
+			const response = await GET(ctx);
+
+			expect(response.status).toBe(200);
+			const [handed] = vi.mocked(genericGET).mock.calls[0] as unknown as [APIContext];
+			expect(handed.request.url).toBe(`http://localhost${path}`);
+			expect(handed.url.href).toBe(`http://localhost${path}`);
+			expect(handed.request.headers.get("Accept")).toBe("image/avif");
+			expect(handed.locals).toBe(ctx.locals);
+			expect(handed.logger).toBe(ctx.logger);
+		});
+
+		it("hands a signed URL in canonical form to the stock endpoint as it came", async () => {
+			const { GET: genericGET } = await import("astro/assets/endpoint/generic");
+			vi.mocked(genericGET).mockClear();
+			imageConfig.assetQueryParams = new URLSearchParams({ dpl: "abc" });
+			const [key] = await importImageSigningKeys(["secret-a"]);
+			const path = await signTransformUrl(
+				new URL("http://localhost/_image?href=%2F_astro%2Fa.png&w=150"),
+				key!,
+				imageConfig.assetQueryParams,
+			);
+			const ctx = buildContext(new Request(`http://localhost${path}`), {
+				download: pngDownload(),
+			});
+
+			await GET(ctx);
+
+			expect(vi.mocked(genericGET).mock.calls[0]![0]).toBe(ctx);
 		});
 	});
 
