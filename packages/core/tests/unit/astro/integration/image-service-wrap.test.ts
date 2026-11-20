@@ -1,7 +1,13 @@
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { pathToFileURL } from "node:url";
+
 import type { AstroIntegration } from "astro";
-import { describe, expect, it, vi } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 
 import {
+	detectCloudflareImageMode,
 	planImageSigning,
 	wrapImageService,
 } from "../../../../src/astro/integration/image-service-wrap.js";
@@ -84,10 +90,91 @@ const compileImageConfig = (transformWithBinding: boolean) => ({
 	transformWithBinding,
 });
 
+/** A config plugin whose load handler is `handler`. */
+function configPluginLoading(handler: () => unknown) {
+	return { name: "virtual:astro-cloudflare:config", load: { handler } };
+}
+
+/** Plugin lists from which the adapter's image mode can't be read. */
+const UNREADABLE: Array<[string, unknown]> = [
+	["no config plugin", [{ name: "other" }]],
+	["no Vite plugins", undefined],
+	[
+		"a load handler that throws",
+		[
+			configPluginLoading(() => {
+				throw new Error("changed internals");
+			}),
+		],
+	],
+	["a load handler without compileImageConfig", [configPluginLoading(() => "export const x = 1;")]],
+	[
+		"unparseable compileImageConfig",
+		[configPluginLoading(() => "export const compileImageConfig = {base: '/'};")],
+	],
+	[
+		"a compileImageConfig without transformWithBinding",
+		[
+			configPluginLoading(
+				() => `export const compileImageConfig = ${JSON.stringify({ base: "/" })};`,
+			),
+		],
+	],
+	["a load handler returning a non-string", [configPluginLoading(() => ({ code: "x" }))]],
+];
+
+describe("detectCloudflareImageMode", () => {
+	// `astro dev` serializes `null` in every image mode, like the default modes at build.
+	it("reads a null compileImageConfig as binding", () => {
+		expect(detectCloudflareImageMode([cloudflareConfigPlugin(null)])).toBe("binding");
+	});
+
+	it("reads the binding build as binding", () => {
+		expect(detectCloudflareImageMode([cloudflareConfigPlugin(compileImageConfig(true))])).toBe(
+			"binding",
+		);
+	});
+
+	it("reads the compile and custom builds as collects", () => {
+		expect(detectCloudflareImageMode([[cloudflareConfigPlugin(compileImageConfig(false))]])).toBe(
+			"collects",
+		);
+	});
+
+	it.each(UNREADABLE)("is unknown with %s", (_case, plugins) => {
+		expect(detectCloudflareImageMode(plugins)).toBe("unknown");
+	});
+});
+
 describe("planImageSigning", () => {
 	const workerd = { entrypoint: WORKERD, config: {} };
+	let root: URL;
+	let rootDir: string;
+
+	beforeAll(() => {
+		rootDir = mkdtempSync(join(tmpdir(), "emdash-plan-image-signing-"));
+		const adapterDir = join(rootDir, "node_modules", "@astrojs", "cloudflare");
+		mkdirSync(adapterDir, { recursive: true });
+		writeFileSync(
+			join(adapterDir, "package.json"),
+			JSON.stringify({ name: "@astrojs/cloudflare", version: "99.1.0" }),
+		);
+		mkdirSync(join(rootDir, "site"));
+		root = pathToFileURL(join(rootDir, "site/"));
+	});
+
+	afterAll(() => {
+		rmSync(rootDir, { recursive: true, force: true });
+	});
+
 	const plan = (vitePlugins: unknown, isCloudflare = true) =>
-		planImageSigning({ endpointInstalled: true, isCloudflare, service: workerd, vitePlugins });
+		planImageSigning({
+			endpointInstalled: true,
+			isCloudflare,
+			service: workerd,
+			vitePlugins,
+			root,
+		});
 
 	it("wraps under the Cloudflare adapter's default runtime image mode", () => {
 		expect(plan([[cloudflareConfigPlugin(null)]])).toEqual({
@@ -110,15 +197,35 @@ describe("planImageSigning", () => {
 		expect(result).toEqual({ warn: expect.stringContaining("compile") });
 	});
 
-	it("wraps when the adapter's resolved config can't be read", () => {
-		expect(plan([{ name: "other" }])).toHaveProperty("original");
-		expect(plan(undefined)).toHaveProperty("original");
+	it.each(UNREADABLE)(
+		"leaves signing off and names the installed adapter version with %s",
+		(_case, plugins) => {
+			const result = plan(plugins);
+
+			expect(result).toEqual({ warn: expect.stringContaining("@astrojs/cloudflare 99.1.0") });
+			expect(result).toEqual({ warn: expect.stringContaining("images.signedUrls") });
+			expect(result).not.toHaveProperty("service");
+		},
+	);
+
+	it("still warns when the adapter's version can't be found", () => {
+		const result = planImageSigning({
+			endpointInstalled: true,
+			isCloudflare: true,
+			service: workerd,
+			vitePlugins: [configPluginLoading(() => "garbage")],
+			root: pathToFileURL(join(tmpdir(), "emdash-no-such-project/")),
+		});
+
+		expect(result).toEqual({ warn: expect.stringContaining("@astrojs/cloudflare") });
+		expect(result).not.toHaveProperty("service");
 	});
 
 	it("ignores the plugin under another adapter", () => {
 		expect(plan([cloudflareConfigPlugin(compileImageConfig(false))], false)).toHaveProperty(
 			"original",
 		);
+		expect(plan(undefined, false)).toHaveProperty("original");
 	});
 
 	it("refuses without EmDash's image endpoint", () => {
@@ -128,6 +235,7 @@ describe("planImageSigning", () => {
 				isCloudflare: false,
 				service: workerd,
 				vitePlugins: [],
+				root,
 			}),
 		).toEqual({ warn: expect.stringContaining("image endpoint") });
 	});
@@ -243,6 +351,22 @@ describe("emdash() image service with images.signedUrls", () => {
 		expect(result.runtimeConfig.imageSigning).toBe(false);
 		expect(result.runtimeConfig.imageRuntimeService).toBeUndefined();
 		expect(result.warn).toHaveBeenCalledWith(expect.stringContaining("images.signedUrls"));
+	});
+
+	it("turns signing off when the Cloudflare adapter's image mode can't be read, and says so", async () => {
+		const result = await setupWith(
+			{ images: { signedUrls: true } },
+			{ service: { entrypoint: WORKERD, config: {} } },
+			{
+				adapter: { name: "@astrojs/cloudflare" },
+				vite: { plugins: [configPluginLoading(() => "garbage")] },
+			},
+		);
+
+		expect(result.service).toBeUndefined();
+		expect(result.runtimeConfig.imageSigning).toBe(false);
+		expect(result.runtimeConfig.imageRuntimeService).toBeUndefined();
+		expect(result.warn).toHaveBeenCalledWith(expect.stringContaining("@astrojs/cloudflare"));
 	});
 
 	it("fails the stock service module loudly when nothing was recorded", async () => {
