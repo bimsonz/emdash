@@ -108,7 +108,7 @@ export const GET: APIRoute = async (ctx) => {
 	// With signing on, every image request needs a valid signature (or a
 	// Contributor+ session) before anything is read, handed to the stock
 	// endpoint or transformed, whatever `href` is: redirects, a site `base`
-	// and scheme-only hrefs can all reach stored media past any href check.
+	// and scheme-only hrefs can all reach the image pipeline past any href check.
 	if (signing) {
 		const refusal = await checkImageSignature(ctx, url, config.assetQueryParams);
 		if (refusal) return refusal;

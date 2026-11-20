@@ -7,10 +7,10 @@ const ORIGINAL = vi.hoisted(() => ({
 	config: { kernel: "lanczos3" },
 }));
 
-const { stock, getDb, resolveSecretsCached } = vi.hoisted(() => ({
+const { stock, getDb, resolveImageSigningSecretsCached } = vi.hoisted(() => ({
 	stock: {} as Record<string, ReturnType<typeof vi.fn>>,
 	getDb: vi.fn(),
-	resolveSecretsCached: vi.fn(),
+	resolveImageSigningSecretsCached: vi.fn(),
 }));
 
 vi.mock("virtual:emdash/config", () => ({
@@ -19,7 +19,7 @@ vi.mock("virtual:emdash/config", () => ({
 vi.mock("../../../src/loader.js", () => ({ getDb }));
 vi.mock("../../../src/config/secrets.js", async (importOriginal) => ({
 	...(await importOriginal<typeof import("../../../src/config/secrets.js")>()),
-	resolveSecretsCached,
+	resolveImageSigningSecretsCached,
 }));
 /**
  * Astro's `baseService.getURL` (`astro/dist/assets/services/service.js`), with
@@ -125,7 +125,7 @@ describe("emdash/image-service", () => {
 		_clearImageSigningKeyCacheForTesting();
 		globalThis.astroAsset = { imageService: service } as typeof globalThis.astroAsset;
 		getDb.mockResolvedValue({ singleton: true });
-		resolveSecretsCached.mockResolvedValue({ imageSigningSecrets: ["secret-a"] });
+		resolveImageSigningSecretsCached.mockResolvedValue(["secret-a"]);
 		vi.stubEnv("EMDASH_IMAGE_SECRET", undefined);
 	});
 
@@ -174,7 +174,7 @@ describe("emdash/image-service", () => {
 
 			expect(image.src).toBe(await stock.getURL.mock.results[0]!.value);
 			expect(image.srcSet.attribute).not.toContain(IMAGE_SIGNATURE_PARAM);
-			expect(resolveSecretsCached).not.toHaveBeenCalled();
+			expect(resolveImageSigningSecretsCached).not.toHaveBeenCalled();
 		});
 
 		describe("while prerendering", () => {
@@ -191,7 +191,25 @@ describe("emdash/image-service", () => {
 
 				expect(url).toBe(await stock.getURL.mock.results[0]!.value);
 				expect(url).not.toContain(IMAGE_SIGNATURE_PARAM);
-				expect(resolveSecretsCached).not.toHaveBeenCalled();
+				expect(resolveImageSigningSecretsCached).not.toHaveBeenCalled();
+				expect(getDb).not.toHaveBeenCalled();
+			});
+
+			it("ends with Astro's static file for src and every srcset URL, reading no secret", async () => {
+				// The wrapper mirrors the condition under which Astro's own getImage
+				// swaps the URL for a generated file. If Astro stops swapping under it,
+				// the final URLs here would be unsigned /_image URLs and this fails.
+				const staticPath = "/_astro/static-abc.webp";
+				const addStaticImage = vi.fn(() => staticPath);
+				globalThis.astroAsset!.addStaticImage = addStaticImage;
+
+				const image = await inRequest(() => render(MEDIA), prerendering);
+
+				expect(image.srcSet.values).toHaveLength(2);
+				expect(image.src).toBe(staticPath);
+				for (const value of image.srcSet.values) expect(value.url).toBe(staticPath);
+				expect(addStaticImage).toHaveBeenCalled();
+				expect(resolveImageSigningSecretsCached).not.toHaveBeenCalled();
 				expect(getDb).not.toHaveBeenCalled();
 			});
 
@@ -207,7 +225,7 @@ describe("emdash/image-service", () => {
 					expect(await verifies(url, ["old"])).toBe(false);
 				}
 				// The build's database holds a different generated secret.
-				expect(resolveSecretsCached).not.toHaveBeenCalled();
+				expect(resolveImageSigningSecretsCached).not.toHaveBeenCalled();
 				expect(getDb).not.toHaveBeenCalled();
 			});
 
@@ -233,7 +251,7 @@ describe("emdash/image-service", () => {
 					);
 					expect(message).toContain("secrets.required");
 					expect(message).not.toMatch(/compile/);
-					expect(resolveSecretsCached).not.toHaveBeenCalled();
+					expect(resolveImageSigningSecretsCached).not.toHaveBeenCalled();
 				},
 			);
 
@@ -254,7 +272,7 @@ describe("emdash/image-service", () => {
 			const image = await inRequest(() => render(MEDIA), { prerendering: false });
 
 			expect(await verifies(image.src, ["secret-a"])).toBe(true);
-			expect(resolveSecretsCached).toHaveBeenCalled();
+			expect(resolveImageSigningSecretsCached).toHaveBeenCalled();
 		});
 
 		it("returns a source the stock service would not transform as it is", async () => {
@@ -282,7 +300,7 @@ describe("emdash/image-service", () => {
 		});
 
 		it("signs with the first secret", async () => {
-			resolveSecretsCached.mockResolvedValue({ imageSigningSecrets: ["new", "old"] });
+			resolveImageSigningSecretsCached.mockResolvedValue(["new", "old"]);
 
 			const image = await inRequest(() => render(MEDIA));
 
@@ -295,18 +313,18 @@ describe("emdash/image-service", () => {
 
 			await inRequest(() => render(MEDIA), { db });
 
-			expect(resolveSecretsCached).toHaveBeenCalledWith(db);
+			expect(resolveImageSigningSecretsCached).toHaveBeenCalledWith(db);
 			expect(getDb).not.toHaveBeenCalled();
 		});
 
 		it("falls back to the configured database", async () => {
 			await inRequest(() => render(MEDIA));
 
-			expect(resolveSecretsCached).toHaveBeenCalledWith({ singleton: true });
+			expect(resolveImageSigningSecretsCached).toHaveBeenCalledWith({ singleton: true });
 		});
 
 		it("fails the render when the secret cannot be resolved", async () => {
-			resolveSecretsCached.mockRejectedValue(new Error("no database"));
+			resolveImageSigningSecretsCached.mockRejectedValue(new Error("no database"));
 
 			await expect(inRequest(() => render(MEDIA))).rejects.toThrow("no database");
 		});

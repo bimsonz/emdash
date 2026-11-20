@@ -2,16 +2,18 @@ import { Role } from "@emdash-cms/auth";
 import type { APIContext } from "astro";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { virtualConfig, getDb, resolveSecretsCached, requestContext } = vi.hoisted(() => ({
-	virtualConfig: {} as { imageSigning?: boolean },
-	getDb: vi.fn(),
-	resolveSecretsCached: vi.fn(),
-	requestContext: { current: undefined as { db?: unknown } | undefined },
-}));
+const { virtualConfig, getDb, resolveImageSigningSecretsCached, requestContext } = vi.hoisted(
+	() => ({
+		virtualConfig: {} as { imageSigning?: boolean },
+		getDb: vi.fn(),
+		resolveImageSigningSecretsCached: vi.fn(),
+		requestContext: { current: undefined as { db?: unknown } | undefined },
+	}),
+);
 
 vi.mock("virtual:emdash/config", () => ({ default: virtualConfig }));
 vi.mock("../../../src/loader.js", () => ({ getDb }));
-vi.mock("../../../src/config/secrets.js", () => ({ resolveSecretsCached }));
+vi.mock("../../../src/config/secrets.js", () => ({ resolveImageSigningSecretsCached }));
 vi.mock("../../../src/request-context.js", () => ({
 	getRequestContext: () => requestContext.current,
 }));
@@ -44,7 +46,7 @@ describe("checkImageSignature", () => {
 		virtualConfig.imageSigning = true;
 		requestContext.current = undefined;
 		getDb.mockResolvedValue({});
-		resolveSecretsCached.mockResolvedValue({ imageSigningSecrets: ["secret-a"] });
+		resolveImageSigningSecretsCached.mockResolvedValue(["secret-a"]);
 		vi.spyOn(console, "debug").mockImplementation(() => undefined);
 	});
 
@@ -119,7 +121,7 @@ describe("checkImageSignature", () => {
 	it("continues for anything when signing is off", async () => {
 		virtualConfig.imageSigning = false;
 		expect(await checkImageSignature(ctx(), new URL(`${ORIGIN}/_image?${BASE}`))).toBeNull();
-		expect(resolveSecretsCached).not.toHaveBeenCalled();
+		expect(resolveImageSigningSecretsCached).not.toHaveBeenCalled();
 	});
 
 	it("verifies on another host with the same query", async () => {
@@ -142,7 +144,7 @@ describe("checkImageSignature", () => {
 	it("uses the request-scoped database before getDb", async () => {
 		requestContext.current = { db: { scoped: true } };
 		await checkImageSignature(ctx(), await signed());
-		expect(resolveSecretsCached).toHaveBeenCalledWith({ scoped: true });
+		expect(resolveImageSigningSecretsCached).toHaveBeenCalledWith({ scoped: true });
 		expect(getDb).not.toHaveBeenCalled();
 	});
 
@@ -157,7 +159,7 @@ describe("checkImageSignature", () => {
 	});
 
 	it("fails closed with 503 when the secret cannot be resolved", async () => {
-		resolveSecretsCached.mockRejectedValue(new Error("boom"));
+		resolveImageSigningSecretsCached.mockRejectedValue(new Error("boom"));
 		await refusal(
 			await checkImageSignature(ctx(), await signed()),
 			503,
