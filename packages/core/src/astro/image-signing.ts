@@ -54,6 +54,17 @@ export async function resolveImageSigningKeys(): Promise<ImageSigningKeys> {
 }
 
 /**
+ * The key from the first `EMDASH_IMAGE_SECRET` value, or `null` when the
+ * variable is unset or blank. Never reads a database.
+ */
+export async function resolveEnvImageSigningKey(): Promise<CryptoKey | null> {
+	const secrets = readImageSigningSecretsFromEnv();
+	if (!secrets) return null;
+	const [key] = await importImageSigningKeys(secrets.slice(0, 1));
+	return key;
+}
+
+/**
  * The signing key for transform URLs that ship in prerendered HTML: the first
  * `EMDASH_IMAGE_SECRET` value. It never reads the database secret, because the
  * build's database holds a different generated one. Throws an
@@ -61,8 +72,8 @@ export async function resolveImageSigningKeys(): Promise<ImageSigningKeys> {
  * or blank, so a build never ships URLs the endpoint would refuse.
  */
 export async function resolveBuildImageSigningKey(): Promise<CryptoKey> {
-	const secrets = readImageSigningSecretsFromEnv();
-	if (!secrets) {
+	const key = await resolveEnvImageSigningKey();
+	if (!key) {
 		throw new EmDashSecretsError(
 			"[emdash] Prerendered pages contain image transform URLs that must be signed " +
 				"(images.signedUrls). Set EMDASH_IMAGE_SECRET to the same value for the build and at runtime. " +
@@ -71,7 +82,6 @@ export async function resolveBuildImageSigningKey(): Promise<CryptoKey> {
 			"IMAGE_SECRET_REQUIRED",
 		);
 	}
-	const [key] = await importImageSigningKeys(secrets.slice(0, 1));
 	return key;
 }
 
