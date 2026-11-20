@@ -2462,9 +2462,12 @@ export class EmDashRuntime {
 		// The image signing secret rides in the site options read, which seeds its
 		// cache, so the first signed render on the isolate needs no query for it.
 		// The seed fills the configured database's entry, so it is skipped inside a
-		// request on any other database, flagged isolated or not.
+		// request on any other database, flagged isolated or not. A prerender
+		// signs with EMDASH_IMAGE_SECRET only, so it must not create a row in the
+		// build's database either.
 		const readsImageSecret =
 			ownsConfiguredDb &&
+			!reqCtx?.prerendering &&
 			// eslint-disable-next-line typescript/no-unsafe-type-assertion -- RequestContext.db is unknown to avoid circular deps
 			(!reqCtx?.db || isRequestScopedDb(reqCtx.db as Kysely<Database>)) &&
 			virtualConfig?.imageSigning === true &&
