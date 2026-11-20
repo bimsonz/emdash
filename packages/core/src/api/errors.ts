@@ -383,7 +383,7 @@ export const ErrorCode = {
 	BACKUP_DOWNLOAD_ERROR: "BACKUP_DOWNLOAD_ERROR",
 
 	// Signed image URLs
-	/** An unsigned or wrongly signed image transform URL for stored media. */
+	/** An unsigned or wrongly signed image transform URL. */
 	IMAGE_SIGNATURE_INVALID: "IMAGE_SIGNATURE_INVALID",
 	/** Signing is on but the verification secret cannot be read (no database on this request). */
 	IMAGE_SIGNING_UNAVAILABLE: "IMAGE_SIGNING_UNAVAILABLE",

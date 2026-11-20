@@ -3,7 +3,13 @@
  * URLs and the image endpoints that verify them.
  */
 
-import { readImageSigningSecretsFromEnv, resolveSecretsCached } from "../config/secrets.js";
+import type { Kysely } from "kysely";
+
+import {
+	readImageSigningSecretsFromEnv,
+	resolveImageSigningSecretsCached,
+} from "../config/secrets.js";
+import type { Database } from "../database/types.js";
 import { getDb } from "../loader.js";
 import { getRequestContext } from "../request-context.js";
 import { importImageSigningKeys } from "./image-signature.js";
@@ -15,10 +21,11 @@ import { ImageSigningSecretRequiredError } from "./image-signing-error.js";
  * database or the secret is unavailable.
  */
 export async function resolveImageSigningKeys(): Promise<CryptoKey[]> {
-	const db = getRequestContext()?.db ?? (await getDb());
+	const requestDb = getRequestContext()?.db ?? (await getDb());
 	// eslint-disable-next-line typescript/no-unsafe-type-assertion -- RequestContext.db is unknown to avoid circular deps
-	const secrets = await resolveSecretsCached(db as Parameters<typeof resolveSecretsCached>[0]);
-	return importImageSigningKeys(secrets.imageSigningSecrets);
+	const db = requestDb as Kysely<Database>;
+	const secrets = await resolveImageSigningSecretsCached(db);
+	return importImageSigningKeys(secrets);
 }
 
 /**

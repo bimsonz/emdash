@@ -106,13 +106,6 @@ export interface ResolvedSecrets {
 	ipSalt: string;
 	/** Source of `ipSalt`. */
 	ipSaltSource: "env" | "db";
-	/**
-	 * HMAC secrets for image transform URLs. Always non-empty after
-	 * resolution; the first value signs, every value verifies.
-	 */
-	imageSigningSecrets: string[];
-	/** Source of `imageSigningSecrets`. */
-	imageSigningSecretSource: "env" | "db";
 }
 
 /** Inputs for `resolveSecrets`. */
@@ -357,21 +350,13 @@ export async function resolveSecrets(options: ResolveSecretsOptions): Promise<Re
 		env.AUTH_SECRET,
 	);
 
-	const imageEnvOverride = readImageSigningSecretsFromEnv(env);
-
-	const [previewSecret, ipSalt, imageSecret] = await Promise.all([
+	const [previewSecret, ipSalt] = await Promise.all([
 		previewEnvOverride !== null
 			? Promise.resolve({ value: previewEnvOverride, source: "env" as const })
 			: ensureGeneratedOption(repo, PREVIEW_SECRET_OPTION_KEY),
 		ipSaltEnvOverride !== null
 			? Promise.resolve({ value: ipSaltEnvOverride, source: "env" as const })
 			: ensureGeneratedOption(repo, IP_SALT_OPTION_KEY),
-		imageEnvOverride !== null
-			? Promise.resolve({ values: imageEnvOverride, source: "env" as const })
-			: ensureGeneratedOption(repo, IMAGE_SECRET_OPTION_KEY).then((generated) => ({
-					values: [generated.value],
-					source: generated.source,
-				})),
 	]);
 
 	return {
@@ -379,9 +364,39 @@ export async function resolveSecrets(options: ResolveSecretsOptions): Promise<Re
 		previewSecretSource: previewSecret.source,
 		ipSalt: ipSalt.value,
 		ipSaltSource: ipSalt.source,
-		imageSigningSecrets: imageSecret.values,
-		imageSigningSecretSource: imageSecret.source,
 	};
+}
+
+/** Inputs for `resolveImageSigningSecrets`. */
+export interface ResolveImageSigningSecretsOptions {
+	/** The Kysely DB that persists (and reads back) the generated secret. */
+	db: Kysely<Database>;
+	/** Optional explicit env map. Defaults to `process.env`. */
+	env?: SecretsEnv;
+	/**
+	 * @internal Test seam: inject a custom OptionsRepository to exercise
+	 * the lost-race re-read branch. Production callers never set this.
+	 */
+	_repo?: OptionsRepository;
+}
+
+/**
+ * Resolve the HMAC secrets for image transform URLs: `EMDASH_IMAGE_SECRET`
+ * (comma-separated, the first signs, every value verifies), else a DB-stored
+ * `emdash:image_secret`, generated atomically on first need.
+ *
+ * Deliberately not part of `resolveSecrets`: the row must only be created on
+ * a site that signs image URLs (`images: { signedUrls: true }`), never as a
+ * side effect of preview, comment or visual-editing requests.
+ */
+export async function resolveImageSigningSecrets(
+	options: ResolveImageSigningSecretsOptions,
+): Promise<string[]> {
+	const fromEnv = readImageSigningSecretsFromEnv(options.env ?? readDefaultEnv());
+	if (fromEnv !== null) return fromEnv;
+	const repo = options._repo ?? new OptionsRepository(options.db);
+	const generated = await ensureGeneratedOption(repo, IMAGE_SECRET_OPTION_KEY);
+	return [generated.value];
 }
 
 /**
@@ -450,26 +465,28 @@ export async function validateEncryptionKeyAtStartup(env?: SecretsEnv): Promise<
 // value changed from a bare promise to a single-flight cache.
 const SECRETS_CACHE_KEY = Symbol.for("@emdash-cms/core/secrets-cache@2");
 
-interface SecretsCacheHolder {
-	cache: WeakMap<Kysely<Database>, SingleFlightCache<ResolvedSecrets>>;
-	requestScoped?: SingleFlightCache<ResolvedSecrets>;
+const IMAGE_SECRETS_CACHE_KEY = Symbol.for("@emdash-cms/core/image-secrets-cache@1");
+
+interface SecretsCacheHolder<T> {
+	cache: WeakMap<Kysely<Database>, SingleFlightCache<T>>;
+	requestScoped?: SingleFlightCache<T>;
 }
 
-function getSecretsCache(db: Kysely<Database>): SingleFlightCache<ResolvedSecrets> {
+function getSecretsCache<T>(db: Kysely<Database>, key: symbol): SingleFlightCache<T> {
 	// eslint-disable-next-line typescript/no-unsafe-type-assertion -- globalThis singleton pattern
-	const holder = globalThis as Record<symbol, SecretsCacheHolder | undefined>;
-	let entry = holder[SECRETS_CACHE_KEY];
+	const holder = globalThis as Record<symbol, SecretsCacheHolder<T> | undefined>;
+	let entry = holder[key];
 	if (!entry) {
 		entry = { cache: new WeakMap() };
-		holder[SECRETS_CACHE_KEY] = entry;
+		holder[key] = entry;
 	}
 	if (isRequestScopedDb(db)) {
-		entry.requestScoped ??= createSingleFlightCache<ResolvedSecrets>();
+		entry.requestScoped ??= createSingleFlightCache<T>();
 		return entry.requestScoped;
 	}
 	let cache = entry.cache.get(db);
 	if (!cache) {
-		cache = createSingleFlightCache<ResolvedSecrets>();
+		cache = createSingleFlightCache<T>();
 		entry.cache.set(db, cache);
 	}
 	return cache;
@@ -487,7 +504,7 @@ function getSecretsCache(db: Kysely<Database>): SingleFlightCache<ResolvedSecret
  * the next caller retries.
  */
 export function resolveSecretsCached(db: Kysely<Database>): Promise<ResolvedSecrets> {
-	const cache = getSecretsCache(db);
+	const cache = getSecretsCache<ResolvedSecrets>(db, SECRETS_CACHE_KEY);
 	return singleFlightCached(cache, () => resolveSecrets({ db }), {
 		anchor: (promise) => after(() => promise),
 		ownerTimeoutMs: 30_000,
@@ -495,15 +512,30 @@ export function resolveSecretsCached(db: Kysely<Database>): Promise<ResolvedSecr
 }
 
 /**
- * Test-only helper: clear the secrets cache. Tests that mutate env between
+ * Memoized `resolveImageSigningSecrets`, for the signing paths (the image
+ * service and the image endpoints). Cached per database with the same
+ * single-flight semantics as `resolveSecretsCached`; it is only reached when
+ * signing is on, so a site with signing off never creates the secret row.
+ */
+export function resolveImageSigningSecretsCached(db: Kysely<Database>): Promise<string[]> {
+	const cache = getSecretsCache<string[]>(db, IMAGE_SECRETS_CACHE_KEY);
+	return singleFlightCached(cache, () => resolveImageSigningSecrets({ db }), {
+		anchor: (promise) => after(() => promise),
+		ownerTimeoutMs: 30_000,
+	});
+}
+
+/**
+ * Test-only helper: clear the secrets caches. Tests that mutate env between
  * cases need this so a stale resolution doesn't leak across cases.
  *
  * @internal
  */
 export function _clearSecretsCacheForTesting(): void {
 	// eslint-disable-next-line typescript/no-unsafe-type-assertion -- globalThis singleton pattern
-	const holder = globalThis as Record<symbol, SecretsCacheHolder | undefined>;
+	const holder = globalThis as Record<symbol, unknown>;
 	holder[SECRETS_CACHE_KEY] = undefined;
+	holder[IMAGE_SECRETS_CACHE_KEY] = undefined;
 }
 
 // ---------------------------------------------------------------------------

@@ -13,6 +13,8 @@ import {
 	fingerprintKey,
 	generateEncryptionKey,
 	parseEncryptionKeys,
+	resolveImageSigningSecrets,
+	resolveImageSigningSecretsCached,
 	resolveSecrets,
 	resolveSecretsCached,
 	validateEncryptionKeyAtStartup,
@@ -325,71 +327,87 @@ describe("config/secrets", () => {
 				}
 			}
 		});
+	});
 
-		describe("image signing secret", () => {
-			it('EMDASH_IMAGE_SECRET " new , old ,," resolves ["new","old"] from env', async () => {
-				const result = await resolveSecrets({
-					db,
-					env: { EMDASH_IMAGE_SECRET: " new , old ,," },
-				});
-				expect(result.imageSigningSecrets).toEqual(["new", "old"]);
-				expect(result.imageSigningSecretSource).toBe("env");
-				expect(await new OptionsRepository(db).get(IMAGE_SECRET_OPTION_KEY)).toBeNull();
-			});
+	describe("image signing secret", () => {
+		it("resolveSecrets alone creates no emdash:image_secret row", async () => {
+			const result = await resolveSecrets({ db, env: {} });
+			expect(result).not.toHaveProperty("imageSigningSecrets");
+			expect(await new OptionsRepository(db).get(IMAGE_SECRET_OPTION_KEY)).toBeNull();
+			expect(await new OptionsRepository(db).get(PREVIEW_SECRET_OPTION_KEY)).not.toBeNull();
+		});
 
-			it("treats an all-blank EMDASH_IMAGE_SECRET as unset", async () => {
-				const result = await resolveSecrets({ db, env: { EMDASH_IMAGE_SECRET: " , ,  " } });
-				expect(result.imageSigningSecretSource).toBe("db");
-				expect(result.imageSigningSecrets).toHaveLength(1);
-				expect(result.imageSigningSecrets[0]).toBe(
-					await new OptionsRepository(db).get<string>(IMAGE_SECRET_OPTION_KEY),
-				);
-			});
+		it("resolveSecretsCached alone creates no emdash:image_secret row", async () => {
+			await resolveSecretsCached(db);
+			expect(await new OptionsRepository(db).get(IMAGE_SECRET_OPTION_KEY)).toBeNull();
+		});
 
-			it("without the env var, generates once and persists under emdash:image_secret", async () => {
-				expect(IMAGE_SECRET_OPTION_KEY).toBe("emdash:image_secret");
-				const first = await resolveSecrets({ db, env: {} });
-				const second = await resolveSecrets({ db, env: {} });
-				expect(first.imageSigningSecretSource).toBe("db");
-				expect(first.imageSigningSecrets).toHaveLength(1);
-				expect(first.imageSigningSecrets[0]!.length).toBeGreaterThan(0);
-				expect(second.imageSigningSecrets).toEqual(first.imageSigningSecrets);
-				expect(await new OptionsRepository(db).get<string>(IMAGE_SECRET_OPTION_KEY)).toBe(
-					first.imageSigningSecrets[0],
-				);
+		it('EMDASH_IMAGE_SECRET " new , old ,," resolves ["new","old"] from env', async () => {
+			const secrets = await resolveImageSigningSecrets({
+				db,
+				env: { EMDASH_IMAGE_SECRET: " new , old ,," },
 			});
+			expect(secrets).toEqual(["new", "old"]);
+			expect(await new OptionsRepository(db).get(IMAGE_SECRET_OPTION_KEY)).toBeNull();
+		});
 
-			it("two concurrent cold resolutions converge on one persisted value", async () => {
-				const [a, b] = await Promise.all([
-					resolveSecrets({ db, env: {} }),
-					resolveSecrets({ db, env: {} }),
-				]);
-				expect(a.imageSigningSecrets).toEqual(b.imageSigningSecrets);
-				expect(await new OptionsRepository(db).get<string>(IMAGE_SECRET_OPTION_KEY)).toBe(
-					a.imageSigningSecrets[0],
-				);
+		it("treats an all-blank EMDASH_IMAGE_SECRET as unset", async () => {
+			const secrets = await resolveImageSigningSecrets({
+				db,
+				env: { EMDASH_IMAGE_SECRET: " , ,  " },
 			});
+			expect(secrets).toHaveLength(1);
+			expect(secrets[0]).toBe(await new OptionsRepository(db).get<string>(IMAGE_SECRET_OPTION_KEY));
+		});
 
-			it("image secret is distinct from the preview secret", async () => {
-				const result = await resolveSecrets({ db, env: {} });
-				expect(result.imageSigningSecrets[0]).not.toBe(result.previewSecret);
-				const repo = new OptionsRepository(db);
-				expect(await repo.get(PREVIEW_SECRET_OPTION_KEY)).not.toBe(
-					await repo.get(IMAGE_SECRET_OPTION_KEY),
-				);
-			});
+		it("without the env var, generates once and persists under emdash:image_secret", async () => {
+			expect(IMAGE_SECRET_OPTION_KEY).toBe("emdash:image_secret");
+			const first = await resolveImageSigningSecrets({ db, env: {} });
+			const second = await resolveImageSigningSecrets({ db, env: {} });
+			expect(first).toHaveLength(1);
+			expect(first[0]!.length).toBeGreaterThan(0);
+			expect(second).toEqual(first);
+			expect(await new OptionsRepository(db).get<string>(IMAGE_SECRET_OPTION_KEY)).toBe(first[0]);
+		});
 
-			it("resolveSecretsCached reads EMDASH_IMAGE_SECRET from process.env", async () => {
-				const previous = process.env.EMDASH_IMAGE_SECRET;
-				process.env.EMDASH_IMAGE_SECRET = "k1,k0";
-				try {
-					const cached = await resolveSecretsCached(db);
-					expect(cached.imageSigningSecrets).toEqual(["k1", "k0"]);
-				} finally {
-					if (previous === undefined) delete process.env.EMDASH_IMAGE_SECRET;
-					else process.env.EMDASH_IMAGE_SECRET = previous;
-				}
-			});
+		it("two concurrent cold resolutions converge on one persisted value", async () => {
+			const [a, b] = await Promise.all([
+				resolveImageSigningSecrets({ db, env: {} }),
+				resolveImageSigningSecrets({ db, env: {} }),
+			]);
+			expect(a).toEqual(b);
+			expect(await new OptionsRepository(db).get<string>(IMAGE_SECRET_OPTION_KEY)).toBe(a[0]);
+		});
+
+		it("is distinct from the preview secret", async () => {
+			const [image] = await resolveImageSigningSecrets({ db, env: {} });
+			const { previewSecret } = await resolveSecrets({ db, env: {} });
+			expect(image).not.toBe(previewSecret);
+			const repo = new OptionsRepository(db);
+			expect(await repo.get(PREVIEW_SECRET_OPTION_KEY)).not.toBe(
+				await repo.get(IMAGE_SECRET_OPTION_KEY),
+			);
+		});
+
+		it("resolveImageSigningSecretsCached reads EMDASH_IMAGE_SECRET from process.env", async () => {
+			const previous = process.env.EMDASH_IMAGE_SECRET;
+			process.env.EMDASH_IMAGE_SECRET = "k1,k0";
+			try {
+				expect(await resolveImageSigningSecretsCached(db)).toEqual(["k1", "k0"]);
+			} finally {
+				if (previous === undefined) delete process.env.EMDASH_IMAGE_SECRET;
+				else process.env.EMDASH_IMAGE_SECRET = previous;
+			}
+		});
+
+		it("resolveImageSigningSecretsCached memoizes per db until the cache is cleared", async () => {
+			const a = await resolveImageSigningSecretsCached(db);
+			const b = await resolveImageSigningSecretsCached(db);
+			expect(b).toBe(a);
+			_clearSecretsCacheForTesting();
+			const c = await resolveImageSigningSecretsCached(db);
+			expect(c).not.toBe(a);
+			expect(c).toEqual(a);
 		});
 	});
 
