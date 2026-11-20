@@ -323,7 +323,9 @@ Cloudflare bills these transforms as [Images transformations](https://developers
 
 Any request can name any width and height, so transformations are not bounded by default. Set [`images: { signedUrls: true }`](/reference/configuration/#imagessignedurls) to have EmDash sign every transform URL it renders and refuse the rest, so the Worker creates only the variants your pages use.
 
-Signing works with the `cloudflare-binding` image mode. With `compile` or `custom`, EmDash logs a warning and signing is off. Under `cloudflare-binding`, prerendered pages keep runtime `/_image` URLs, and EmDash signs them during the build with `EMDASH_IMAGE_SECRET`. The prerender runs in workerd and reads the Worker's environment, not the shell you build in, so declare the secret as required, export it when you build, and set the same value as a Worker secret for runtime:
+Signing works with the `cloudflare-binding` image mode. With `compile` or `custom`, EmDash logs a warning and signing is off. It also logs a warning, naming the installed `@astrojs/cloudflare` version, and leaves signing off when it can't read the adapter's image mode.
+
+Under the default mode (`imageService` unset) and the string `"cloudflare-binding"`, prerendered pages keep runtime `/_image` URLs, and EmDash signs them during the build with `EMDASH_IMAGE_SECRET`. `imageService: { build: "cloudflare-binding" }` transforms prerendered images at build and needs no build secret. The prerender runs in workerd and reads the Worker's environment, not the shell you build in, so declare the secret as required, export it when you build, and set the same value as a Worker secret for runtime:
 
 ```jsonc title="wrangler.jsonc"
 {
@@ -339,7 +341,7 @@ pnpm astro build
 printf '%s' "$EMDASH_IMAGE_SECRET" | pnpm wrangler secret put EMDASH_IMAGE_SECRET
 ```
 
-Without it the build fails with `ImageSigningSecretRequiredError`. Avoid `CLOUDFLARE_INCLUDE_PROCESS_ENV=true` for this: it copies your whole shell environment into the built Worker's local vars file.
+`secrets` is not inherited by named Wrangler environments, so list it again under each environment you deploy. Without the secret at build, the build fails with an error that names `EMDASH_IMAGE_SECRET` and says where to set it. A secret set at build but missing or different at runtime makes prerendered images answer `403`, with no warning at build.
 
 ## Cloudflare Access authentication
 
