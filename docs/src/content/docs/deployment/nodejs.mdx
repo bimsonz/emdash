@@ -352,6 +352,7 @@ process needs to share a secret with your main site.
 | Variable | Description |
 | -------- | ----------- |
 | `EMDASH_PREVIEW_SECRET` | Override for the auto-generated preview HMAC secret. |
+| `EMDASH_IMAGE_SECRET` | Override for the auto-generated image URL signing secret, used with `images.signedUrls`. |
 | `EMDASH_IP_SALT` | Override for the auto-generated commenter-IP hash salt. |
 | `EMDASH_AUTH_SECRET` | Optional. If set, used as the IP-salt source (unless `EMDASH_IP_SALT` is also set, which takes precedence), keeping commenter-IP hashes stable for installs that already rely on it. Leave it unset for a new deployment. |
 
