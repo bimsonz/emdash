@@ -61,6 +61,9 @@ export default defineConfig({
 	test: {
 		globals: true,
 		environment: "node",
+		// Astro's image services read `import.meta.env.BASE_URL`, which only a
+		// module Vite transforms has.
+		server: { deps: { inline: [/\/astro\/dist\/assets\/services\//] } },
 		include: ["tests/**/*.test.ts"],
 		// Server integration tests (cli, client, smoke) start real Astro dev
 		// servers and need a full workspace build — run them in a dedicated

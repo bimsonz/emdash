@@ -18,53 +18,13 @@ vi.mock("virtual:emdash/config", () => ({
 }));
 // The configured database, which tests make fail to show it is not read.
 vi.mock("../../../src/loader.js", () => ({ getDb }));
-/**
- * Astro's `baseService.getURL` (`astro/dist/assets/services/service.js`), with
- * `BASE_URL` fixed at `/`: Astro's dist reads `import.meta.env`, which is
- * undefined in an untransformed module under vitest.
- */
-function baseGetURL(
-	options: { src: string | { src: string }; [key: string]: unknown },
-	config: { assetQueryParams?: URLSearchParams; remotePatterns: Array<{ hostname: string }> },
-): string {
-	const searchParams = new URLSearchParams();
-	if (typeof options.src !== "string") {
-		searchParams.append("href", options.src.src);
-	} else if (
-		config.remotePatterns.some(
-			({ hostname }) => new URL(options.src as string).hostname === hostname,
-		)
-	) {
-		searchParams.append("href", options.src);
-	} else {
-		return options.src;
-	}
-	const params = {
-		w: "width",
-		h: "height",
-		q: "quality",
-		f: "format",
-		fit: "fit",
-		position: "position",
-	};
-	for (const [param, key] of Object.entries(params)) {
-		const value = options[key];
-		if (value && (typeof value === "string" || typeof value === "number")) {
-			searchParams.append(param, String(value));
-		}
-	}
-	let url = `/_image?${searchParams}`;
-	const assetQueryString = config.assetQueryParams?.toString();
-	if (assetQueryString) url += `&${assetQueryString}`;
-	return url;
-}
 
 // The stock service is sharp itself, with every method recorded.
 vi.mock("virtual:emdash/stock-image-service", async () => {
 	const { default: sharp } = await import("astro/assets/services/sharp");
 	Object.assign(stock, {
 		validateOptions: vi.fn(sharp.validateOptions),
-		getURL: vi.fn(baseGetURL),
+		getURL: vi.fn(sharp.getURL),
 		parseURL: vi.fn(sharp.parseURL),
 		getHTMLAttributes: vi.fn(sharp.getHTMLAttributes),
 		getSrcSet: vi.fn(sharp.getSrcSet),
@@ -392,6 +352,48 @@ describe("emdash/internal/image-service", () => {
 		});
 	});
 
+	// The stock service is Astro's own sharp service: a parameter it starts to
+	// write or read must be one the signature covers.
+	describe("over Astro's getURL and parseURL", () => {
+		const config = imageConfig({ assetQueryParams: new URLSearchParams({ dpl: "abc" }) });
+		const options = {
+			width: 640,
+			height: 480,
+			quality: 70,
+			format: "webp",
+			fit: "cover",
+			position: "top",
+			background: "#ffffff",
+		};
+
+		it.each([
+			["stored media", MEDIA],
+			["a bundled image", BUNDLED],
+			["a remote image", REMOTE],
+		])("signs every parameter Astro writes and reads for %s", async (_kind, src) => {
+			const path = await inRequest(async () =>
+				service.getURL({ src, ...options } as never, config as never, logger),
+			);
+			const url = new URL(path, ORIGIN);
+			const stockUrl = new URL(await stock.getURL.mock.results[0]!.value, ORIGIN);
+
+			expect(await verifies(path)).toBe(true);
+			for (const [name, value] of stockUrl.searchParams) {
+				expect(url.searchParams.getAll(name), name).toEqual([value]);
+			}
+
+			const read = await parametersRead(
+				(recording) => service.parseURL(recording, config as never, logger),
+				url,
+			);
+			expect(read).toContain("href");
+			expect(await verifies(withParameter(url, "unread", "x"))).toBe(true);
+			for (const name of read) {
+				expect(await verifies(withParameter(url, name, "altered")), name).toBe(false);
+			}
+		});
+	});
+
 	describe("delegation", () => {
 		const config = imageConfig({ assetQueryParams: new URLSearchParams({ dpl: "abc" }) });
 		const expected = { ...config, service: ORIGINAL };
@@ -471,4 +473,45 @@ describe("emdash/internal/image-service over a stock service without optional me
 
 function escape(text: string): string {
 	return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+const EVERY_PARAMETER = "(every parameter)";
+
+/**
+ * The query parameters `parse` reads from `url`. Reading the query other than
+ * by name (iterating it, its size, its text) counts as reading every parameter.
+ */
+async function parametersRead(parse: (url: URL) => unknown, url: URL): Promise<string[]> {
+	const read = new Set<string>();
+	const byName = new Set<PropertyKey>(["get", "getAll", "has"]);
+	const params = new Proxy(url.searchParams, {
+		get(target, property) {
+			const value: unknown = Reflect.get(target, property, target);
+			if (typeof value !== "function") {
+				read.add(EVERY_PARAMETER);
+				return value;
+			}
+			return (...args: unknown[]) => {
+				read.add(byName.has(property) ? String(args[0]) : EVERY_PARAMETER);
+				return value.apply(target, args);
+			};
+		},
+	});
+	const recording = new Proxy(url, {
+		get(target, property) {
+			if (property === "searchParams") return params;
+			if (property === "search" || property === "href") read.add(EVERY_PARAMETER);
+			const value: unknown = Reflect.get(target, property, target);
+			return typeof value === "function" ? value.bind(target) : value;
+		},
+	});
+	expect(await parse(recording)).toMatchObject({ src: url.searchParams.get("href") });
+	return [...read];
+}
+
+/** `url`'s path and query with `name` set to `value`. */
+function withParameter(url: URL, name: string, value: string): string {
+	const changed = new URL(url);
+	changed.searchParams.set(name, value);
+	return `${changed.pathname}${changed.search}`;
 }

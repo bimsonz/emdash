@@ -5,7 +5,8 @@
  * It wraps Astro's generic endpoint: for an EmDash media URL it loads the source
  * bytes straight from the storage adapter (no HTTP, so it works behind any auth
  * gate) and runs the configured image service's `transform`; every other image
- * is delegated to the stock endpoint unchanged.
+ * is delegated to the stock endpoint unchanged, or under `images.signedUrls`
+ * with only the parameters the signature covers.
  */
 
 import type { APIRoute } from "astro";
@@ -29,7 +30,7 @@ import {
 	validatorHeaders,
 	isNotModified,
 } from "../media/image-endpoint.js";
-import { checkImageSignature } from "./image-signing.js";
+import { checkImageSignature, withSignedParameters } from "./image-signing.js";
 
 export const prerender = false;
 
@@ -97,12 +98,15 @@ export const GET: APIRoute = async (ctx) => {
 		if (refusal) return refusal;
 	}
 
+	const handToStockEndpoint = () =>
+		genericGET(signing ? withSignedParameters(ctx, url, config.assetQueryParams) : ctx);
+
 	// Not EmDash media, or storage unavailable: let the stock endpoint handle it
 	// (bundled assets, allowed remote, `publicUrl` media).
-	if (!key || !storage) return genericGET(ctx);
+	if (!key || !storage) return handToStockEndpoint();
 
 	const service = await getConfiguredImageService();
-	if (!("transform" in service)) return genericGET(ctx);
+	if (!("transform" in service)) return handToStockEndpoint();
 
 	// Under images.signedUrls the configured service is EmDash's signing wrapper
 	// around the recorded stock one.
