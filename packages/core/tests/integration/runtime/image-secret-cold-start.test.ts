@@ -121,6 +121,24 @@ describe("EmDashRuntime.create — image signing secret", () => {
 		}
 	});
 
+	// A build signs prerendered URLs with EMDASH_IMAGE_SECRET only.
+	it("neither reads nor creates the secret while prerendering", async () => {
+		const getMany = vi.spyOn(OptionsRepository.prototype, "getMany");
+		try {
+			const runtime = await runWithContext({ editMode: false, prerendering: true }, () =>
+				EmDashRuntime.create(createDeps(sqlite)),
+			);
+			await runtime.shutdown();
+			expect(getMany.mock.calls.flatMap(([keys]) => keys)).not.toContain(IMAGE_SECRET_OPTION_KEY);
+		} finally {
+			getMany.mockRestore();
+		}
+		expect(await storedSecret(sqlite)).toBeNull();
+		await expect(resolveImageSigningSecrets({ getDb: noQuery })).rejects.toThrow(
+			"should not need a query",
+		);
+	});
+
 	it("creates no secret row when EMDASH_IMAGE_SECRET is set", async () => {
 		vi.stubEnv("EMDASH_IMAGE_SECRET", "from-env");
 		const runtime = await EmDashRuntime.create(createDeps(sqlite));
