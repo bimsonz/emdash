@@ -285,6 +285,7 @@ import {
 	validateEncryptionKeyAtStartup,
 } from "./config/secrets.js";
 import { OptionsRepository } from "./database/repositories/options.js";
+import { isRequestScopedDb } from "./database/request-scoped.js";
 import type { Database } from "./database/types.js";
 import { getDb } from "./loader.js";
 import { isRecord } from "./plugin-utils.js";
@@ -2460,8 +2461,12 @@ export class EmDashRuntime {
 
 		// The image signing secret rides in the site options read, which seeds its
 		// cache, so the first signed render on the isolate needs no query for it.
+		// The seed fills the configured database's entry, so it is skipped inside a
+		// request on any other database, flagged isolated or not.
 		const readsImageSecret =
 			ownsConfiguredDb &&
+			// eslint-disable-next-line typescript/no-unsafe-type-assertion -- RequestContext.db is unknown to avoid circular deps
+			(!reqCtx?.db || isRequestScopedDb(reqCtx.db as Kysely<Database>)) &&
 			virtualConfig?.imageSigning === true &&
 			readImageSigningSecretsFromEnv() === null;
 
