@@ -207,6 +207,12 @@ describe("checkImageSignature", () => {
 				await broken.destroy();
 			}
 		});
+
+		it("logs the env source without a hint for an invalid signature", async () => {
+			await checkImageSignature(ctx(), await signed(ORIGIN, undefined, "other-secret"));
+			const [, , fields] = vi.mocked(console.debug).mock.calls[0] as [string, string, object];
+			expect(fields).toEqual({ secretSource: "env" });
+		});
 	});
 
 	it("fails closed with 503 when the secret cannot be read", async () => {
@@ -224,7 +230,7 @@ describe("checkImageSignature", () => {
 		}
 	});
 
-	it("logs the reason and the href at debug without the expected MAC", async () => {
+	it("logs the reason, the href and the secret source at debug without the expected MAC", async () => {
 		const url = new URL(`${ORIGIN}/_image?${BASE}`);
 		await checkImageSignature(ctx(), url);
 		const debug = vi.mocked(console.debug);
@@ -232,7 +238,27 @@ describe("checkImageSignature", () => {
 		expect(debug.mock.calls[0]).toEqual([
 			"[emdash] image signature missing:",
 			JSON.stringify(HREF),
+			{ secretSource: "db" },
 		]);
+	});
+
+	it("hints at EMDASH_IMAGE_SECRET for an invalid signature checked against the database secret", async () => {
+		const url = await signed(ORIGIN, undefined, "other-secret");
+		await checkImageSignature(ctx(), url);
+		const debug = vi.mocked(console.debug);
+		expect(debug.mock.calls[0]).toEqual([
+			"[emdash] image signature invalid:",
+			JSON.stringify(HREF),
+			{ secretSource: "db", hint: expect.stringContaining("EMDASH_IMAGE_SECRET") },
+		]);
+		const logged = JSON.stringify(debug.mock.calls[0]);
+		expect(logged).not.toContain(url.searchParams.get(IMAGE_SIGNATURE_PARAM)!);
+		const [expected] = await importImageSigningKeys(["secret-a"]);
+		const expectedMac = new URL(
+			await signTransformUrl(new URL(`${ORIGIN}/_image?${BASE}`), expected!),
+			ORIGIN,
+		).searchParams.get(IMAGE_SIGNATURE_PARAM)!;
+		expect(logged).not.toContain(expectedMac);
 	});
 
 	it("refuses an unsigned href that is not stored media", async () => {
