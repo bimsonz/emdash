@@ -105,10 +105,17 @@ export async function checkImageSignature(ctx: APIContext, url: URL): Promise<Re
 
 	if (await hasValidTransformSignature(url, signing.keys)) return null;
 
+	// Debug, not warn: any visitor can send an unsigned or forged URL.
 	const reason = url.searchParams.has(IMAGE_SIGNATURE_PARAM) ? "invalid" : "missing";
+	const fields: Record<string, unknown> = { secretSource: signing.source };
+	if (reason === "invalid" && signing.source === "db") {
+		fields.hint =
+			"Set EMDASH_IMAGE_SECRET in both this process and the one that rendered the page to share one secret across deployments";
+	}
 	console.debug(
 		`[emdash] image signature ${reason}:`,
 		href === null ? "(no href)" : JSON.stringify(href.slice(0, 200)),
+		fields,
 	);
 	return apiError(
 		ErrorCode.IMAGE_SIGNATURE_INVALID,
