@@ -165,7 +165,10 @@ export function withSignedParameters(
 ): APIContext {
 	const search = canonicalTransformSearch(url, assetQueryParams, [IMAGE_SIGNATURE_PARAM]);
 	if (search === null) return ctx;
-	const signedUrl = new URL(`${url.pathname}?${search}`, url);
+	// Copy and replace only the query: re-parsing the pathname would read a leading
+	// `//` as a scheme-relative host.
+	const signedUrl = new URL(url);
+	signedUrl.search = search;
 	// Astro's context getters close over its render state rather than `this`,
 	// so every other property still comes from the original context.
 	return Object.create(ctx, {
