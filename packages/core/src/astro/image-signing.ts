@@ -86,6 +86,15 @@ export async function resolveBuildImageSigningKey(): Promise<CryptoKey> {
 }
 
 /**
+ * Throttle for `checkImageSignature`'s logs: one line per interval per
+ * isolate for each, since every image request can hit them. Plain module
+ * state, not globalThis: a duplicated chunk only means an extra line.
+ */
+const IMAGE_SIGNING_LOG_INTERVAL_MS = 30_000;
+let lastUnavailableLogAt = 0;
+let lastRefusalLogAt = 0;
+
+/**
  * Verification of signed image transform URLs in the image endpoints.
  *
  * Runs before any storage read, adapter handoff or transform, on every image
@@ -104,7 +113,12 @@ export async function checkImageSignature(ctx: APIContext, url: URL): Promise<Re
 	let signing: ImageSigningKeys;
 	try {
 		signing = await resolveImageSigningKeys();
-	} catch {
+	} catch (error) {
+		// `/_image` skips runtime init, so this is the only trace of the failure.
+		if (Date.now() - lastUnavailableLogAt >= IMAGE_SIGNING_LOG_INTERVAL_MS) {
+			lastUnavailableLogAt = Date.now();
+			console.error("[emdash] image signatures cannot be verified (answering 503):", error);
+		}
 		// Fail closed: without the secret nothing can be verified.
 		return apiError(
 			ErrorCode.IMAGE_SIGNING_UNAVAILABLE,
@@ -115,18 +129,21 @@ export async function checkImageSignature(ctx: APIContext, url: URL): Promise<Re
 
 	if (await hasValidTransformSignature(url, signing.keys)) return null;
 
-	// Debug, not warn: any visitor can send an unsigned or forged URL.
-	const reason = url.searchParams.has(IMAGE_SIGNATURE_PARAM) ? "invalid" : "missing";
-	const fields: Record<string, unknown> = { secretSource: signing.source };
-	if (reason === "invalid" && signing.source === "db") {
-		fields.hint =
-			"Set EMDASH_IMAGE_SECRET in both this process and the one that rendered the page to share one secret across deployments";
+	// Debug, not warn, and throttled: any visitor can send an unsigned or forged URL.
+	if (Date.now() - lastRefusalLogAt >= IMAGE_SIGNING_LOG_INTERVAL_MS) {
+		lastRefusalLogAt = Date.now();
+		const reason = url.searchParams.has(IMAGE_SIGNATURE_PARAM) ? "invalid" : "missing";
+		const fields: Record<string, unknown> = { secretSource: signing.source };
+		if (reason === "invalid" && signing.source === "db") {
+			fields.hint =
+				"Set EMDASH_IMAGE_SECRET in both this process and the one that rendered the page to share one secret across deployments";
+		}
+		console.debug(
+			`[emdash] image signature ${reason}:`,
+			href === null ? "(no href)" : JSON.stringify(href.slice(0, 200)),
+			fields,
+		);
 	}
-	console.debug(
-		`[emdash] image signature ${reason}:`,
-		href === null ? "(no href)" : JSON.stringify(href.slice(0, 200)),
-		fields,
-	);
 	return apiError(
 		ErrorCode.IMAGE_SIGNATURE_INVALID,
 		"This image URL is not signed or its signature is invalid",
