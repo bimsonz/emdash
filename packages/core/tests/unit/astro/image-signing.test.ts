@@ -2,16 +2,12 @@ import { Role } from "@emdash-cms/auth";
 import type { APIContext } from "astro";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { virtualConfig, getDb, resolveImageSigningSecretsCached, requestContext } = vi.hoisted(
-	() => ({
-		virtualConfig: {} as { imageSigning?: boolean },
-		getDb: vi.fn(),
-		resolveImageSigningSecretsCached: vi.fn(),
-		requestContext: { current: undefined as { db?: unknown } | undefined },
-	}),
-);
+const { getDb, resolveImageSigningSecretsCached, requestContext } = vi.hoisted(() => ({
+	getDb: vi.fn(),
+	resolveImageSigningSecretsCached: vi.fn(),
+	requestContext: { current: undefined as { db?: unknown } | undefined },
+}));
 
-vi.mock("virtual:emdash/config", () => ({ default: virtualConfig }));
 vi.mock("../../../src/loader.js", () => ({ getDb }));
 vi.mock("../../../src/config/secrets.js", async (importActual) => ({
 	readImageSigningSecretsFromEnv: (
@@ -23,7 +19,7 @@ vi.mock("../../../src/request-context.js", () => ({
 	getRequestContext: () => requestContext.current,
 }));
 
-import { checkImageSignature } from "../../../src/media/image-signature-check.js";
+import { checkImageSignature } from "../../../src/astro/image-signing.js";
 import {
 	_clearImageSigningKeyCacheForTesting,
 	IMAGE_SIGNATURE_PARAM,
@@ -48,7 +44,6 @@ async function signed(origin = ORIGIN, asset?: URLSearchParams): Promise<URL> {
 describe("checkImageSignature", () => {
 	beforeEach(() => {
 		_clearImageSigningKeyCacheForTesting();
-		virtualConfig.imageSigning = true;
 		requestContext.current = undefined;
 		getDb.mockResolvedValue({});
 		resolveImageSigningSecretsCached.mockResolvedValue(["secret-a"]);
@@ -123,12 +118,6 @@ describe("checkImageSignature", () => {
 		expect(getDb).not.toHaveBeenCalled();
 	});
 
-	it("continues for anything when signing is off", async () => {
-		virtualConfig.imageSigning = false;
-		expect(await checkImageSignature(ctx(), new URL(`${ORIGIN}/_image?${BASE}`))).toBeNull();
-		expect(resolveImageSigningSecretsCached).not.toHaveBeenCalled();
-	});
-
 	it("verifies on another host with the same query", async () => {
 		for (const origin of [
 			"https://www.site.example",
@@ -143,7 +132,7 @@ describe("checkImageSignature", () => {
 		const asset = new URLSearchParams({ dpl: "abc" });
 		const url = await signed(ORIGIN, asset);
 		expect(url.searchParams.get("dpl")).toBe("abc");
-		expect(await checkImageSignature(ctx(), url, asset)).toBeNull();
+		expect(await checkImageSignature(ctx(), url)).toBeNull();
 	});
 
 	it("uses the request-scoped database before getDb", async () => {

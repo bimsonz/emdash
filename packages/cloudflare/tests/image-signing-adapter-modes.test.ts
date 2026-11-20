@@ -89,7 +89,7 @@ describe("images.signedUrls under each @astrojs/cloudflare image mode", () => {
 	])("wraps the workerd service under %s", async (_mode, imageService) => {
 		const result = await buildWith(imageService);
 
-		expect(result.service).toEqual({ entrypoint: "emdash/image-service" });
+		expect(result.service).toEqual({ entrypoint: "emdash/internal/image-service" });
 		expect(result.imageSigning).toBe(true);
 		expect(result.warnings.filter((w) => w.includes("signedUrls"))).toEqual([]);
 	});

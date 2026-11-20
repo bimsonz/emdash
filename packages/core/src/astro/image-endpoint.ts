@@ -18,7 +18,6 @@ import virtualConfig from "virtual:emdash/config";
 
 import {
 	cacheMediaResponse,
-	checkImageSignature,
 	canonicalTransformRedirect,
 	canonicalTransformSearch,
 	getTransformFingerprint,
@@ -30,6 +29,7 @@ import {
 	validatorHeaders,
 	isNotModified,
 } from "../media/image-endpoint.js";
+import { checkImageSignature } from "./image-signing.js";
 
 export const prerender = false;
 
@@ -93,7 +93,7 @@ export const GET: APIRoute = async (ctx) => {
 	// endpoint or transformed, whatever `href` is: redirects, a site `base`
 	// and scheme-only hrefs can all reach the image pipeline past any href check.
 	if (signing) {
-		const refusal = await checkImageSignature(ctx, url, config.assetQueryParams);
+		const refusal = await checkImageSignature(ctx, url);
 		if (refusal) return refusal;
 	}
 

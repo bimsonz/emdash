@@ -443,7 +443,7 @@ export function createVirtualModulesPlugin(options: VitePluginOptions): Plugin {
 			if (id === RESOLVED_VIRTUAL_ROOM_ENGINE_ID) {
 				return generateRoomEngineModule(resolvedConfig.coEditing === true);
 			}
-			// The stock runtime image service `emdash/image-service` signs over.
+			// The stock runtime image service `emdash/internal/image-service` signs over.
 			if (id === RESOLVED_VIRTUAL_STOCK_IMAGE_SERVICE_ID) {
 				return generateStockImageServiceModule(serializableConfig.imageRuntimeService);
 			}

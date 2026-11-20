@@ -68,9 +68,7 @@ export interface EmDashRequestContext {
 	editMode: boolean;
 	/**
 	 * Astro is prerendering this page at build time: `context.isPrerendered`
-	 * outside `astro dev`, which renders prerendered routes per request. The
-	 * image service then signs only the transform URLs that ship in the HTML,
-	 * with `EMDASH_IMAGE_SECRET` rather than the build database's secret. Set by
+	 * outside `astro dev`, which renders prerendered routes per request. Set by
 	 * the runtime middleware.
 	 */
 	prerendering?: boolean;

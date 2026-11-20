@@ -120,4 +120,10 @@ describe("images option", () => {
 	it.each([{ signedUrls: "yes" }, { other: 1 }, "yes"])("rejects %j", (images) => {
 		expect(() => build({ images })()).toThrow(/images/);
 	});
+
+	it("explains the accepted shapes", () => {
+		expect(() => build({ images: "yes" })()).toThrow(
+			"Expected a boolean or { signedUrls: boolean }",
+		);
+	});
 });

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 
-import { ImageSigningSecretRequiredError } from "../../../src/media/image-signing-error.js";
+import { EmDashSecretsError } from "../../../src/config/secrets.js";
 import {
 	RESPONSIVE_BREAKPOINTS,
 	buildResponsiveImage,
@@ -225,13 +225,12 @@ describe("canOptimizeImage", () => {
  * service comes from the built package.
  */
 function signingErrors(): Array<[string, Error]> {
-	const otherCopy = Object.defineProperty(
-		new Error("from another module copy"),
-		Symbol.for("emdash:image-signing-secret-required"),
-		{ value: true },
-	);
+	const otherCopy = Object.assign(new Error("from another module copy"), {
+		name: "EmDashSecretsError",
+		code: "IMAGE_SECRET_REQUIRED",
+	});
 	return [
-		["this copy", new ImageSigningSecretRequiredError()],
+		["this copy", new EmDashSecretsError("secret required", "IMAGE_SECRET_REQUIRED")],
 		["another copy", otherCopy],
 	];
 }

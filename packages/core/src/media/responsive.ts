@@ -9,8 +9,23 @@
  * resolves inside an Astro project, not in this precompiled package).
  */
 
-import { isImageSigningSecretRequiredError } from "./image-signing-error.js";
 import type { EmbedOptions } from "./types.js";
+
+/**
+ * The build error `images.signedUrls` raises when prerendered HTML would carry
+ * transform URLs without a secret to sign them. Matched by name and code, not
+ * `instanceof`: the image components compile this module from source while the
+ * image service comes from the built package, so each holds its own
+ * `EmDashSecretsError` class.
+ */
+function isImageSecretRequiredError(error: unknown): boolean {
+	return (
+		error instanceof Error &&
+		error.name === "EmDashSecretsError" &&
+		"code" in error &&
+		error.code === "IMAGE_SECRET_REQUIRED"
+	);
+}
 
 /** Standard responsive breakpoints. Matches CDN-provider srcset generation. */
 export const RESPONSIVE_BREAKPOINTS = [640, 750, 828, 960, 1080, 1280, 1600, 1920];
@@ -129,7 +144,7 @@ export async function canOptimizeImage(
 		return Boolean(result.src && result.src !== opts.src);
 	} catch (error) {
 		// A build must not ship the original in place of an image it can't sign.
-		if (isImageSigningSecretRequiredError(error)) throw error;
+		if (isImageSecretRequiredError(error)) throw error;
 		return false;
 	}
 }
@@ -156,7 +171,7 @@ export interface ResponsiveImage {
  *  - the URL is relative (a same-origin proxy/public asset Astro won't optimize),
  *  - the host isn't authorized (the service passed the URL through unchanged),
  *  - no image service is configured / `getImage` throws, except for
- *    `ImageSigningSecretRequiredError`, which fails the build.
+ *    an `EmDashSecretsError` coded `IMAGE_SECRET_REQUIRED`, which fails the build.
  */
 export async function buildResponsiveImage(
 	getImage: GetImage,
@@ -193,7 +208,7 @@ export async function buildResponsiveImage(
 		};
 	} catch (error) {
 		// A build must not ship the original in place of an image it can't sign.
-		if (isImageSigningSecretRequiredError(error)) throw error;
+		if (isImageSecretRequiredError(error)) throw error;
 		return null;
 	}
 }

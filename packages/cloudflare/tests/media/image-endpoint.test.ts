@@ -25,12 +25,17 @@ vi.mock("../../../core/src/config/secrets.js", () => ({
 }));
 // Core source is imported through a variable specifier so tsgo does not compile
 // it under this package's stricter options.
-const { CORE_SRC } = vi.hoisted(() => ({
+const { CORE_SRC, CORE_ASTRO_SRC } = vi.hoisted(() => ({
 	CORE_SRC: new URL("../../../core/src/media/", import.meta.url).pathname,
+	CORE_ASTRO_SRC: new URL("../../../core/src/astro/", import.meta.url).pathname,
 }));
 vi.mock(
 	"emdash/media/image-endpoint",
 	async () => import(/* @vite-ignore */ `${CORE_SRC}image-endpoint.js`),
+);
+vi.mock(
+	"emdash/internal/image-signing",
+	async () => import(/* @vite-ignore */ `${CORE_ASTRO_SRC}image-signing.js`),
 );
 
 import { GET } from "../../src/image-endpoint.js";
@@ -231,7 +236,7 @@ describe("Cloudflare image endpoint", () => {
 		const workerd = { entrypoint: "@astrojs/cloudflare/image-service-workerd", config: {} };
 
 		it("redirects a non-canonical query as the workerd service would", async () => {
-			imageConfig.service.entrypoint = "emdash/image-service";
+			imageConfig.service.entrypoint = "emdash/internal/image-service";
 			virtualConfig.imageRuntimeService = workerd;
 			const { images } = installImages();
 			const { ctx, storage } = context("x=1&w=120");
@@ -247,7 +252,7 @@ describe("Cloudflare image endpoint", () => {
 		});
 
 		it("caches a transformed variant as the workerd service would", async () => {
-			imageConfig.service.entrypoint = "emdash/image-service";
+			imageConfig.service.entrypoint = "emdash/internal/image-service";
 			virtualConfig.imageRuntimeService = workerd;
 			installImages();
 			const { ctx } = context("w=120");
@@ -261,7 +266,7 @@ describe("Cloudflare image endpoint", () => {
 		});
 
 		it("treats it as custom when no stock service was recorded", async () => {
-			imageConfig.service.entrypoint = "emdash/image-service";
+			imageConfig.service.entrypoint = "emdash/internal/image-service";
 			installImages();
 			const { ctx } = context("x=1&w=120");
 

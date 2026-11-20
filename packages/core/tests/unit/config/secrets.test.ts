@@ -361,7 +361,6 @@ describe("config/secrets", () => {
 		});
 
 		it("without the env var, generates once and persists under emdash:image_secret", async () => {
-			expect(IMAGE_SECRET_OPTION_KEY).toBe("emdash:image_secret");
 			const first = await resolveImageSigningSecrets({ db, env: {} });
 			const second = await resolveImageSigningSecrets({ db, env: {} });
 			expect(first).toHaveLength(1);
