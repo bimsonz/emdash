@@ -4,12 +4,14 @@
  * when `images: { signedUrls: true }` is on.
  *
  * Every method delegates to the stock service with the stock service's own
- * `imageConfig.service`. `getURL` also signs each transform URL it builds while
- * EmDash renders a request, so the image endpoint can refuse URLs it did not
- * build. Astro awaits `getURL` for an image's `src` and for each `srcset`
- * candidate, so both are signed. While prerendering, a URL Astro replaces with
- * a generated file stays unsigned; one that ships in the HTML is signed with
- * `EMDASH_IMAGE_SECRET`.
+ * `imageConfig.service`. `getURL` also signs each transform URL it builds, so
+ * the image endpoint can refuse URLs it did not build. Astro awaits `getURL`
+ * for an image's `src` and for each `srcset` candidate, so both are signed.
+ * While prerendering, a URL Astro replaces with a generated file stays
+ * unsigned; one that ships in the HTML is signed with `EMDASH_IMAGE_SECRET`.
+ * Outside an EmDash request (`getStaticPaths`, error pages rendered without
+ * the middleware) a URL is signed with `EMDASH_IMAGE_SECRET` when it is set,
+ * and left unsigned otherwise.
  */
 
 import type { LocalImageService } from "astro";
@@ -18,7 +20,11 @@ import stockImageService from "virtual:emdash/stock-image-service";
 
 import { signTransformUrl } from "../media/image-signature.js";
 import { getRequestContext } from "../request-context.js";
-import { resolveBuildImageSigningKey, resolveImageSigningKeys } from "./image-signing.js";
+import {
+	resolveBuildImageSigningKey,
+	resolveEnvImageSigningKey,
+	resolveImageSigningKeys,
+} from "./image-signing.js";
 
 type ImageConfig = Parameters<LocalImageService["getURL"]>[1];
 
@@ -52,14 +58,18 @@ function signingImageService(
 		...stock,
 		async getURL(options, imageConfig, logger) {
 			const url = await stock.getURL(options, stockConfig(imageConfig), logger);
-			// Sign only while EmDash renders a request or prerenders a page.
-			const context = getRequestContext();
-			if (!context) return url;
 			// A source the stock service won't transform comes back as it is. It
 			// doesn't address the image endpoint, so there is nothing to sign.
 			if (url === options.src) return url;
+			const context = getRequestContext();
 			let signingKey: CryptoKey;
-			if (context.prerendering) {
+			if (!context) {
+				// This can run at build (`getStaticPaths`), whose database holds a
+				// different generated secret, so only the variable signs here.
+				const envKey = await resolveEnvImageSigningKey();
+				if (!envKey) return url;
+				signingKey = envKey;
+			} else if (context.prerendering) {
 				// Astro replaces a local service's URL with a generated file when static
 				// image collection is installed (`globalThis.astroAsset.addStaticImage`),
 				// so such a URL is discarded.

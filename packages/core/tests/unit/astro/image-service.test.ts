@@ -179,12 +179,35 @@ describe("emdash/internal/image-service", () => {
 			);
 		});
 
-		it("leaves URLs unsigned outside a request", async () => {
-			const image = await render(MEDIA);
+		// `getStaticPaths` and error pages Astro renders without the middleware.
+		describe("outside a request", () => {
+			it("signs src and srcset with the first EMDASH_IMAGE_SECRET, reading no database", async () => {
+				vi.stubEnv("EMDASH_IMAGE_SECRET", " new , old ");
+				getDb.mockRejectedValue(new Error("no database"));
 
-			expect(image.src).toBe(await stock.getURL.mock.results[0]!.value);
-			expect(image.srcSet.attribute).not.toContain(IMAGE_SIGNATURE_PARAM);
-			expect(getDb).not.toHaveBeenCalled();
+				const image = await render(MEDIA);
+
+				const urls = [image.src, ...image.srcSet.values.map((value) => value.url)];
+				expect(image.srcSet.values).toHaveLength(2);
+				for (const url of urls) {
+					expect(await verifies(url, ["new"])).toBe(true);
+					expect(await verifies(url, ["old"])).toBe(false);
+				}
+				expect(getDb).not.toHaveBeenCalled();
+			});
+
+			it.each([undefined, "", " , "])(
+				"leaves URLs unsigned when EMDASH_IMAGE_SECRET is %j, without throwing or reading a database",
+				async (secret) => {
+					vi.stubEnv("EMDASH_IMAGE_SECRET", secret);
+
+					const image = await render(MEDIA);
+
+					expect(image.src).toBe(await stock.getURL.mock.results[0]!.value);
+					expect(image.srcSet.attribute).not.toContain(IMAGE_SIGNATURE_PARAM);
+					expect(getDb).not.toHaveBeenCalled();
+				},
+			);
 		});
 
 		describe("while prerendering", () => {
