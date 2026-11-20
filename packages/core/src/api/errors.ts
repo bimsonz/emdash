@@ -99,6 +99,10 @@ export const ErrorCode = {
 	REGISTER_FAILED: "REGISTER_FAILED",
 
 	// Media
+	/** An unsigned or wrongly signed image transform URL. */
+	IMAGE_SIGNATURE_INVALID: "IMAGE_SIGNATURE_INVALID",
+	/** Signing is on but the verification secret cannot be read (no database on this request). */
+	IMAGE_SIGNING_UNAVAILABLE: "IMAGE_SIGNING_UNAVAILABLE",
 	MEDIA_LIST_ERROR: "MEDIA_LIST_ERROR",
 	MEDIA_GET_ERROR: "MEDIA_GET_ERROR",
 	MEDIA_CREATE_ERROR: "MEDIA_CREATE_ERROR",
@@ -381,12 +385,6 @@ export const ErrorCode = {
 	BACKUP_CREATE_ERROR: "BACKUP_CREATE_ERROR",
 	BACKUP_DELETE_ERROR: "BACKUP_DELETE_ERROR",
 	BACKUP_DOWNLOAD_ERROR: "BACKUP_DOWNLOAD_ERROR",
-
-	// Signed image URLs
-	/** An unsigned or wrongly signed image transform URL. */
-	IMAGE_SIGNATURE_INVALID: "IMAGE_SIGNATURE_INVALID",
-	/** Signing is on but the verification secret cannot be read (no database on this request). */
-	IMAGE_SIGNING_UNAVAILABLE: "IMAGE_SIGNING_UNAVAILABLE",
 
 	// Search
 	SEARCH_UNAVAILABLE: "SEARCH_UNAVAILABLE",

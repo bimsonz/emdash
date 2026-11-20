@@ -50,7 +50,6 @@ import { startDevSchedulerBridge } from "./dev-scheduler-bridge.js";
 import { createDebouncedTypegenRefresh, listenForDevTypegenRefresh } from "./dev-typegen.js";
 import { notoSans } from "./font-provider.js";
 import { planImageSigning } from "./image-service-wrap.js";
-import { imageSigningEnabled, imagesEnabled } from "./images-option.js";
 import {
 	hasUserDefinedPublicRoute,
 	injectCoreRoutes,
@@ -222,6 +221,11 @@ export function buildImageRemotePatterns(
 	return patterns;
 }
 
+/** Only `images: { signedUrls: true }` signs image transform URLs. */
+function signedImageUrls(images: EmDashConfig["images"]): boolean {
+	return typeof images === "object" && images.signedUrls === true;
+}
+
 /**
  * Build the config subset baked into `virtual:emdash/config` and exposed
  * at runtime as `locals.emdash.config`. A config option that runtime code
@@ -247,9 +251,7 @@ export function buildSerializableConfig(resolvedConfig: EmDashConfig): Record<st
 		toolbar: resolvedConfig.toolbar,
 		updateCheck: resolvedConfig.updateCheck,
 		objectCacheEnabled: resolvedConfig.objectCache !== undefined,
-		imageSigning: imageSigningEnabled(resolvedConfig.images),
-		// Filled in by the integration when signing is on.
-		imageRuntimeService: undefined,
+		imageSigning: signedImageUrls(resolvedConfig.images),
 	};
 }
 
@@ -768,7 +770,7 @@ export function emdash(config: EmDashConfig = {}): AstroIntegration {
 				// storage (Access-safe) instead of over HTTP. Skip when the user opts
 				// out or has a custom endpoint we can't delegate back to.
 				const { entrypoint: imageEndpoint, warn: imageEndpointWarning } = resolveImageEndpoint({
-					imagesDisabled: !imagesEnabled(resolvedConfig.images),
+					imagesDisabled: resolvedConfig.images === false,
 					currentEntrypoint: astroConfig.image?.endpoint?.entrypoint,
 					isCloudflare: astroConfig.adapter?.name === "@astrojs/cloudflare",
 				});
@@ -786,15 +788,15 @@ export function emdash(config: EmDashConfig = {}): AstroIntegration {
 				// Sign transform URLs where the stock runtime service builds them. The
 				// adapter's setup hook has already set `image.service`. Where signing
 				// can't apply, the site runs as if it were off.
-				if (imageSigningEnabled(resolvedConfig.images)) {
+				if (signedImageUrls(resolvedConfig.images)) {
 					const signing = planImageSigning({
 						endpointInstalled: imageEndpoint !== undefined,
 						isCloudflare: usesCloudflareAdapter,
 						service: astroConfig.image?.service,
 						vitePlugins: astroConfig.vite?.plugins,
 					});
-					if ("warning" in signing) {
-						logger.warn(signing.warning);
+					if ("warn" in signing) {
+						logger.warn(signing.warn);
 						serializableConfig.imageSigning = false;
 					} else {
 						imageConfig.service = signing.service;

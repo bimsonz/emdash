@@ -178,9 +178,13 @@
       "types": "./dist/astro/image-endpoint.d.mts",
       "default": "./dist/astro/image-endpoint.mjs"
     },
-    "./image-service": {
+    "./internal/image-service": {
       "types": "./dist/astro/image-service.d.mts",
       "default": "./dist/astro/image-service.mjs"
+    },
+    "./internal/image-signing": {
+      "types": "./dist/astro/image-signing.d.mts",
+      "default": "./dist/astro/image-signing.mjs"
     },
     "./runtime": {
       "types": "./dist/runtime.d.mts",

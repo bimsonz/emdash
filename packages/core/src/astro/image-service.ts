@@ -1,5 +1,5 @@
 /**
- * `emdash/image-service` -- the image service EmDash installs over the stock
+ * `emdash/internal/image-service` -- the image service EmDash installs over the stock
  * runtime service (Astro's sharp, or the Cloudflare adapter's workerd service)
  * when `images: { signedUrls: true }` is on.
  *
@@ -17,11 +17,8 @@ import virtualConfig from "virtual:emdash/config";
 import stockImageService from "virtual:emdash/stock-image-service";
 
 import { signTransformUrl } from "../media/image-signature.js";
-import {
-	resolveBuildImageSigningKey,
-	resolveImageSigningKeys,
-} from "../media/image-signing-keys.js";
 import { getRequestContext } from "../request-context.js";
+import { resolveBuildImageSigningKey, resolveImageSigningKeys } from "./image-signing.js";
 
 type ImageConfig = Parameters<LocalImageService["getURL"]>[1];
 
@@ -32,7 +29,7 @@ function recordedStockService(): ImageConfig["service"] {
 	const recorded = virtualConfig.imageRuntimeService;
 	if (!recorded) {
 		throw new Error(
-			"[emdash] emdash/image-service is installed by EmDash for images.signedUrls, not configured directly.",
+			"[emdash] emdash/internal/image-service is installed by EmDash for images.signedUrls, not configured directly.",
 		);
 	}
 	return recorded;
@@ -63,11 +60,9 @@ function signingImageService(
 			if (url === options.src) return url;
 			let signingKey: CryptoKey;
 			if (context.prerendering) {
-				// Astro's getImage (astro/dist/assets/internal.js:157) replaces the URL
-				// with a generated file when `isLocalService(service) &&
-				// globalThis.astroAsset.addStaticImage && !(isRemoteImage(src) &&
-				// url === src)`. This service is local and the untransformed source
-				// returned above, so `addStaticImage` decides. Such a URL is discarded.
+				// Astro replaces a local service's URL with a generated file when static
+				// image collection is installed (`globalThis.astroAsset.addStaticImage`),
+				// so such a URL is discarded.
 				if (globalThis.astroAsset?.addStaticImage) return url;
 				// Otherwise the URL ships in the prerendered HTML.
 				signingKey = await resolveBuildImageSigningKey();

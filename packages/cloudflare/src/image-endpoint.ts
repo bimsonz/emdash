@@ -17,9 +17,9 @@ import type { APIRoute } from "astro";
 import { imageConfig } from "astro:assets";
 import { env } from "cloudflare:workers";
 import type { Storage } from "emdash";
+import { checkImageSignature } from "emdash/internal/image-signing";
 import {
 	cacheMediaResponse,
-	checkImageSignature,
 	canonicalTransformRedirect,
 	canonicalTransformSearch,
 	getTransformFingerprint,
@@ -174,7 +174,7 @@ export const GET: APIRoute = async (ctx) => {
 	// endpoint or transformed, whatever `href` is: redirects, a site `base`
 	// and scheme-only hrefs can all reach the image pipeline past any href check.
 	if (signing) {
-		const refusal = await checkImageSignature(ctx, url, config.assetQueryParams);
+		const refusal = await checkImageSignature(ctx, url);
 		if (refusal) return refusal;
 	}
 

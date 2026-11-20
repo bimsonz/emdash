@@ -289,7 +289,7 @@ describe("GET /_image over EmDash media", () => {
 
 	describe("under the signing image service", () => {
 		beforeEach(() => {
-			imageConfig.service.entrypoint = "emdash/image-service";
+			imageConfig.service.entrypoint = "emdash/internal/image-service";
 		});
 
 		it("redirects a non-canonical query as sharp would", async () => {

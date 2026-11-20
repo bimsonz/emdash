@@ -19,7 +19,7 @@ describe("wrapImageService", () => {
 		const sharp = { entrypoint: SHARP, config: { kernel: "lanczos3", limitInputPixels: 1000 } };
 
 		expect(wrapImageService(sharp)).toEqual({
-			service: { entrypoint: "emdash/image-service" },
+			service: { entrypoint: "emdash/internal/image-service" },
 			original: { entrypoint: SHARP, config: { kernel: "lanczos3", limitInputPixels: 1000 } },
 		});
 	});
@@ -28,21 +28,21 @@ describe("wrapImageService", () => {
 	// `{ build, runtime }` form) to one Astro `image.service`, the workerd service.
 	it("replaces the workerd service @astrojs/cloudflare installs", () => {
 		expect(wrapImageService({ entrypoint: WORKERD, config: {} })).toEqual({
-			service: { entrypoint: "emdash/image-service" },
+			service: { entrypoint: "emdash/internal/image-service" },
 			original: { entrypoint: WORKERD, config: {} },
 		});
 	});
 
 	it("records an empty config for a service set without one", () => {
 		expect(wrapImageService({ entrypoint: WORKERD })).toEqual({
-			service: { entrypoint: "emdash/image-service" },
+			service: { entrypoint: "emdash/internal/image-service" },
 			original: { entrypoint: WORKERD, config: {} },
 		});
 	});
 
 	it("treats an unset service as Astro's default, sharp", () => {
 		expect(wrapImageService(undefined)).toEqual({
-			service: { entrypoint: "emdash/image-service" },
+			service: { entrypoint: "emdash/internal/image-service" },
 			original: { entrypoint: SHARP, config: {} },
 		});
 	});
@@ -50,11 +50,11 @@ describe("wrapImageService", () => {
 	it.each([
 		"./src/thumbnail-service.ts",
 		"@astrojs/cloudflare/image-service",
-		"emdash/image-service",
+		"emdash/internal/image-service",
 	])("refuses %s with a warning", (entrypoint) => {
 		const result = wrapImageService({ entrypoint, config: {} });
 
-		expect(result).toEqual({ warning: expect.stringContaining(entrypoint) });
+		expect(result).toEqual({ warn: expect.stringContaining(entrypoint) });
 		expect(result).not.toHaveProperty("service");
 	});
 });
@@ -91,7 +91,7 @@ describe("planImageSigning", () => {
 
 	it("wraps under the Cloudflare adapter's default runtime image mode", () => {
 		expect(plan([[cloudflareConfigPlugin(null)]])).toEqual({
-			service: { entrypoint: "emdash/image-service" },
+			service: { entrypoint: "emdash/internal/image-service" },
 			original: workerd,
 		});
 	});
@@ -107,7 +107,7 @@ describe("planImageSigning", () => {
 	it("refuses the compile and custom image modes with a warning", () => {
 		const result = plan([[cloudflareConfigPlugin(compileImageConfig(false))]]);
 
-		expect(result).toEqual({ warning: expect.stringContaining("compile") });
+		expect(result).toEqual({ warn: expect.stringContaining("compile") });
 	});
 
 	it("wraps when the adapter's resolved config can't be read", () => {
@@ -129,7 +129,7 @@ describe("planImageSigning", () => {
 				service: workerd,
 				vitePlugins: [],
 			}),
-		).toEqual({ warning: expect.stringContaining("image endpoint") });
+		).toEqual({ warn: expect.stringContaining("image endpoint") });
 	});
 });
 
@@ -186,7 +186,7 @@ describe("emdash() image service with images.signedUrls", () => {
 	it("installs the signing service and records sharp for the runtime", async () => {
 		const result = await setupWith({ images: { signedUrls: true } }, { service: sharp });
 
-		expect(result.service).toEqual({ entrypoint: "emdash/image-service" });
+		expect(result.service).toEqual({ entrypoint: "emdash/internal/image-service" });
 		expect(result.runtimeConfig.imageSigning).toBe(true);
 		expect(result.runtimeConfig.imageRuntimeService).toEqual(sharp);
 		expect(result.stockModule()).toBe(`export { default } from "${SHARP}";`);

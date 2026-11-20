@@ -531,7 +531,7 @@ export function generateEnvModule(adapterName: string | undefined): string {
 
 /**
  * Generates the stock image service module: the runtime image service that
- * `emdash/image-service` delegates to, as the integration recorded it in
+ * `emdash/internal/image-service` delegates to, as the integration recorded it in
  * `imageRuntimeService` when `images: { signedUrls: true }` replaced it.
  */
 export function generateStockImageServiceModule(recorded: unknown): string {
@@ -541,7 +541,7 @@ export function generateStockImageServiceModule(recorded: unknown): string {
 			: undefined;
 	if (typeof entrypoint !== "string") {
 		const message =
-			"[emdash] No stock image service was recorded: emdash/image-service is installed by EmDash for images.signedUrls, not configured directly.";
+			"[emdash] No stock image service was recorded: emdash/internal/image-service is installed by EmDash for images.signedUrls, not configured directly.";
 		return `throw new Error(${JSON.stringify(message)});`;
 	}
 	return `export { default } from ${JSON.stringify(entrypoint)};`;

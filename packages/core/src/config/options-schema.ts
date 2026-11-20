@@ -33,7 +33,14 @@ const configShape = {
 	migrations: z.unknown(),
 	storage: descriptor("a storage adapter such as local() or r2()"),
 	objectCache: descriptor("an object cache adapter such as memoryCache() or kvCache()"),
-	images: z.union([z.boolean(), z.object({ signedUrls: z.boolean() }).partial().strict()]),
+	images: z.union(
+		[
+			z.boolean(),
+			// Strict: a typo such as `signedUrl` must not silently leave signing off.
+			z.object({ signedUrls: z.boolean() }).partial().strict(),
+		],
+		{ error: "Expected a boolean or { signedUrls: boolean }" },
+	),
 	imagePlaceholders: z.boolean(),
 	plugins: z.array(pluginDescriptor),
 	sandboxed: z.array(pluginDescriptor),

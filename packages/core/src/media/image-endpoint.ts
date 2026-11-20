@@ -16,10 +16,8 @@ import mime from "mime/lite";
 
 import { INTERNAL_MEDIA_PREFIX } from "./normalize.js";
 
-// The signing and check modules import this one; their exports are only used
-// at call time, so the import cycle is safe.
-export { checkImageSignature } from "./image-signature-check.js";
-export { IMAGE_SIGNATURE_PARAM } from "./image-signature.js";
+/** Query parameter carrying the signature of a signed transform URL (`images.signedUrls`). */
+export const IMAGE_SIGNATURE_PARAM = "_emdash_sig";
 
 /** Output formats the wrapped endpoint can produce on Cloudflare. */
 export const ALLOWED_TRANSFORM_FORMATS = ["webp", "avif", "jpeg", "png"] as const;

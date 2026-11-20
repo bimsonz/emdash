@@ -1,13 +1,13 @@
 /**
  * The image service swap behind `images: { signedUrls: true }`.
  *
- * EmDash replaces the stock runtime image service with `emdash/image-service`,
+ * EmDash replaces the stock runtime image service with `emdash/internal/image-service`,
  * which signs the transform URLs it builds, and records the stock service so
  * the wrapper and the image endpoints can still treat it as stock.
  */
 
 /** The image service EmDash installs in place of a stock runtime service. */
-export const SIGNING_IMAGE_SERVICE_ENTRYPOINT = "emdash/image-service";
+export const SIGNING_IMAGE_SERVICE_ENTRYPOINT = "emdash/internal/image-service";
 
 /** Astro's service when `image.service` is unset. */
 const SHARP_IMAGE_SERVICE = "astro/assets/services/sharp";
@@ -33,11 +33,11 @@ export interface RecordedImageService {
  */
 export function wrapImageService(
 	service: { entrypoint: string; config?: Record<string, unknown> } | undefined,
-): { service: { entrypoint: string }; original: RecordedImageService } | { warning: string } {
+): { service: { entrypoint: string }; original: RecordedImageService } | { warn: string } {
 	const entrypoint = service?.entrypoint ?? SHARP_IMAGE_SERVICE;
 	if (!STOCK_RUNTIME_IMAGE_SERVICES.has(entrypoint)) {
 		return {
-			warning:
+			warn:
 				`images.signedUrls applies to Astro's stock image services; the configured ` +
 				`image service (${entrypoint}) is not one, so image URLs are not signed.`,
 		};
@@ -64,7 +64,7 @@ function flattenPlugins(plugins: unknown): unknown[] {
  * Whether the Cloudflare adapter collects static images at build through the
  * configured image service, which its `compile` and `custom` image modes do.
  * It then imports that service by path in Node, outside Vite, where
- * `emdash/image-service` can't load its virtual modules (`dist/index.js`
+ * `emdash/internal/image-service` can't load its virtual modules (`dist/index.js`
  * `hasUserBuildImageService`, `dist/prerenderer.js`).
  *
  * `image.service` and `image.endpoint` look the same for those modes and the
@@ -110,14 +110,14 @@ export function planImageSigning(opts: {
 }): ReturnType<typeof wrapImageService> {
 	if (!opts.endpointInstalled) {
 		return {
-			warning:
+			warn:
 				"images.signedUrls needs the image endpoint EmDash installs, which this " +
 				"site does not use, so image URLs are not signed.",
 		};
 	}
 	if (opts.isCloudflare && cloudflareCollectsImagesThroughService(opts.vitePlugins)) {
 		return {
-			warning:
+			warn:
 				"images.signedUrls is not supported with the Cloudflare adapter's compile or " +
 				"custom image modes, so image URLs are not signed.",
 		};

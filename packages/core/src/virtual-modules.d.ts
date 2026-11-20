@@ -38,7 +38,7 @@ declare module "virtual:emdash/config" {
 		/** Whether image transform URLs are signed and required (`images: { signedUrls: true }`). */
 		imageSigning?: boolean;
 		/**
-		 * The stock runtime image service `emdash/image-service` replaced, recorded
+		 * The stock runtime image service `emdash/internal/image-service` replaced, recorded
 		 * when signing is on. The image endpoints treat it as the configured service.
 		 */
 		imageRuntimeService?: { entrypoint: string; config: Record<string, unknown> };
@@ -240,7 +240,7 @@ declare module "virtual:emdash/rooms" {
 
 declare module "virtual:emdash/stock-image-service" {
 	/**
-	 * The stock runtime image service `emdash/image-service` delegates to when
+	 * The stock runtime image service `emdash/internal/image-service` delegates to when
 	 * `images: { signedUrls: true }` replaced it (`imageRuntimeService`).
 	 */
 	const service: import("astro").LocalImageService;

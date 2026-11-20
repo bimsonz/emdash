@@ -109,8 +109,12 @@ export default defineConfig({
 		// Image-endpoint helpers (portable) + the Node image endpoint
 		"src/media/image-endpoint.ts",
 		"src/astro/image-endpoint.ts",
-		// Signing image service (images.signedUrls), loaded via virtual:image-service
+		// Signing image service (images.signedUrls): installed as `image.service`
+		// by the integration, not configured directly
 		"src/astro/image-service.ts",
+		// Image signing keys + signature check (used by the image endpoints and
+		// by @emdash-cms/cloudflare)
+		"src/astro/image-signing.ts",
 		// Runtime exports (depends on virtual modules - for live.config.ts)
 		"src/runtime.ts",
 		// Seed engine

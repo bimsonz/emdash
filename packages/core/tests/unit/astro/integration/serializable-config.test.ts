@@ -1,9 +1,5 @@
 import { describe, expect, it } from "vitest";
 
-import {
-	imageSigningEnabled,
-	imagesEnabled,
-} from "../../../../src/astro/integration/images-option.js";
 import { buildSerializableConfig, emdash } from "../../../../src/astro/integration/index.js";
 
 describe("buildSerializableConfig", () => {
@@ -29,12 +25,9 @@ describe("image signing config", () => {
 		}
 	});
 
-	it("treats an images object as enabled", () => {
-		expect(imagesEnabled({ signedUrls: true })).toBe(true);
-		expect(imagesEnabled({})).toBe(true);
-		expect(imagesEnabled(undefined)).toBe(true);
-		expect(imagesEnabled(false)).toBe(false);
-		expect(imageSigningEnabled({ signedUrls: true })).toBe(true);
-		expect(imageSigningEnabled(true)).toBe(false);
+	it("leaves imageRuntimeService for the integration to fill", () => {
+		expect(buildSerializableConfig({ images: { signedUrls: true } })).not.toHaveProperty(
+			"imageRuntimeService",
+		);
 	});
 });

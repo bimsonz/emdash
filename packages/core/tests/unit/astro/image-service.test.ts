@@ -78,6 +78,7 @@ vi.mock("virtual:emdash/stock-image-service", async () => {
 });
 
 import service from "../../../src/astro/image-service.js";
+import { EmDashSecretsError } from "../../../src/config/secrets.js";
 import { canonicalTransformSearch } from "../../../src/media/image-endpoint.js";
 import {
 	_clearImageSigningKeyCacheForTesting,
@@ -85,7 +86,6 @@ import {
 	IMAGE_SIGNATURE_PARAM,
 	importImageSigningKeys,
 } from "../../../src/media/image-signature.js";
-import { isImageSigningSecretRequiredError } from "../../../src/media/image-signing-error.js";
 import { type EmDashRequestContext, runWithContext } from "../../../src/request-context.js";
 
 const ORIGIN = "https://site.example";
@@ -96,7 +96,7 @@ const logger = { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() };
 
 function imageConfig(extra: Record<string, unknown> = {}) {
 	return {
-		service: { entrypoint: "emdash/image-service", config: {} },
+		service: { entrypoint: "emdash/internal/image-service", config: {} },
 		endpoint: { route: "/_image" },
 		domains: [],
 		remotePatterns: [
@@ -120,7 +120,7 @@ async function verifies(path: string, secrets = ["secret-a"]): Promise<boolean> 
 	return hasValidTransformSignature(new URL(path, ORIGIN), await importImageSigningKeys(secrets));
 }
 
-describe("emdash/image-service", () => {
+describe("emdash/internal/image-service", () => {
 	beforeEach(() => {
 		_clearImageSigningKeyCacheForTesting();
 		globalThis.astroAsset = { imageService: service } as typeof globalThis.astroAsset;
@@ -239,7 +239,7 @@ describe("emdash/image-service", () => {
 						(rejection: unknown) => rejection,
 					);
 
-					if (!isImageSigningSecretRequiredError(error)) {
+					if (!(error instanceof EmDashSecretsError) || error.code !== "IMAGE_SECRET_REQUIRED") {
 						throw new Error(`expected the build signing error, got ${String(error)}`);
 					}
 					const { message } = error;
@@ -383,7 +383,7 @@ describe("emdash/image-service", () => {
 	});
 });
 
-describe("emdash/image-service over a stock service without optional methods", () => {
+describe("emdash/internal/image-service over a stock service without optional methods", () => {
 	afterEach(() => {
 		vi.doUnmock("virtual:emdash/stock-image-service");
 		vi.resetModules();
