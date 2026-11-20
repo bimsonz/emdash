@@ -145,7 +145,7 @@ A secret set at build but missing or different at runtime makes prerendered imag
 
 A `getImage()` call with no request context, for example in `getStaticPaths`, signs with the first `EMDASH_IMAGE_SECRET` value when it is set and otherwise ships an unsigned URL. Set `EMDASH_IMAGE_SECRET`, or call `getImage()` from the page.
 
-Signing supports the stock runtime image service. With a custom image service, or Cloudflare's `compile` or `custom` image modes, EmDash logs a warning and signing stays off. It does the same when it can't read the Cloudflare adapter's image mode.
+Signing supports the stock runtime image service. With a custom image service, including one that an integration set up after EmDash installs, or Cloudflare's `compile` or `custom` image modes, EmDash logs a warning and signing stays off. It does the same when it can't read the Cloudflare adapter's image mode.
 
 ##### Turn signing on
 

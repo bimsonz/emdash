@@ -241,30 +241,38 @@ describe("planImageSigning", () => {
 	});
 });
 
-/** Runs `astro:config:setup` and returns what Astro and the runtime would receive. */
+/**
+ * Runs `astro:config:setup` and returns what Astro and the runtime would
+ * receive. With `finalService`, it then runs `astro:config:done` with that as
+ * the `image.service` Astro ends with, as when a later integration sets one.
+ */
 async function setupWith(
 	config: EmDashConfig,
 	image: { service?: { entrypoint: string; config?: Record<string, unknown> }; endpoint?: object },
 	astro: { adapter?: { name: string }; vite?: { plugins?: unknown[] } } = {},
+	finalService?: { entrypoint: string; config?: Record<string, unknown> },
 ) {
-	const setup = emdash(config).hooks["astro:config:setup"] as NonNullable<
+	const integration = emdash(config);
+	const setup = integration.hooks["astro:config:setup"] as NonNullable<
 		AstroIntegration["hooks"]["astro:config:setup"]
 	>;
 	const updateConfig = vi.fn();
 	const warn = vi.fn();
 	const root = new URL("file:///tmp/emdash-image-service-wrap/");
+	const astroConfig = {
+		root,
+		srcDir: new URL("src/", root),
+		security: {},
+		trailingSlash: "ignore",
+		integrations: [{ name: "@astrojs/react", hooks: {} }],
+		image,
+		...astro,
+	};
+	const logger = { debug: vi.fn(), error: vi.fn(), info: vi.fn(), warn };
 	await setup({
 		command: "build",
-		config: {
-			root,
-			srcDir: new URL("src/", root),
-			security: {},
-			trailingSlash: "ignore",
-			integrations: [{ name: "@astrojs/react", hooks: {} }],
-			image,
-			...astro,
-		},
-		logger: { debug: vi.fn(), error: vi.fn(), info: vi.fn(), warn },
+		config: astroConfig,
+		logger,
 		injectRoute: vi.fn(),
 		addMiddleware: vi.fn(),
 		updateConfig,
@@ -273,6 +281,15 @@ async function setupWith(
 		image?: { service?: unknown };
 		vite?: { plugins?: Array<{ name?: string; load: (id: string) => unknown }> };
 	};
+	if (finalService) {
+		const done = integration.hooks["astro:config:done"] as NonNullable<
+			AstroIntegration["hooks"]["astro:config:done"]
+		>;
+		await done({
+			config: { ...astroConfig, image: { ...image, service: finalService } },
+			logger,
+		} as never);
+	}
 	const virtualModules = update.vite?.plugins?.find(
 		(plugin) => plugin?.name === "emdash-virtual-modules",
 	);
@@ -373,5 +390,42 @@ describe("emdash() image service with images.signedUrls", () => {
 		const result = await setupWith({}, { service: sharp });
 
 		expect(result.stockModule()).toContain("throw new Error");
+	});
+
+	describe("when Astro's final config is done", () => {
+		const signing = { images: { signedUrls: true } };
+		const later = { entrypoint: "./src/later-service.ts", config: {} };
+
+		// Its URLs carry no signature, so the endpoints would refuse every visitor image.
+		it("turns signing off when a later integration replaced the signing service, and says so", async () => {
+			const result = await setupWith(signing, { service: sharp }, {}, later);
+
+			expect(result.runtimeConfig.imageSigning).toBe(false);
+			expect(result.runtimeConfig.imageRuntimeService).toBeUndefined();
+			expect(result.warn).toHaveBeenCalledWith(expect.stringContaining("images.signedUrls"));
+			expect(result.warn).toHaveBeenCalledWith(expect.stringContaining(later.entrypoint));
+		});
+
+		it("keeps signing on while the final config uses the signing service", async () => {
+			const result = await setupWith(
+				signing,
+				{ service: sharp },
+				{},
+				{
+					entrypoint: "emdash/internal/image-service",
+				},
+			);
+
+			expect(result.runtimeConfig.imageSigning).toBe(true);
+			expect(result.runtimeConfig.imageRuntimeService).toEqual(sharp);
+			expect(result.warn).not.toHaveBeenCalledWith(expect.stringContaining("images.signedUrls"));
+		});
+
+		it("says nothing about signing when it is off", async () => {
+			const result = await setupWith({}, { service: sharp }, {}, later);
+
+			expect(result.runtimeConfig.imageSigning).toBe(false);
+			expect(result.warn).not.toHaveBeenCalledWith(expect.stringContaining("images.signedUrls"));
+		});
 	});
 });
