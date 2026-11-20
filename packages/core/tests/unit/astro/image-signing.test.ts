@@ -8,7 +8,7 @@ const { getDb } = vi.hoisted(() => ({ getDb: vi.fn() }));
 // The configured database, which tests make fail to exercise the 503.
 vi.mock("../../../src/loader.js", () => ({ getDb }));
 
-import { checkImageSignature } from "../../../src/astro/image-signing.js";
+import { checkImageSignature, withSignedParameters } from "../../../src/astro/image-signing.js";
 import {
 	_clearSecretsCacheForTesting,
 	IMAGE_SECRET_OPTION_KEY,
@@ -394,4 +394,24 @@ describe("checkImageSignature", () => {
 		expect(logged).not.toContain("\n");
 		expect(logged).toBe(JSON.stringify("a\nb"));
 	});
+});
+
+describe("withSignedParameters", () => {
+	it.each(["//docs/_image", "//_image"])(
+		"keeps the request origin and path for %s",
+		async (path) => {
+			const [key] = await importImageSigningKeys(["secret-a"]);
+			const signedPath = await signTransformUrl(new URL(`${ORIGIN}/_image?${BASE}`), key!);
+			const query = new URL(signedPath, ORIGIN).search;
+			const url = new URL(`http://site.example${path}${query}&foo=1`);
+			expect(url.host).toBe("site.example");
+
+			const handedOn = withSignedParameters(ctx(), url);
+
+			expect(handedOn.url.origin).toBe("http://site.example");
+			expect(handedOn.url.pathname).toBe(path);
+			expect(new URL(handedOn.request.url).origin).toBe("http://site.example");
+			expect(handedOn.url.searchParams.has("foo")).toBe(false);
+		},
+	);
 });
