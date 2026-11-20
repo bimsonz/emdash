@@ -48,8 +48,12 @@ function inRequest<T>(fn: () => Promise<T>, context: Partial<EmDashRequestContex
 
 describe("checkImageSignature", () => {
 	let db: Kysely<Database>;
+	// The logs are throttled per isolate: each test starts an hour after the last.
+	let now = Date.parse("2026-01-01T00:00:00Z");
 
 	beforeEach(async () => {
+		now += 60 * 60_000;
+		vi.useFakeTimers({ now, toFake: ["Date"] });
 		_clearImageSigningKeyCacheForTesting();
 		_clearSecretsCacheForTesting();
 		vi.stubEnv("EMDASH_IMAGE_SECRET", "");
@@ -57,9 +61,11 @@ describe("checkImageSignature", () => {
 		await new OptionsRepository(db).set(IMAGE_SECRET_OPTION_KEY, "secret-a");
 		getDb.mockResolvedValue(db);
 		vi.spyOn(console, "debug").mockImplementation(() => undefined);
+		vi.spyOn(console, "error").mockImplementation(() => undefined);
 	});
 
 	afterEach(async () => {
+		vi.useRealTimers();
 		vi.unstubAllEnvs();
 		vi.restoreAllMocks();
 		vi.clearAllMocks();
@@ -176,6 +182,43 @@ describe("checkImageSignature", () => {
 			"IMAGE_SIGNING_UNAVAILABLE",
 		);
 		expect(text).not.toContain("not configured");
+	});
+
+	it("logs a secret it cannot resolve, at most once per 30 seconds", async () => {
+		const failure = new Error("EmDash database not configured");
+		getDb.mockRejectedValue(failure);
+		const error = vi.mocked(console.error);
+		const url = await signed();
+
+		await checkImageSignature(ctx(), url);
+		await checkImageSignature(ctx(), url);
+		expect(error).toHaveBeenCalledTimes(1);
+		expect(error.mock.calls[0]).toEqual([expect.stringContaining("[emdash]"), failure]);
+
+		vi.advanceTimersByTime(29_999);
+		await checkImageSignature(ctx(), url);
+		expect(error).toHaveBeenCalledTimes(1);
+
+		vi.advanceTimersByTime(1);
+		await checkImageSignature(ctx(), url);
+		expect(error).toHaveBeenCalledTimes(2);
+	});
+
+	it("logs refused requests at debug at most once per 30 seconds", async () => {
+		const debug = vi.mocked(console.debug);
+		const unsigned = new URL(`${ORIGIN}/_image?${BASE}`);
+
+		await checkImageSignature(ctx(), unsigned);
+		await checkImageSignature(ctx(), await signed(ORIGIN, undefined, "other-secret"));
+		expect(debug).toHaveBeenCalledTimes(1);
+
+		vi.advanceTimersByTime(29_999);
+		await checkImageSignature(ctx(), unsigned);
+		expect(debug).toHaveBeenCalledTimes(1);
+
+		vi.advanceTimersByTime(1);
+		await checkImageSignature(ctx(), unsigned);
+		expect(debug).toHaveBeenCalledTimes(2);
 	});
 
 	// The Durable Object preview puts its own database in the request context
