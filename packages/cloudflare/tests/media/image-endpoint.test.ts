@@ -21,7 +21,7 @@ vi.mock("@astrojs/cloudflare/image-transform-endpoint", () => ({ GET: adapterGET
 vi.mock("../../../core/src/loader.js", () => ({ getDb: vi.fn(async () => ({})) }));
 vi.mock("../../../core/src/config/secrets.js", () => ({
 	readImageSigningSecretsFromEnv: () => null,
-	resolveImageSigningSecretsCached: vi.fn(async () => ["secret-a"]),
+	resolveImageSigningSecrets: vi.fn(async () => ({ secrets: ["secret-a"], source: "db" })),
 }));
 // Core source is imported through a variable specifier so tsgo does not compile
 // it under this package's stricter options.

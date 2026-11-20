@@ -67,7 +67,7 @@ function signingImageService(
 				// Otherwise the URL ships in the prerendered HTML.
 				signingKey = await resolveBuildImageSigningKey();
 			} else {
-				[signingKey] = await resolveImageSigningKeys();
+				[signingKey] = (await resolveImageSigningKeys()).keys;
 			}
 			return signTransformUrl(
 				new URL(url, PLACEHOLDER_ORIGIN),

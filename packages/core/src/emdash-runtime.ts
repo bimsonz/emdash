@@ -278,7 +278,12 @@ import {
 	type CommentCreateResult,
 	type CommentHookRunner,
 } from "./comments/service.js";
-import { validateEncryptionKeyAtStartup } from "./config/secrets.js";
+import {
+	IMAGE_SECRET_OPTION_KEY,
+	primeImageSigningSecret,
+	readImageSigningSecretsFromEnv,
+	validateEncryptionKeyAtStartup,
+} from "./config/secrets.js";
 import { OptionsRepository } from "./database/repositories/options.js";
 import type { Database } from "./database/types.js";
 import { getDb } from "./loader.js";
@@ -2453,6 +2458,13 @@ export class EmDashRuntime {
 			}
 		};
 
+		// The image signing secret rides in the site options read, which seeds its
+		// cache, so the first signed render on the isolate needs no query for it.
+		const readsImageSecret =
+			ownsConfiguredDb &&
+			virtualConfig?.imageSigning === true &&
+			readImageSigningSecretsFromEnv() === null;
+
 		const readSiteInfo = async (readDb: Kysely<Database>) => {
 			const siteOpts = await new OptionsRepository(readDb).getMany([
 				"site:title",
@@ -2463,6 +2475,7 @@ export class EmDashRuntime {
 				LOCALE_CASING_REPAIR_OPTION,
 				AUTO_SEED_COMPLETE_OPTION,
 				SETUP_COMPLETE_OPTION,
+				...(readsImageSecret ? [IMAGE_SECRET_OPTION_KEY] : []),
 			]);
 			const siteTitle = resolveSiteTitle(
 				siteOpts.get("site:title"),
@@ -2489,6 +2502,9 @@ export class EmDashRuntime {
 					typeof repairVersion === "string" ? repairVersion : undefined,
 				seedComplete: siteOpts.get(AUTO_SEED_COMPLETE_OPTION) === true,
 				setupDone: siteOpts.get(SETUP_COMPLETE_OPTION) === true,
+				imageSecret: readsImageSecret
+					? { value: siteOpts.get(IMAGE_SECRET_OPTION_KEY) }
+					: undefined,
 			};
 		};
 
@@ -2659,6 +2675,16 @@ export class EmDashRuntime {
 		if (missingManualSchemaError) {
 			await disposeReadDb();
 			throw missingManualSchemaError;
+		}
+
+		const imageSecret = reads.site?.imageSecret;
+		if (imageSecret) {
+			// A missing row means this is the site's first request: create it once here.
+			try {
+				await primeImageSigningSecret(db, imageSecret.value);
+			} catch {
+				// Non-fatal: the first signed render resolves the secret itself.
+			}
 		}
 
 		if (

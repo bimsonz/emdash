@@ -1,31 +1,32 @@
 import { Role } from "@emdash-cms/auth";
 import type { APIContext } from "astro";
+import type { Kysely } from "kysely";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { getDb, resolveImageSigningSecretsCached, requestContext } = vi.hoisted(() => ({
-	getDb: vi.fn(),
-	resolveImageSigningSecretsCached: vi.fn(),
-	requestContext: { current: undefined as { db?: unknown } | undefined },
-}));
+const { getDb } = vi.hoisted(() => ({ getDb: vi.fn() }));
 
+// The configured database, which tests make fail to exercise the 503.
 vi.mock("../../../src/loader.js", () => ({ getDb }));
-vi.mock("../../../src/config/secrets.js", async (importActual) => ({
-	readImageSigningSecretsFromEnv: (
-		await importActual<typeof import("../../../src/config/secrets.js")>()
-	).readImageSigningSecretsFromEnv,
-	resolveImageSigningSecretsCached,
-}));
-vi.mock("../../../src/request-context.js", () => ({
-	getRequestContext: () => requestContext.current,
-}));
 
 import { checkImageSignature } from "../../../src/astro/image-signing.js";
+import {
+	_clearSecretsCacheForTesting,
+	IMAGE_SECRET_OPTION_KEY,
+} from "../../../src/config/secrets.js";
+import { OptionsRepository } from "../../../src/database/repositories/options.js";
+import type { Database } from "../../../src/database/types.js";
 import {
 	_clearImageSigningKeyCacheForTesting,
 	IMAGE_SIGNATURE_PARAM,
 	importImageSigningKeys,
 	signTransformUrl,
 } from "../../../src/media/image-signature.js";
+import { type EmDashRequestContext, runWithContext } from "../../../src/request-context.js";
+import {
+	createTestDatabase,
+	setupTestDatabase,
+	teardownTestDatabase,
+} from "../../utils/test-db.js";
 
 const ORIGIN = "https://site.example";
 const HREF = "https://site.example/_emdash/api/media/file/abc.jpg";
@@ -35,24 +36,35 @@ function ctx(user?: { role: number }): APIContext {
 	return { locals: { user } } as unknown as APIContext;
 }
 
-async function signed(origin = ORIGIN, asset?: URLSearchParams): Promise<URL> {
-	const [key] = await importImageSigningKeys(["secret-a"]);
+async function signed(origin = ORIGIN, asset?: URLSearchParams, secret = "secret-a"): Promise<URL> {
+	const [key] = await importImageSigningKeys([secret]);
 	const path = await signTransformUrl(new URL(`${ORIGIN}/_image?${BASE}`), key!, asset);
 	return new URL(path, origin);
 }
 
+function inRequest<T>(fn: () => Promise<T>, context: Partial<EmDashRequestContext>): Promise<T> {
+	return runWithContext({ editMode: false, ...context }, fn);
+}
+
 describe("checkImageSignature", () => {
-	beforeEach(() => {
+	let db: Kysely<Database>;
+
+	beforeEach(async () => {
 		_clearImageSigningKeyCacheForTesting();
-		requestContext.current = undefined;
-		getDb.mockResolvedValue({});
-		resolveImageSigningSecretsCached.mockResolvedValue(["secret-a"]);
+		_clearSecretsCacheForTesting();
+		vi.stubEnv("EMDASH_IMAGE_SECRET", "");
+		db = await setupTestDatabase();
+		await new OptionsRepository(db).set(IMAGE_SECRET_OPTION_KEY, "secret-a");
+		getDb.mockResolvedValue(db);
 		vi.spyOn(console, "debug").mockImplementation(() => undefined);
 	});
 
-	afterEach(() => {
+	afterEach(async () => {
+		vi.unstubAllEnvs();
 		vi.restoreAllMocks();
 		vi.clearAllMocks();
+		_clearSecretsCacheForTesting();
+		await teardownTestDatabase(db);
 	});
 
 	async function refusal(response: Response | null, status: number, code: string): Promise<string> {
@@ -135,11 +147,25 @@ describe("checkImageSignature", () => {
 		expect(await checkImageSignature(ctx(), url)).toBeNull();
 	});
 
-	it("uses the request-scoped database before getDb", async () => {
-		requestContext.current = { db: { scoped: true } };
-		await checkImageSignature(ctx(), await signed());
-		expect(resolveImageSigningSecretsCached).toHaveBeenCalledWith({ scoped: true });
-		expect(getDb).not.toHaveBeenCalled();
+	it("verifies with the secret stored in the database", async () => {
+		await refusal(
+			await checkImageSignature(ctx(), await signed(ORIGIN, undefined, "other-secret")),
+			403,
+			"IMAGE_SIGNATURE_INVALID",
+		);
+	});
+
+	it("reads the secret through the request's database before getDb", async () => {
+		const scoped = await setupTestDatabase();
+		try {
+			await new OptionsRepository(scoped).set(IMAGE_SECRET_OPTION_KEY, "scoped-secret");
+			getDb.mockRejectedValue(new Error("EmDash database not configured"));
+			const url = await signed(ORIGIN, undefined, "scoped-secret");
+			expect(await inRequest(() => checkImageSignature(ctx(), url), { db: scoped })).toBeNull();
+			expect(getDb).not.toHaveBeenCalled();
+		} finally {
+			await teardownTestDatabase(scoped);
+		}
 	});
 
 	it("fails closed with 503 when there is no database", async () => {
@@ -158,14 +184,9 @@ describe("checkImageSignature", () => {
 			getDb.mockRejectedValue(new Error("EmDash database not configured"));
 		});
 
-		afterEach(() => {
-			vi.unstubAllEnvs();
-		});
-
 		it("verifies a signed URL without a database", async () => {
 			expect(await checkImageSignature(ctx(), await signed())).toBeNull();
 			expect(getDb).not.toHaveBeenCalled();
-			expect(resolveImageSigningSecretsCached).not.toHaveBeenCalled();
 		});
 
 		it("refuses an unsigned URL with 403, never 503", async () => {
@@ -177,20 +198,30 @@ describe("checkImageSignature", () => {
 			expect(getDb).not.toHaveBeenCalled();
 		});
 
-		it("does not read the request-scoped database", async () => {
-			requestContext.current = { db: { scoped: true } };
-			expect(await checkImageSignature(ctx(), await signed())).toBeNull();
-			expect(resolveImageSigningSecretsCached).not.toHaveBeenCalled();
+		it("does not read the request's database", async () => {
+			const broken = createTestDatabase();
+			try {
+				const url = await signed();
+				expect(await inRequest(() => checkImageSignature(ctx(), url), { db: broken })).toBeNull();
+			} finally {
+				await broken.destroy();
+			}
 		});
 	});
 
-	it("fails closed with 503 when the secret cannot be resolved", async () => {
-		resolveImageSigningSecretsCached.mockRejectedValue(new Error("boom"));
-		await refusal(
-			await checkImageSignature(ctx(), await signed()),
-			503,
-			"IMAGE_SIGNING_UNAVAILABLE",
-		);
+	it("fails closed with 503 when the secret cannot be read", async () => {
+		// No migrations: the options table is missing.
+		const unmigrated = createTestDatabase();
+		try {
+			getDb.mockResolvedValue(unmigrated);
+			await refusal(
+				await checkImageSignature(ctx(), await signed()),
+				503,
+				"IMAGE_SIGNING_UNAVAILABLE",
+			);
+		} finally {
+			await unmigrated.destroy();
+		}
 	});
 
 	it("logs the reason and the href at debug without the expected MAC", async () => {

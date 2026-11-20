@@ -1,5 +1,6 @@
 import type { LocalImageService } from "astro";
 import { getImage, isLocalService } from "astro/assets";
+import type { Kysely } from "kysely";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const ORIGINAL = vi.hoisted(() => ({
@@ -7,20 +8,16 @@ const ORIGINAL = vi.hoisted(() => ({
 	config: { kernel: "lanczos3" },
 }));
 
-const { stock, getDb, resolveImageSigningSecretsCached } = vi.hoisted(() => ({
+const { stock, getDb } = vi.hoisted(() => ({
 	stock: {} as Record<string, ReturnType<typeof vi.fn>>,
 	getDb: vi.fn(),
-	resolveImageSigningSecretsCached: vi.fn(),
 }));
 
 vi.mock("virtual:emdash/config", () => ({
 	default: { imageSigning: true, imageRuntimeService: ORIGINAL },
 }));
+// The configured database, which tests make fail to show it is not read.
 vi.mock("../../../src/loader.js", () => ({ getDb }));
-vi.mock("../../../src/config/secrets.js", async (importOriginal) => ({
-	...(await importOriginal<typeof import("../../../src/config/secrets.js")>()),
-	resolveImageSigningSecretsCached,
-}));
 /**
  * Astro's `baseService.getURL` (`astro/dist/assets/services/service.js`), with
  * `BASE_URL` fixed at `/`: Astro's dist reads `import.meta.env`, which is
@@ -78,7 +75,13 @@ vi.mock("virtual:emdash/stock-image-service", async () => {
 });
 
 import service from "../../../src/astro/image-service.js";
-import { EmDashSecretsError } from "../../../src/config/secrets.js";
+import {
+	_clearSecretsCacheForTesting,
+	EmDashSecretsError,
+	IMAGE_SECRET_OPTION_KEY,
+} from "../../../src/config/secrets.js";
+import { OptionsRepository } from "../../../src/database/repositories/options.js";
+import type { Database } from "../../../src/database/types.js";
 import { canonicalTransformSearch } from "../../../src/media/image-endpoint.js";
 import {
 	_clearImageSigningKeyCacheForTesting,
@@ -87,6 +90,7 @@ import {
 	importImageSigningKeys,
 } from "../../../src/media/image-signature.js";
 import { type EmDashRequestContext, runWithContext } from "../../../src/request-context.js";
+import { setupTestDatabase, teardownTestDatabase } from "../../utils/test-db.js";
 
 const ORIGIN = "https://site.example";
 const MEDIA = `${ORIGIN}/_emdash/api/media/file/abc.jpg`;
@@ -121,17 +125,23 @@ async function verifies(path: string, secrets = ["secret-a"]): Promise<boolean> 
 }
 
 describe("emdash/internal/image-service", () => {
-	beforeEach(() => {
+	let db: Kysely<Database>;
+
+	beforeEach(async () => {
 		_clearImageSigningKeyCacheForTesting();
+		_clearSecretsCacheForTesting();
 		globalThis.astroAsset = { imageService: service } as typeof globalThis.astroAsset;
-		getDb.mockResolvedValue({ singleton: true });
-		resolveImageSigningSecretsCached.mockResolvedValue(["secret-a"]);
+		db = await setupTestDatabase();
+		await new OptionsRepository(db).set(IMAGE_SECRET_OPTION_KEY, "secret-a");
+		getDb.mockResolvedValue(db);
 		vi.stubEnv("EMDASH_IMAGE_SECRET", undefined);
 	});
 
-	afterEach(() => {
+	afterEach(async () => {
 		vi.unstubAllEnvs();
 		vi.clearAllMocks();
+		_clearSecretsCacheForTesting();
+		await teardownTestDatabase(db);
 	});
 
 	describe("getURL", () => {
@@ -174,7 +184,7 @@ describe("emdash/internal/image-service", () => {
 
 			expect(image.src).toBe(await stock.getURL.mock.results[0]!.value);
 			expect(image.srcSet.attribute).not.toContain(IMAGE_SIGNATURE_PARAM);
-			expect(resolveImageSigningSecretsCached).not.toHaveBeenCalled();
+			expect(getDb).not.toHaveBeenCalled();
 		});
 
 		describe("while prerendering", () => {
@@ -191,7 +201,6 @@ describe("emdash/internal/image-service", () => {
 
 				expect(url).toBe(await stock.getURL.mock.results[0]!.value);
 				expect(url).not.toContain(IMAGE_SIGNATURE_PARAM);
-				expect(resolveImageSigningSecretsCached).not.toHaveBeenCalled();
 				expect(getDb).not.toHaveBeenCalled();
 			});
 
@@ -209,7 +218,6 @@ describe("emdash/internal/image-service", () => {
 				expect(image.src).toBe(staticPath);
 				for (const value of image.srcSet.values) expect(value.url).toBe(staticPath);
 				expect(addStaticImage).toHaveBeenCalled();
-				expect(resolveImageSigningSecretsCached).not.toHaveBeenCalled();
 				expect(getDb).not.toHaveBeenCalled();
 			});
 
@@ -225,7 +233,6 @@ describe("emdash/internal/image-service", () => {
 					expect(await verifies(url, ["old"])).toBe(false);
 				}
 				// The build's database holds a different generated secret.
-				expect(resolveImageSigningSecretsCached).not.toHaveBeenCalled();
 				expect(getDb).not.toHaveBeenCalled();
 			});
 
@@ -251,7 +258,7 @@ describe("emdash/internal/image-service", () => {
 					);
 					expect(message).toContain("secrets.required");
 					expect(message).not.toMatch(/compile/);
-					expect(resolveImageSigningSecretsCached).not.toHaveBeenCalled();
+					expect(getDb).not.toHaveBeenCalled();
 				},
 			);
 
@@ -270,7 +277,7 @@ describe("emdash/internal/image-service", () => {
 			const image = await inRequest(() => render(MEDIA), { prerendering: false });
 
 			expect(await verifies(image.src, ["secret-a"])).toBe(true);
-			expect(resolveImageSigningSecretsCached).toHaveBeenCalled();
+			expect(getDb).toHaveBeenCalled();
 		});
 
 		it("signs with EMDASH_IMAGE_SECRET without reading a database", async () => {
@@ -281,7 +288,6 @@ describe("emdash/internal/image-service", () => {
 
 			expect(await verifies(image.src, ["env-only"])).toBe(true);
 			expect(getDb).not.toHaveBeenCalled();
-			expect(resolveImageSigningSecretsCached).not.toHaveBeenCalled();
 		});
 
 		it("returns a source the stock service would not transform as it is", async () => {
@@ -308,8 +314,8 @@ describe("emdash/internal/image-service", () => {
 			}
 		});
 
-		it("signs with the first secret", async () => {
-			resolveImageSigningSecretsCached.mockResolvedValue(["new", "old"]);
+		it("signs with the first EMDASH_IMAGE_SECRET", async () => {
+			vi.stubEnv("EMDASH_IMAGE_SECRET", "new,old");
 
 			const image = await inRequest(() => render(MEDIA));
 
@@ -318,22 +324,29 @@ describe("emdash/internal/image-service", () => {
 		});
 
 		it("reads the secret through the request's database", async () => {
-			const db = { scoped: true };
+			const scoped = await setupTestDatabase();
+			try {
+				await new OptionsRepository(scoped).set(IMAGE_SECRET_OPTION_KEY, "scoped-secret");
+				getDb.mockRejectedValue(new Error("no database"));
 
-			await inRequest(() => render(MEDIA), { db });
+				const image = await inRequest(() => render(MEDIA), { db: scoped });
 
-			expect(resolveImageSigningSecretsCached).toHaveBeenCalledWith(db);
-			expect(getDb).not.toHaveBeenCalled();
+				expect(await verifies(image.src, ["scoped-secret"])).toBe(true);
+				expect(getDb).not.toHaveBeenCalled();
+			} finally {
+				await teardownTestDatabase(scoped);
+			}
 		});
 
 		it("falls back to the configured database", async () => {
-			await inRequest(() => render(MEDIA));
+			const image = await inRequest(() => render(MEDIA));
 
-			expect(resolveImageSigningSecretsCached).toHaveBeenCalledWith({ singleton: true });
+			expect(await verifies(image.src, ["secret-a"])).toBe(true);
+			expect(getDb).toHaveBeenCalled();
 		});
 
 		it("fails the render when the secret cannot be resolved", async () => {
-			resolveImageSigningSecretsCached.mockRejectedValue(new Error("no database"));
+			getDb.mockRejectedValue(new Error("no database"));
 
 			await expect(inRequest(() => render(MEDIA))).rejects.toThrow("no database");
 		});
