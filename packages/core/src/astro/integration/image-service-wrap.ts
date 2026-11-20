@@ -153,7 +153,8 @@ export function planImageSigning(opts: {
 			return {
 				warn:
 					"images.signedUrls is not supported with the Cloudflare adapter's compile or " +
-					"custom image modes, so image URLs are not signed.",
+					"custom image modes, so image URLs are not signed. The default " +
+					"cloudflare-binding image mode supports signing.",
 			};
 		}
 		if (mode === "unknown") {

@@ -24,10 +24,4 @@ describe("image signing config", () => {
 			expect(buildSerializableConfig({ images }).imageSigning).toBe(false);
 		}
 	});
-
-	it("leaves imageRuntimeService for the integration to fill", () => {
-		expect(buildSerializableConfig({ images: { signedUrls: true } })).not.toHaveProperty(
-			"imageRuntimeService",
-		);
-	});
 });

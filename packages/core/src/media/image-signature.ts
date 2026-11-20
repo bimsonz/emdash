@@ -9,7 +9,8 @@
 
 import { encodeBase64url } from "../utils/base64.js";
 import { timingSafeEqualString } from "../utils/constant-time.js";
-import { canonicalTransformQuery, IMAGE_SIGNATURE_PARAM } from "./image-endpoint.js";
+import { IMAGE_SIGNATURE_PARAM } from "./image-endpoint.js";
+import { canonicalTransformQuery } from "./transform-query.js";
 
 export { IMAGE_SIGNATURE_PARAM };
 

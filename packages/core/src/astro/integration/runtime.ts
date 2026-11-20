@@ -251,16 +251,19 @@ export interface EmDashConfig {
 	 *
 	 * `true` and `{}` mean the default above. Pass `{ signedUrls: true }` to
 	 * also sign every image transform URL the stock image service builds and
-	 * refuse unsigned ones. Signing applies to the stock image services; with a custom runtime image
-	 * service it logs a build-time warning and the site behaves as if signing
-	 * were off.
+	 * refuse unsigned ones. Signing applies to the stock image services and
+	 * needs the image endpoint EmDash installs. With a custom runtime image
+	 * service, or when EmDash installs no image endpoint (a custom
+	 * `image.endpoint`), it logs a build-time warning and the site behaves as
+	 * if signing were off.
 	 */
 	images?:
 		| boolean
 		| {
 				/**
-				 * Sign every image transform URL the stock image service builds, and refuse unsigned ones.
-				 * Applies to the stock image services. Default `false`.
+				 * Sign every image transform URL the stock image service builds,
+				 * and refuse unsigned ones. Applies to the stock image services.
+				 * Default `false`.
 				 */
 				signedUrls?: boolean;
 		  };
