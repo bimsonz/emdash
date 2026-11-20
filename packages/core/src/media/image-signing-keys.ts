@@ -16,16 +16,19 @@ import { importImageSigningKeys } from "./image-signature.js";
 import { ImageSigningSecretRequiredError } from "./image-signing-error.js";
 
 /**
- * Imports the image signing secrets from the request's database, or the
- * configured one. The first key signs; every key verifies. Throws when the
- * database or the secret is unavailable.
+ * Imports the image signing secrets. `EMDASH_IMAGE_SECRET` wins and needs no
+ * database: the request's database and `getDb()` are never touched. Otherwise
+ * the secret is the one persisted in the request's database, or the configured
+ * one. The first key signs; every key verifies. Throws when the variable is
+ * unset and the database or the persisted secret is unavailable.
  */
 export async function resolveImageSigningKeys(): Promise<CryptoKey[]> {
+	const fromEnv = readImageSigningSecretsFromEnv();
+	if (fromEnv) return importImageSigningKeys(fromEnv);
 	const requestDb = getRequestContext()?.db ?? (await getDb());
 	// eslint-disable-next-line typescript/no-unsafe-type-assertion -- RequestContext.db is unknown to avoid circular deps
 	const db = requestDb as Kysely<Database>;
-	const secrets = await resolveImageSigningSecretsCached(db);
-	return importImageSigningKeys(secrets);
+	return importImageSigningKeys(await resolveImageSigningSecretsCached(db));
 }
 
 /**

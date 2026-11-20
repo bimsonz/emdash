@@ -267,12 +267,21 @@ describe("emdash/image-service", () => {
 		// `astro dev` renders a prerendered route per request: the middleware
 		// records prerendering=false, so the request's secret signs as usual.
 		it("signs a dev render of a prerendered route with the request's secret", async () => {
-			vi.stubEnv("EMDASH_IMAGE_SECRET", "env-only");
-
 			const image = await inRequest(() => render(MEDIA), { prerendering: false });
 
 			expect(await verifies(image.src, ["secret-a"])).toBe(true);
 			expect(resolveImageSigningSecretsCached).toHaveBeenCalled();
+		});
+
+		it("signs with EMDASH_IMAGE_SECRET without reading a database", async () => {
+			vi.stubEnv("EMDASH_IMAGE_SECRET", "env-only");
+			getDb.mockRejectedValue(new Error("no database"));
+
+			const image = await inRequest(() => render(MEDIA), { prerendering: false });
+
+			expect(await verifies(image.src, ["env-only"])).toBe(true);
+			expect(getDb).not.toHaveBeenCalled();
+			expect(resolveImageSigningSecretsCached).not.toHaveBeenCalled();
 		});
 
 		it("returns a source the stock service would not transform as it is", async () => {
