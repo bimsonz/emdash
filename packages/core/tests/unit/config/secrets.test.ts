@@ -2,7 +2,7 @@ import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 
 import type { Kysely } from "kysely";
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 
 import {
 	EmDashSecretsError,
@@ -13,8 +13,8 @@ import {
 	fingerprintKey,
 	generateEncryptionKey,
 	parseEncryptionKeys,
+	primeImageSigningSecret,
 	resolveImageSigningSecrets,
-	resolveImageSigningSecretsCached,
 	resolveSecrets,
 	resolveSecretsCached,
 	validateEncryptionKeyAtStartup,
@@ -330,6 +330,10 @@ describe("config/secrets", () => {
 	});
 
 	describe("image signing secret", () => {
+		const unreachable = () => {
+			throw new Error("getDb must not be called");
+		};
+
 		it("resolveSecrets alone creates no emdash:image_secret row", async () => {
 			const result = await resolveSecrets({ db, env: {} });
 			expect(result).not.toHaveProperty("imageSigningSecrets");
@@ -342,71 +346,203 @@ describe("config/secrets", () => {
 			expect(await new OptionsRepository(db).get(IMAGE_SECRET_OPTION_KEY)).toBeNull();
 		});
 
-		it('EMDASH_IMAGE_SECRET " new , old ,," resolves ["new","old"] from env', async () => {
-			const secrets = await resolveImageSigningSecrets({
-				db,
+		it('returns EMDASH_IMAGE_SECRET " new , old ,," as ["new","old"] without opening the database', async () => {
+			const getDb = vi.fn(unreachable);
+			const result = await resolveImageSigningSecrets({
+				getDb,
 				env: { EMDASH_IMAGE_SECRET: " new , old ,," },
 			});
-			expect(secrets).toEqual(["new", "old"]);
+			expect(result).toEqual({ secrets: ["new", "old"], source: "env" });
+			expect(getDb).not.toHaveBeenCalled();
 			expect(await new OptionsRepository(db).get(IMAGE_SECRET_OPTION_KEY)).toBeNull();
 		});
 
 		it("treats an all-blank EMDASH_IMAGE_SECRET as unset", async () => {
-			const secrets = await resolveImageSigningSecrets({
-				db,
+			const result = await resolveImageSigningSecrets({
+				getDb: () => db,
 				env: { EMDASH_IMAGE_SECRET: " , ,  " },
 			});
-			expect(secrets).toHaveLength(1);
-			expect(secrets[0]).toBe(await new OptionsRepository(db).get<string>(IMAGE_SECRET_OPTION_KEY));
+			expect(result).toEqual({
+				secrets: [await new OptionsRepository(db).get<string>(IMAGE_SECRET_OPTION_KEY)],
+				source: "db",
+			});
 		});
 
-		it("without the env var, generates once and persists under emdash:image_secret", async () => {
-			const first = await resolveImageSigningSecrets({ db, env: {} });
-			const second = await resolveImageSigningSecrets({ db, env: {} });
-			expect(first).toHaveLength(1);
-			expect(first[0]!.length).toBeGreaterThan(0);
+		it("without the env var, opens the database once, generates once and persists under emdash:image_secret", async () => {
+			const getDb = vi.fn(async () => db);
+			const first = await resolveImageSigningSecrets({ getDb, env: {} });
+			const second = await resolveImageSigningSecrets({ getDb, env: {} });
+			expect(first.source).toBe("db");
+			expect(first.secrets).toHaveLength(1);
+			expect(first.secrets[0]!.length).toBeGreaterThan(0);
 			expect(second).toEqual(first);
-			expect(await new OptionsRepository(db).get<string>(IMAGE_SECRET_OPTION_KEY)).toBe(first[0]);
+			expect(getDb).toHaveBeenCalledTimes(1);
+			expect(await new OptionsRepository(db).get<string>(IMAGE_SECRET_OPTION_KEY)).toBe(
+				first.secrets[0],
+			);
 		});
 
-		it("two concurrent cold resolutions converge on one persisted value", async () => {
+		it("returns the stored emdash:image_secret", async () => {
+			await new OptionsRepository(db).set(IMAGE_SECRET_OPTION_KEY, "stored-secret");
+			expect(await resolveImageSigningSecrets({ getDb: () => db, env: {} })).toEqual({
+				secrets: ["stored-secret"],
+				source: "db",
+			});
+		});
+
+		it("coalesces concurrent cold resolutions in one isolate onto one database read", async () => {
+			const getDb = vi.fn(async () => db);
 			const [a, b] = await Promise.all([
-				resolveImageSigningSecrets({ db, env: {} }),
-				resolveImageSigningSecrets({ db, env: {} }),
+				resolveImageSigningSecrets({ getDb, env: {} }),
+				resolveImageSigningSecrets({ getDb, env: {} }),
 			]);
 			expect(a).toEqual(b);
-			expect(await new OptionsRepository(db).get<string>(IMAGE_SECRET_OPTION_KEY)).toBe(a[0]);
+			expect(getDb).toHaveBeenCalledTimes(1);
+		});
+
+		it("two isolates resolving concurrently converge on one persisted value", async () => {
+			// Each isolate has its own cache. Clearing it between the two calls gives
+			// the second call a fresh one, so both race to generate and persist.
+			const first = resolveImageSigningSecrets({ getDb: async () => db, env: {} });
+			_clearSecretsCacheForTesting();
+			const second = resolveImageSigningSecrets({ getDb: async () => db, env: {} });
+			const [a, b] = await Promise.all([first, second]);
+			expect(a).toEqual(b);
+			expect(await new OptionsRepository(db).get<string>(IMAGE_SECRET_OPTION_KEY)).toBe(
+				a.secrets[0],
+			);
+		});
+
+		it("converges on the value another isolate persisted first", async () => {
+			const winner = "other-isolate-won";
+			const realRepo = new OptionsRepository(db);
+			const stubRepo = Object.create(realRepo) as OptionsRepository;
+			stubRepo.setIfAbsent = async <T>(name: string, value: T) => {
+				if (name === IMAGE_SECRET_OPTION_KEY) {
+					await realRepo.set(name, winner);
+					return false;
+				}
+				return realRepo.setIfAbsent(name, value);
+			};
+
+			const result = await resolveImageSigningSecrets({
+				getDb: () => db,
+				env: {},
+				_repo: stubRepo,
+			});
+			expect(result).toEqual({ secrets: [winner], source: "db" });
+		});
+
+		it("throws SECRET_PERSIST_FAILED when the insert loses but no row appears", async () => {
+			const stubRepo = Object.create(new OptionsRepository(db)) as OptionsRepository;
+			stubRepo.setIfAbsent = async () => false;
+
+			await expect(
+				resolveImageSigningSecrets({ getDb: () => db, env: {}, _repo: stubRepo }),
+			).rejects.toThrow(/Failed to persist/);
 		});
 
 		it("is distinct from the preview secret", async () => {
-			const [image] = await resolveImageSigningSecrets({ db, env: {} });
+			const { secrets } = await resolveImageSigningSecrets({ getDb: () => db, env: {} });
 			const { previewSecret } = await resolveSecrets({ db, env: {} });
-			expect(image).not.toBe(previewSecret);
+			expect(secrets[0]).not.toBe(previewSecret);
 			const repo = new OptionsRepository(db);
 			expect(await repo.get(PREVIEW_SECRET_OPTION_KEY)).not.toBe(
 				await repo.get(IMAGE_SECRET_OPTION_KEY),
 			);
 		});
 
-		it("resolveImageSigningSecretsCached reads EMDASH_IMAGE_SECRET from process.env", async () => {
+		it("reads EMDASH_IMAGE_SECRET from process.env when no env is passed", async () => {
 			const previous = process.env.EMDASH_IMAGE_SECRET;
 			process.env.EMDASH_IMAGE_SECRET = "k1,k0";
 			try {
-				expect(await resolveImageSigningSecretsCached(db)).toEqual(["k1", "k0"]);
+				expect(await resolveImageSigningSecrets({ getDb: unreachable })).toEqual({
+					secrets: ["k1", "k0"],
+					source: "env",
+				});
 			} finally {
 				if (previous === undefined) delete process.env.EMDASH_IMAGE_SECRET;
 				else process.env.EMDASH_IMAGE_SECRET = previous;
 			}
 		});
 
-		it("resolveImageSigningSecretsCached memoizes per db until the cache is cleared", async () => {
-			const a = await resolveImageSigningSecretsCached(db);
-			const b = await resolveImageSigningSecretsCached(db);
-			expect(b).toBe(a);
+		it("memoizes the database secret until the cache is cleared", async () => {
+			const a = await resolveImageSigningSecrets({ getDb: () => db, env: {} });
+			const b = await resolveImageSigningSecrets({ getDb: () => db, env: {} });
+			expect(b.secrets).toBe(a.secrets);
 			_clearSecretsCacheForTesting();
-			const c = await resolveImageSigningSecretsCached(db);
-			expect(c).not.toBe(a);
-			expect(c).toEqual(a);
+			const c = await resolveImageSigningSecrets({ getDb: () => db, env: {} });
+			expect(c.secrets).not.toBe(a.secrets);
+			expect(c.secrets).toEqual(a.secrets);
+		});
+
+		it("serves every handle on the configured database from one resolution", async () => {
+			// The runtime, the loader and each request-scoped view hold their own
+			// Kysely instance for the configured database.
+			const first = await resolveImageSigningSecrets({ getDb: () => db, env: {} });
+			const otherHandle = vi.fn(unreachable);
+			expect(await resolveImageSigningSecrets({ getDb: otherHandle, env: {} })).toEqual(first);
+			expect(otherHandle).not.toHaveBeenCalled();
+		});
+
+		it("keeps an isolated database's secret apart from the configured database's", async () => {
+			const isolatedDb = await setupTestDatabase();
+			try {
+				const configured = await resolveImageSigningSecrets({ getDb: () => db, env: {} });
+				const isolated = await resolveImageSigningSecrets({
+					getDb: () => isolatedDb,
+					isolated: true,
+					env: {},
+				});
+				expect(isolated.secrets).not.toEqual(configured.secrets);
+				expect(isolated.secrets[0]).toBe(
+					await new OptionsRepository(isolatedDb).get<string>(IMAGE_SECRET_OPTION_KEY),
+				);
+				expect(await resolveImageSigningSecrets({ getDb: () => db, env: {} })).toEqual(configured);
+			} finally {
+				await teardownTestDatabase(isolatedDb);
+			}
+		});
+
+		describe("primeImageSigningSecret", () => {
+			it("serves the value runtime init read without opening the database", async () => {
+				await primeImageSigningSecret(db, "read-at-init");
+				const getDb = vi.fn(unreachable);
+				expect(await resolveImageSigningSecrets({ getDb, env: {} })).toEqual({
+					secrets: ["read-at-init"],
+					source: "db",
+				});
+				expect(getDb).not.toHaveBeenCalled();
+			});
+
+			it("persists a generated secret when the row is missing, then serves it", async () => {
+				await primeImageSigningSecret(db, undefined);
+				const stored = await new OptionsRepository(db).get<string>(IMAGE_SECRET_OPTION_KEY);
+				expect(stored).toEqual(expect.any(String));
+				expect(await resolveImageSigningSecrets({ getDb: unreachable, env: {} })).toEqual({
+					secrets: [stored],
+					source: "db",
+				});
+			});
+
+			it("converges on a row another isolate created after init read it as missing", async () => {
+				await new OptionsRepository(db).set(IMAGE_SECRET_OPTION_KEY, "created-meanwhile");
+				await primeImageSigningSecret(db, undefined);
+				expect(await resolveImageSigningSecrets({ getDb: unreachable, env: {} })).toEqual({
+					secrets: ["created-meanwhile"],
+					source: "db",
+				});
+			});
+
+			it("keeps a secret already resolved on the isolate", async () => {
+				await new OptionsRepository(db).set(IMAGE_SECRET_OPTION_KEY, "resolved-first");
+				await resolveImageSigningSecrets({ getDb: () => db, env: {} });
+				await primeImageSigningSecret(db, "stale");
+				expect(await resolveImageSigningSecrets({ getDb: unreachable, env: {} })).toEqual({
+					secrets: ["resolved-first"],
+					source: "db",
+				});
+			});
 		});
 	});
 

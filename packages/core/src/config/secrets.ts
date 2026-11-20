@@ -367,10 +367,29 @@ export async function resolveSecrets(options: ResolveSecretsOptions): Promise<Re
 	};
 }
 
+/** Image signing secrets and where they came from. */
+export interface ResolvedImageSigningSecrets {
+	/** The first signs; every one verifies. Never empty. */
+	secrets: string[];
+	/**
+	 * Source of `secrets`. Useful for diagnostics; never expose the values
+	 * themselves, only the source.
+	 */
+	source: "env" | "db";
+}
+
 /** Inputs for `resolveImageSigningSecrets`. */
 export interface ResolveImageSigningSecretsOptions {
-	/** The Kysely DB that persists (and reads back) the generated secret. */
-	db: Kysely<Database>;
+	/**
+	 * Opens the database that holds `emdash:image_secret`. Not called when
+	 * `EMDASH_IMAGE_SECRET` is set, and called at most once otherwise.
+	 */
+	getDb: () => Kysely<Database> | Promise<Kysely<Database>>;
+	/**
+	 * `getDb` returns a database other than the configured one (playground,
+	 * Durable Object preview), which holds its own secret.
+	 */
+	isolated?: boolean;
 	/** Optional explicit env map. Defaults to `process.env`. */
 	env?: SecretsEnv;
 	/**
@@ -385,18 +404,77 @@ export interface ResolveImageSigningSecretsOptions {
  * (comma-separated, the first signs, every value verifies), else a DB-stored
  * `emdash:image_secret`, generated atomically on first need.
  *
+ * The stored secret is cached per isolate: one entry for the configured
+ * database, whichever Kysely instance addresses it (runtime, loader,
+ * request-scoped views), and one per isolated database. Runtime init seeds the
+ * configured entry from its options read (`primeImageSigningSecret`), so the
+ * first signed render on an isolate needs no query of its own. Concurrent cold
+ * callers coalesce onto one resolution, with the single-flight semantics of
+ * `resolveSecretsCached`.
+ *
  * Deliberately not part of `resolveSecrets`: the row must only be created on
  * a site that signs image URLs (`images: { signedUrls: true }`), never as a
  * side effect of preview, comment or visual-editing requests.
  */
 export async function resolveImageSigningSecrets(
 	options: ResolveImageSigningSecretsOptions,
-): Promise<string[]> {
-	const fromEnv = readImageSigningSecretsFromEnv(options.env ?? readDefaultEnv());
-	if (fromEnv !== null) return fromEnv;
-	const repo = options._repo ?? new OptionsRepository(options.db);
-	const generated = await ensureGeneratedOption(repo, IMAGE_SECRET_OPTION_KEY);
-	return [generated.value];
+): Promise<ResolvedImageSigningSecrets> {
+	const fromEnv = readImageSigningSecretsFromEnv(options.env);
+	if (fromEnv !== null) return { secrets: fromEnv, source: "env" };
+
+	const generate = async (db: Kysely<Database>) => {
+		const repo = options._repo ?? new OptionsRepository(db);
+		const generated = await ensureGeneratedOption(repo, IMAGE_SECRET_OPTION_KEY);
+		return [generated.value];
+	};
+	let secrets: string[];
+	if (options.isolated) {
+		const db = await options.getDb();
+		secrets = await singleFlightCached(getIsolatedImageSecretsCache(db), () => generate(db), {
+			anchor: (promise) => after(() => promise),
+			ownerTimeoutMs: 30_000,
+		});
+	} else {
+		secrets = await singleFlightCached(
+			getConfiguredImageSecretsCache(),
+			async () => generate(await options.getDb()),
+			{ anchor: (promise) => after(() => promise), ownerTimeoutMs: 30_000 },
+		);
+	}
+	return { secrets, source: "db" };
+}
+
+/**
+ * Seed the configured database's image secret from runtime init's options
+ * read, which includes `emdash:image_secret` when signing is on and
+ * `EMDASH_IMAGE_SECRET` is unset. `stored` is the value read, `undefined` when
+ * the row is missing: the secret is then generated and persisted through `db`,
+ * once per site. Leaves a secret the isolate has already resolved alone.
+ */
+export async function primeImageSigningSecret(
+	db: Kysely<Database>,
+	stored: unknown,
+): Promise<void> {
+	const cache = getConfiguredImageSecretsCache();
+	if (cache.hasValue) return;
+	if (typeof stored === "string" && stored.length > 0) {
+		cache.value = [stored];
+		cache.hasValue = true;
+		cache.valueVersion = cache.version;
+		return;
+	}
+	await singleFlightCached(
+		cache,
+		async () => {
+			const generated = await ensureGeneratedOption(
+				new OptionsRepository(db),
+				IMAGE_SECRET_OPTION_KEY,
+				{ value: stored },
+			);
+			return [generated.value];
+		},
+		{ anchor: (promise) => after(() => promise), ownerTimeoutMs: 30_000 },
+	);
 }
 
 /**
@@ -465,7 +543,8 @@ export async function validateEncryptionKeyAtStartup(env?: SecretsEnv): Promise<
 // value changed from a bare promise to a single-flight cache.
 const SECRETS_CACHE_KEY = Symbol.for("@emdash-cms/core/secrets-cache@2");
 
-const IMAGE_SECRETS_CACHE_KEY = Symbol.for("@emdash-cms/core/image-secrets-cache@1");
+// Bumped to @2 when the configured database got one entry for every handle.
+const IMAGE_SECRETS_CACHE_KEY = Symbol.for("@emdash-cms/core/image-secrets-cache@2");
 
 interface SecretsCacheHolder<T> {
 	cache: WeakMap<Kysely<Database>, SingleFlightCache<T>>;
@@ -492,6 +571,34 @@ function getSecretsCache<T>(db: Kysely<Database>, key: symbol): SingleFlightCach
 	return cache;
 }
 
+interface ImageSecretsCacheHolder {
+	configured: SingleFlightCache<string[]>;
+	isolated: WeakMap<Kysely<Database>, SingleFlightCache<string[]>>;
+}
+
+function getImageSecretsCacheHolder(): ImageSecretsCacheHolder {
+	// eslint-disable-next-line typescript/no-unsafe-type-assertion -- globalThis singleton pattern
+	const holder = globalThis as Record<symbol, ImageSecretsCacheHolder | undefined>;
+	return (holder[IMAGE_SECRETS_CACHE_KEY] ??= {
+		configured: createSingleFlightCache<string[]>(),
+		isolated: new WeakMap(),
+	});
+}
+
+function getConfiguredImageSecretsCache(): SingleFlightCache<string[]> {
+	return getImageSecretsCacheHolder().configured;
+}
+
+function getIsolatedImageSecretsCache(db: Kysely<Database>): SingleFlightCache<string[]> {
+	const { isolated } = getImageSecretsCacheHolder();
+	let cache = isolated.get(db);
+	if (!cache) {
+		cache = createSingleFlightCache<string[]>();
+		isolated.set(db, cache);
+	}
+	return cache;
+}
+
 /**
  * Memoized wrapper around `resolveSecrets`. Use this from request-time hot
  * paths (preview verification, comment IP hashing) so they don't reread
@@ -506,22 +613,6 @@ function getSecretsCache<T>(db: Kysely<Database>, key: symbol): SingleFlightCach
 export function resolveSecretsCached(db: Kysely<Database>): Promise<ResolvedSecrets> {
 	const cache = getSecretsCache<ResolvedSecrets>(db, SECRETS_CACHE_KEY);
 	return singleFlightCached(cache, () => resolveSecrets({ db }), {
-		anchor: (promise) => after(() => promise),
-		ownerTimeoutMs: 30_000,
-	});
-}
-
-/**
- * Memoized `resolveImageSigningSecrets`, for the signing paths once the caller
- * has found `EMDASH_IMAGE_SECRET` unset (`resolveImageSigningKeys` reads the
- * variable first so a configured secret never needs a database). Cached per
- * database with the same
- * single-flight semantics as `resolveSecretsCached`; it is only reached when
- * signing is on, so a site with signing off never creates the secret row.
- */
-export function resolveImageSigningSecretsCached(db: Kysely<Database>): Promise<string[]> {
-	const cache = getSecretsCache<string[]>(db, IMAGE_SECRETS_CACHE_KEY);
-	return singleFlightCached(cache, () => resolveImageSigningSecrets({ db }), {
 		anchor: (promise) => after(() => promise),
 		ownerTimeoutMs: 30_000,
 	});
@@ -546,7 +637,8 @@ export function _clearSecretsCacheForTesting(): void {
 
 /**
  * Read or generate-and-persist a random base64url secret stored in the
- * options table.
+ * options table. `stored` is a value the caller already read for the key,
+ * which saves the first read.
  *
  * Concurrency: `setIfAbsent` is an atomic INSERT...ON CONFLICT DO NOTHING.
  * On race, the loser re-reads to converge on the winner's value.
@@ -554,8 +646,9 @@ export function _clearSecretsCacheForTesting(): void {
 async function ensureGeneratedOption(
 	repo: OptionsRepository,
 	optionKey: string,
+	stored?: { value: unknown },
 ): Promise<{ value: string; source: "db" }> {
-	const existing = await repo.get<string>(optionKey);
+	const existing = stored ? stored.value : await repo.get<string>(optionKey);
 	if (typeof existing === "string" && existing.length > 0) {
 		return { value: existing, source: "db" };
 	}

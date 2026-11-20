@@ -19,7 +19,7 @@ import { ErrorCode } from "../api/errors.js";
 import {
 	EmDashSecretsError,
 	readImageSigningSecretsFromEnv,
-	resolveImageSigningSecretsCached,
+	resolveImageSigningSecrets,
 } from "../config/secrets.js";
 import type { Database } from "../database/types.js";
 import { getDb } from "../loader.js";
@@ -30,20 +30,27 @@ import {
 } from "../media/image-signature.js";
 import { getRequestContext } from "../request-context.js";
 
+/** Imported image signing keys and where their secrets came from. */
+export interface ImageSigningKeys {
+	/** The first signs; every key verifies. */
+	keys: CryptoKey[];
+	source: "env" | "db";
+}
+
 /**
  * Imports the image signing secrets. `EMDASH_IMAGE_SECRET` wins and needs no
- * database: the request's database and `getDb()` are never touched. Otherwise
- * the secret is the one persisted in the request's database, or the configured
- * one. The first key signs; every key verifies. Throws when the variable is
- * unset and the database or the persisted secret is unavailable.
+ * database. Otherwise the secret is the one persisted in the request's
+ * database, or the configured one. Throws when the variable is unset and the
+ * database or the persisted secret is unavailable.
  */
-export async function resolveImageSigningKeys(): Promise<CryptoKey[]> {
-	const fromEnv = readImageSigningSecretsFromEnv();
-	if (fromEnv) return importImageSigningKeys(fromEnv);
-	const requestDb = getRequestContext()?.db ?? (await getDb());
-	// eslint-disable-next-line typescript/no-unsafe-type-assertion -- RequestContext.db is unknown to avoid circular deps
-	const db = requestDb as Kysely<Database>;
-	return importImageSigningKeys(await resolveImageSigningSecretsCached(db));
+export async function resolveImageSigningKeys(): Promise<ImageSigningKeys> {
+	const context = getRequestContext();
+	const { secrets, source } = await resolveImageSigningSecrets({
+		// eslint-disable-next-line typescript/no-unsafe-type-assertion -- RequestContext.db is unknown to avoid circular deps
+		getDb: async () => (context?.db as Kysely<Database> | undefined) ?? getDb(),
+		isolated: context?.dbIsIsolated === true,
+	});
+	return { keys: await importImageSigningKeys(secrets), source };
 }
 
 /**
@@ -84,9 +91,9 @@ export async function checkImageSignature(ctx: APIContext, url: URL): Promise<Re
 	if (hasPermission(user, "media:upload")) return null;
 
 	const href = url.searchParams.get("href");
-	let keys: CryptoKey[];
+	let signing: ImageSigningKeys;
 	try {
-		keys = await resolveImageSigningKeys();
+		signing = await resolveImageSigningKeys();
 	} catch {
 		// Fail closed: without the secret nothing can be verified.
 		return apiError(
@@ -96,7 +103,7 @@ export async function checkImageSignature(ctx: APIContext, url: URL): Promise<Re
 		);
 	}
 
-	if (await hasValidTransformSignature(url, keys)) return null;
+	if (await hasValidTransformSignature(url, signing.keys)) return null;
 
 	const reason = url.searchParams.has(IMAGE_SIGNATURE_PARAM) ? "invalid" : "missing";
 	console.debug(
