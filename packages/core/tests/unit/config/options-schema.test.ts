@@ -123,7 +123,7 @@ describe("images option", () => {
 
 	it("explains the accepted shapes", () => {
 		expect(() => build({ images: "yes" })()).toThrow(
-			"Expected a boolean or { signedUrls: boolean }",
+			"Expected a boolean or `{ signedUrls: boolean }`",
 		);
 	});
 });

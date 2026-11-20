@@ -39,7 +39,7 @@ const configShape = {
 			// Strict: a typo such as `signedUrl` must not silently leave signing off.
 			z.object({ signedUrls: z.boolean() }).partial().strict(),
 		],
-		{ error: "Expected a boolean or { signedUrls: boolean }" },
+		{ error: "Expected a boolean or `{ signedUrls: boolean }`" },
 	),
 	imagePlaceholders: z.boolean(),
 	plugins: z.array(pluginDescriptor),
