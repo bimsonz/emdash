@@ -127,7 +127,7 @@ emdash({
 });
 ```
 
-With signing on, EmDash adds a signature to every transform URL it renders: stored media, bundled `/_astro` assets and allowed remote images. `<Image>` from `emdash/ui`, Astro's `<Image>` and `<Picture>`, and `getImage()` all sign without template changes. The endpoint verifies the signature before it reads storage or transforms anything, and answers `403` with code `IMAGE_SIGNATURE_INVALID` when it is missing or wrong. It answers `503` with code `IMAGE_SIGNING_UNAVAILABLE` when the secret cannot be resolved, which happens only with no `EMDASH_IMAGE_SECRET` and no database.
+With signing on, EmDash adds a signature to every transform URL it renders: stored media, bundled `/_astro` assets and allowed remote images. `<Image>` from `emdash/ui`, Astro's `<Image>` and `<Picture>`, and `getImage()` all sign without template changes. The endpoint verifies the signature before it reads storage or transforms anything, and answers `403` with code `IMAGE_SIGNATURE_INVALID` when it is missing or wrong. It answers `503` with code `IMAGE_SIGNING_UNAVAILABLE` when `EMDASH_IMAGE_SECRET` is unset and the database can't be reached. With `EMDASH_IMAGE_SECRET` set, signing and verification never touch the database.
 
 Contributors and above, anyone with the `media:upload` permission, need no signature, because the media library and the visual editor's picker build thumbnail URLs in the browser. Subscribers can open the media library, but their thumbnails get `403` and fall back to the full originals.
 
@@ -139,9 +139,13 @@ Contributors and above, anyone with the `media:upload` permission, need no signa
 
 EmDash signs with a site secret. Without configuration it generates one on first use and stores it as the `emdash:image_secret` option, shared by every deployment that uses the same database. Set `EMDASH_IMAGE_SECRET` to supply your own, as a comma-separated list: the first value signs and every value verifies, which is how you rotate. Deployments that have their own secrets must share the value. See [Image secret](/deployment/secrets/#image-secret).
 
-Most builds need no secret, because Astro turns the transform URLs on prerendered pages into static files. Under Cloudflare's default image mode, `cloudflare-binding`, prerendered pages keep runtime `/_image` URLs and EmDash signs them during the build, so the build needs the secret. See [Image transformation](/deployment/cloudflare/#image-transformation) for the Cloudflare setup. Without it the build fails with `ImageSigningSecretRequiredError`. A `getImage()` call made outside the page render during a prerender, for example in `getStaticPaths`, ships an unsigned URL, so call it from the page.
+Most builds need no secret, because Astro turns the transform URLs on prerendered pages into static files. Under Cloudflare's default image mode, `cloudflare-binding` (`imageService` unset, or the string `"cloudflare-binding"`), prerendered pages keep runtime `/_image` URLs and EmDash signs them during the build with the first `EMDASH_IMAGE_SECRET` value, so the build needs it. Without it the build fails with an error that names `EMDASH_IMAGE_SECRET` and says where to set it. With `imageService: { build: "cloudflare-binding" }` the build transforms prerendered images itself and needs no secret. See [Image transformation](/deployment/cloudflare/#image-transformation) for the Cloudflare setup.
 
-Signing supports the stock runtime image service. With a custom image service, or Cloudflare's `compile` or `custom` image modes, EmDash logs a warning and signing stays off.
+A secret set at build but missing or different at runtime makes prerendered images answer `403`, and nothing warns you at build, so set the same value in both places.
+
+A `getImage()` call with no request context, for example in `getStaticPaths`, signs with the first `EMDASH_IMAGE_SECRET` value when it is set and otherwise ships an unsigned URL. Set `EMDASH_IMAGE_SECRET`, or call `getImage()` from the page.
+
+Signing supports the stock runtime image service. With a custom image service, or Cloudflare's `compile` or `custom` image modes, EmDash logs a warning and signing stays off. It does the same when it can't read the Cloudflare adapter's image mode.
 
 ##### Turn signing on
 
