@@ -538,8 +538,7 @@ export async function validateEncryptionKeyAtStartup(env?: SecretsEnv): Promise<
 // value changed from a bare promise to a single-flight cache.
 const SECRETS_CACHE_KEY = Symbol.for("@emdash-cms/core/secrets-cache@2");
 
-// Bumped to @2 when the configured database got one entry for every handle.
-const IMAGE_SECRETS_CACHE_KEY = Symbol.for("@emdash-cms/core/image-secrets-cache@2");
+const IMAGE_SECRETS_CACHE_KEY = Symbol.for("@emdash-cms/core/image-secrets-cache@1");
 
 interface SecretsCacheHolder<T> {
 	cache: WeakMap<Kysely<Database>, SingleFlightCache<T>>;

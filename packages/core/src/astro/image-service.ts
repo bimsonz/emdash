@@ -31,16 +31,6 @@ type ImageConfig = Parameters<LocalImageService["getURL"]>[1];
 /** Base for parsing the root-relative URLs a stock service builds. */
 const PLACEHOLDER_ORIGIN = "http://emdash.invalid";
 
-function recordedStockService(): ImageConfig["service"] {
-	const recorded = virtualConfig.imageRuntimeService;
-	if (!recorded) {
-		throw new Error(
-			"[emdash] emdash/internal/image-service is installed by EmDash for images.signedUrls, not configured directly.",
-		);
-	}
-	return recorded;
-}
-
 /**
  * Wraps `stock` so each method sees `original` as `imageConfig.service`, as it
  * would unwrapped (sharp reads its `kernel` there), and `getURL` signs.
@@ -111,4 +101,6 @@ function signingImageService(
 	return service;
 }
 
-export default signingImageService(stockImageService, recordedStockService());
+// Importing `virtual:emdash/stock-image-service` throws first when no stock
+// service was recorded, so `imageRuntimeService` is set here.
+export default signingImageService(stockImageService, virtualConfig.imageRuntimeService!);
