@@ -381,15 +381,18 @@ export interface ResolvedImageSigningSecrets {
 /** Inputs for `resolveImageSigningSecrets`. */
 export interface ResolveImageSigningSecretsOptions {
 	/**
-	 * Opens the database that holds `emdash:image_secret`. Not called when
-	 * `EMDASH_IMAGE_SECRET` is set, and called at most once otherwise.
+	 * The database in the request context, if any. A request-scoped view of
+	 * the configured database (see `database/request-scoped.ts`) shares the
+	 * configured database's secret; any other database (playground, Durable
+	 * Object preview) holds its own, whatever flags the request context sets.
+	 */
+	requestDb?: Kysely<Database>;
+	/**
+	 * Opens the configured database. Called only when there is no request
+	 * database, `EMDASH_IMAGE_SECRET` is unset and the isolate has not
+	 * resolved the configured database's secret yet.
 	 */
 	getDb: () => Kysely<Database> | Promise<Kysely<Database>>;
-	/**
-	 * `getDb` returns a database other than the configured one (playground,
-	 * Durable Object preview), which holds its own secret.
-	 */
-	isolated?: boolean;
 	/** Optional explicit env map. Defaults to `process.env`. */
 	env?: SecretsEnv;
 	/**
@@ -405,12 +408,11 @@ export interface ResolveImageSigningSecretsOptions {
  * `emdash:image_secret`, generated atomically on first need.
  *
  * The stored secret is cached per isolate: one entry for the configured
- * database, whichever Kysely instance addresses it (runtime, loader,
- * request-scoped views), and one per isolated database. Runtime init seeds the
- * configured entry from its options read (`primeImageSigningSecret`), so the
- * first signed render on an isolate needs no query of its own. Concurrent cold
- * callers coalesce onto one resolution, with the single-flight semantics of
- * `resolveSecretsCached`.
+ * database, shared by the loader's handle and its request-scoped views, and
+ * one per other database. Runtime init seeds the configured entry from its
+ * options read (`primeImageSigningSecret`), so the first signed render on an
+ * isolate needs no query of its own. Concurrent cold callers coalesce onto
+ * one resolution, with the single-flight semantics of `resolveSecretsCached`.
  *
  * Deliberately not part of `resolveSecrets`: the row must only be created on
  * a site that signs image URLs (`images: { signedUrls: true }`), never as a
@@ -427,20 +429,13 @@ export async function resolveImageSigningSecrets(
 		const generated = await ensureGeneratedOption(repo, IMAGE_SECRET_OPTION_KEY);
 		return [generated.value];
 	};
-	let secrets: string[];
-	if (options.isolated) {
-		const db = await options.getDb();
-		secrets = await singleFlightCached(getIsolatedImageSecretsCache(db), () => generate(db), {
-			anchor: (promise) => after(() => promise),
-			ownerTimeoutMs: 30_000,
-		});
-	} else {
-		secrets = await singleFlightCached(
-			getConfiguredImageSecretsCache(),
-			async () => generate(await options.getDb()),
-			{ anchor: (promise) => after(() => promise), ownerTimeoutMs: 30_000 },
-		);
-	}
+	const { requestDb } = options;
+	const isolated = requestDb !== undefined && !isRequestScopedDb(requestDb);
+	const secrets = await singleFlightCached(
+		isolated ? getIsolatedImageSecretsCache(requestDb) : getConfiguredImageSecretsCache(),
+		async () => generate(requestDb ?? (await options.getDb())),
+		{ anchor: (promise) => after(() => promise), ownerTimeoutMs: 30_000 },
+	);
 	return { secrets, source: "db" };
 }
 

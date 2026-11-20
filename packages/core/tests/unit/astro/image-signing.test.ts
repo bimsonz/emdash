@@ -178,6 +178,57 @@ describe("checkImageSignature", () => {
 		expect(text).not.toContain("not configured");
 	});
 
+	// The Durable Object preview puts its own database in the request context
+	// without `dbIsIsolated`. Each test starts on a cold isolate.
+	describe("with another site's database in the request context", () => {
+		let previewDb: Kysely<Database>;
+
+		beforeEach(async () => {
+			previewDb = await setupTestDatabase();
+		});
+
+		afterEach(async () => {
+			await teardownTestDatabase(previewDb);
+		});
+
+		const preview = <T>(fn: () => Promise<T>) => inRequest(fn, { db: previewDb });
+
+		it("keeps the main site's secret when the preview resolves first", async () => {
+			await new OptionsRepository(previewDb).set(IMAGE_SECRET_OPTION_KEY, "preview-secret");
+			const previewUrl = await signed(ORIGIN, undefined, "preview-secret");
+			const mainUrl = await signed(ORIGIN, undefined, "secret-a");
+
+			expect(await preview(() => checkImageSignature(ctx(), previewUrl))).toBeNull();
+
+			expect(await checkImageSignature(ctx(), mainUrl)).toBeNull();
+			await refusal(await checkImageSignature(ctx(), previewUrl), 403, "IMAGE_SIGNATURE_INVALID");
+			await refusal(
+				await preview(() => checkImageSignature(ctx(), mainUrl)),
+				403,
+				"IMAGE_SIGNATURE_INVALID",
+			);
+		});
+
+		it("gives the preview its own secret after the main site resolved", async () => {
+			const mainUrl = await signed(ORIGIN, undefined, "secret-a");
+			expect(await checkImageSignature(ctx(), mainUrl)).toBeNull();
+
+			await refusal(
+				await preview(() => checkImageSignature(ctx(), mainUrl)),
+				403,
+				"IMAGE_SIGNATURE_INVALID",
+			);
+			const previewSecret = await new OptionsRepository(previewDb).get<string>(
+				IMAGE_SECRET_OPTION_KEY,
+			);
+			expect(previewSecret).toEqual(expect.any(String));
+			expect(previewSecret).not.toBe("secret-a");
+			const previewUrl = await signed(ORIGIN, undefined, previewSecret!);
+			expect(await preview(() => checkImageSignature(ctx(), previewUrl))).toBeNull();
+			expect(await checkImageSignature(ctx(), mainUrl)).toBeNull();
+		});
+	});
+
 	describe("with EMDASH_IMAGE_SECRET set", () => {
 		beforeEach(() => {
 			vi.stubEnv("EMDASH_IMAGE_SECRET", "secret-a");

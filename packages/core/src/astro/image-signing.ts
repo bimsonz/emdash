@@ -44,11 +44,10 @@ export interface ImageSigningKeys {
  * database or the persisted secret is unavailable.
  */
 export async function resolveImageSigningKeys(): Promise<ImageSigningKeys> {
-	const context = getRequestContext();
 	const { secrets, source } = await resolveImageSigningSecrets({
 		// eslint-disable-next-line typescript/no-unsafe-type-assertion -- RequestContext.db is unknown to avoid circular deps
-		getDb: async () => (context?.db as Kysely<Database> | undefined) ?? getDb(),
-		isolated: context?.dbIsIsolated === true,
+		requestDb: getRequestContext()?.db as Kysely<Database> | undefined,
+		getDb,
 	});
 	return { keys: await importImageSigningKeys(secrets), source };
 }

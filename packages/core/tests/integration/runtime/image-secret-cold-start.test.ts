@@ -22,6 +22,8 @@ import { OptionsRepository } from "../../../src/database/repositories/options.js
 import type { Database as EmDashDatabase } from "../../../src/database/types.js";
 import { EmDashRuntime } from "../../../src/emdash-runtime.js";
 import type { RuntimeDependencies } from "../../../src/emdash-runtime.js";
+import { runWithContext } from "../../../src/request-context.js";
+import { setupTestDatabase, teardownTestDatabase } from "../../utils/test-db.js";
 
 const virtualConfig = vi.hoisted(() => ({ imageSigning: false }));
 vi.mock("virtual:emdash/config", () => ({ default: virtualConfig }));
@@ -130,5 +132,54 @@ describe("EmDashRuntime.create — image signing secret", () => {
 		} finally {
 			await runtime.shutdown();
 		}
+	});
+
+	describe("the site options read", () => {
+		/** The keys of the runtime's site options read, the `getMany` that asks for `site:title`. */
+		async function siteOptionKeys(create: () => Promise<EmDashRuntime>): Promise<string[]> {
+			const getMany = vi.spyOn(OptionsRepository.prototype, "getMany");
+			try {
+				const runtime = await create();
+				await runtime.shutdown();
+				const reads = getMany.mock.calls
+					.map(([keys]) => keys)
+					.filter((keys) => keys.includes("site:title"));
+				expect(reads.length).toBeGreaterThan(0);
+				return reads.flat();
+			} finally {
+				getMany.mockRestore();
+			}
+		}
+
+		it("asks for emdash:image_secret with signing on, no EMDASH_IMAGE_SECRET and the configured database", async () => {
+			const keys = await siteOptionKeys(() => EmDashRuntime.create(createDeps(sqlite)));
+			expect(keys).toContain(IMAGE_SECRET_OPTION_KEY);
+		});
+
+		it("leaves emdash:image_secret out with signing off", async () => {
+			virtualConfig.imageSigning = false;
+			const keys = await siteOptionKeys(() => EmDashRuntime.create(createDeps(sqlite)));
+			expect(keys).not.toContain(IMAGE_SECRET_OPTION_KEY);
+		});
+
+		it("leaves emdash:image_secret out when EMDASH_IMAGE_SECRET is set", async () => {
+			vi.stubEnv("EMDASH_IMAGE_SECRET", "from-env");
+			const keys = await siteOptionKeys(() => EmDashRuntime.create(createDeps(sqlite)));
+			expect(keys).not.toContain(IMAGE_SECRET_OPTION_KEY);
+		});
+
+		it("leaves emdash:image_secret out for a runtime on an isolated database", async () => {
+			const isolated = await setupTestDatabase();
+			try {
+				const keys = await siteOptionKeys(() =>
+					runWithContext({ editMode: false, db: isolated, dbIsIsolated: true }, () =>
+						EmDashRuntime.create(createDeps(sqlite)),
+					),
+				);
+				expect(keys).not.toContain(IMAGE_SECRET_OPTION_KEY);
+			} finally {
+				await teardownTestDatabase(isolated);
+			}
+		});
 	});
 });
