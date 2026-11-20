@@ -512,8 +512,10 @@ export function resolveSecretsCached(db: Kysely<Database>): Promise<ResolvedSecr
 }
 
 /**
- * Memoized `resolveImageSigningSecrets`, for the signing paths (the image
- * service and the image endpoints). Cached per database with the same
+ * Memoized `resolveImageSigningSecrets`, for the signing paths once the caller
+ * has found `EMDASH_IMAGE_SECRET` unset (`resolveImageSigningKeys` reads the
+ * variable first so a configured secret never needs a database). Cached per
+ * database with the same
  * single-flight semantics as `resolveSecretsCached`; it is only reached when
  * signing is on, so a site with signing off never creates the secret row.
  */

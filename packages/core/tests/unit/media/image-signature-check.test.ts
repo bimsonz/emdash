@@ -13,7 +13,12 @@ const { virtualConfig, getDb, resolveImageSigningSecretsCached, requestContext }
 
 vi.mock("virtual:emdash/config", () => ({ default: virtualConfig }));
 vi.mock("../../../src/loader.js", () => ({ getDb }));
-vi.mock("../../../src/config/secrets.js", () => ({ resolveImageSigningSecretsCached }));
+vi.mock("../../../src/config/secrets.js", async (importActual) => ({
+	readImageSigningSecretsFromEnv: (
+		await importActual<typeof import("../../../src/config/secrets.js")>()
+	).readImageSigningSecretsFromEnv,
+	resolveImageSigningSecretsCached,
+}));
 vi.mock("../../../src/request-context.js", () => ({
 	getRequestContext: () => requestContext.current,
 }));
@@ -156,6 +161,38 @@ describe("checkImageSignature", () => {
 			"IMAGE_SIGNING_UNAVAILABLE",
 		);
 		expect(text).not.toContain("not configured");
+	});
+
+	describe("with EMDASH_IMAGE_SECRET set", () => {
+		beforeEach(() => {
+			vi.stubEnv("EMDASH_IMAGE_SECRET", "secret-a");
+			getDb.mockRejectedValue(new Error("EmDash database not configured"));
+		});
+
+		afterEach(() => {
+			vi.unstubAllEnvs();
+		});
+
+		it("verifies a signed URL without a database", async () => {
+			expect(await checkImageSignature(ctx(), await signed())).toBeNull();
+			expect(getDb).not.toHaveBeenCalled();
+			expect(resolveImageSigningSecretsCached).not.toHaveBeenCalled();
+		});
+
+		it("refuses an unsigned URL with 403, never 503", async () => {
+			await refusal(
+				await checkImageSignature(ctx(), new URL(`${ORIGIN}/_image?${BASE}`)),
+				403,
+				"IMAGE_SIGNATURE_INVALID",
+			);
+			expect(getDb).not.toHaveBeenCalled();
+		});
+
+		it("does not read the request-scoped database", async () => {
+			requestContext.current = { db: { scoped: true } };
+			expect(await checkImageSignature(ctx(), await signed())).toBeNull();
+			expect(resolveImageSigningSecretsCached).not.toHaveBeenCalled();
+		});
 	});
 
 	it("fails closed with 503 when the secret cannot be resolved", async () => {

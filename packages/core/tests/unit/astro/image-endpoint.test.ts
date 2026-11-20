@@ -23,6 +23,7 @@ const virtualConfig = vi.hoisted(
 vi.mock("virtual:emdash/config", () => ({ default: virtualConfig }));
 vi.mock("../../../src/loader.js", () => ({ getDb: vi.fn(async () => ({})) }));
 vi.mock("../../../src/config/secrets.js", () => ({
+	readImageSigningSecretsFromEnv: () => null,
 	resolveImageSigningSecretsCached: vi.fn(async () => ["secret-a"]),
 }));
 
