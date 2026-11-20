@@ -20,8 +20,13 @@ import {
 	validateEncryptionKeyAtStartup,
 } from "../../../src/config/secrets.js";
 import { OptionsRepository } from "../../../src/database/repositories/options.js";
+import { markRequestScopedDb } from "../../../src/database/request-scoped.js";
 import type { Database } from "../../../src/database/types.js";
-import { setupTestDatabase, teardownTestDatabase } from "../../utils/test-db.js";
+import {
+	createTestDatabase,
+	setupTestDatabase,
+	teardownTestDatabase,
+} from "../../utils/test-db.js";
 
 describe("config/secrets", () => {
 	let db: Kysely<Database>;
@@ -476,31 +481,54 @@ describe("config/secrets", () => {
 			expect(c.secrets).toEqual(a.secrets);
 		});
 
-		it("serves every handle on the configured database from one resolution", async () => {
-			// The runtime, the loader and each request-scoped view hold their own
-			// Kysely instance for the configured database.
+		it("serves a request-scoped view of the configured database from the configured resolution", async () => {
 			const first = await resolveImageSigningSecrets({ getDb: () => db, env: {} });
-			const otherHandle = vi.fn(unreachable);
-			expect(await resolveImageSigningSecrets({ getDb: otherHandle, env: {} })).toEqual(first);
-			expect(otherHandle).not.toHaveBeenCalled();
+			// Unmigrated, so any query through it would throw.
+			const view = createTestDatabase();
+			markRequestScopedDb(view);
+			try {
+				expect(
+					await resolveImageSigningSecrets({ requestDb: view, getDb: unreachable, env: {} }),
+				).toEqual(first);
+			} finally {
+				await view.destroy();
+			}
 		});
 
-		it("keeps an isolated database's secret apart from the configured database's", async () => {
-			const isolatedDb = await setupTestDatabase();
+		it("does not open the configured database for a request database", async () => {
+			const getDb = vi.fn(unreachable);
+			const result = await resolveImageSigningSecrets({ requestDb: db, getDb, env: {} });
+			expect(result.secrets).toEqual([
+				await new OptionsRepository(db).get<string>(IMAGE_SECRET_OPTION_KEY),
+			]);
+			expect(getDb).not.toHaveBeenCalled();
+		});
+
+		// The Durable Object preview sets its database without `dbIsIsolated`.
+		it("keeps another database's secret apart from the configured database's, either order", async () => {
+			const other = await setupTestDatabase();
 			try {
-				const configured = await resolveImageSigningSecrets({ getDb: () => db, env: {} });
-				const isolated = await resolveImageSigningSecrets({
-					getDb: () => isolatedDb,
-					isolated: true,
-					env: {},
+				await new OptionsRepository(db).set(IMAGE_SECRET_OPTION_KEY, "configured");
+				await new OptionsRepository(other).set(IMAGE_SECRET_OPTION_KEY, "other");
+
+				expect(
+					await resolveImageSigningSecrets({ requestDb: other, getDb: unreachable, env: {} }),
+				).toEqual({ secrets: ["other"], source: "db" });
+				expect(await resolveImageSigningSecrets({ getDb: () => db, env: {} })).toEqual({
+					secrets: ["configured"],
+					source: "db",
 				});
-				expect(isolated.secrets).not.toEqual(configured.secrets);
-				expect(isolated.secrets[0]).toBe(
-					await new OptionsRepository(isolatedDb).get<string>(IMAGE_SECRET_OPTION_KEY),
-				);
-				expect(await resolveImageSigningSecrets({ getDb: () => db, env: {} })).toEqual(configured);
+
+				_clearSecretsCacheForTesting();
+				expect(await resolveImageSigningSecrets({ getDb: () => db, env: {} })).toEqual({
+					secrets: ["configured"],
+					source: "db",
+				});
+				expect(
+					await resolveImageSigningSecrets({ requestDb: other, getDb: unreachable, env: {} }),
+				).toEqual({ secrets: ["other"], source: "db" });
 			} finally {
-				await teardownTestDatabase(isolatedDb);
+				await teardownTestDatabase(other);
 			}
 		});
 

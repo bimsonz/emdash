@@ -361,6 +361,23 @@ describe("emdash/internal/image-service", () => {
 			}
 		});
 
+		// The Durable Object preview sets its database without `dbIsIsolated`.
+		it("signs a render on another site's database with that site's secret", async () => {
+			const previewDb = await setupTestDatabase();
+			try {
+				await new OptionsRepository(previewDb).set(IMAGE_SECRET_OPTION_KEY, "preview-secret");
+
+				const previewImage = await inRequest(() => render(MEDIA), { db: previewDb });
+				const mainImage = await inRequest(() => render(MEDIA));
+
+				expect(await verifies(previewImage.src, ["preview-secret"])).toBe(true);
+				expect(await verifies(mainImage.src, ["secret-a"])).toBe(true);
+				expect(await verifies(mainImage.src, ["preview-secret"])).toBe(false);
+			} finally {
+				await teardownTestDatabase(previewDb);
+			}
+		});
+
 		it("falls back to the configured database", async () => {
 			const image = await inRequest(() => render(MEDIA));
 
