@@ -6,6 +6,8 @@
  * the wrapper and the image endpoints can still treat it as stock.
  */
 
+import { installedPackageVersion } from "./installed-package.js";
+
 /** The image service EmDash installs in place of a stock runtime service. */
 export const SIGNING_IMAGE_SERVICE_ENTRYPOINT = "emdash/internal/image-service";
 
@@ -61,27 +63,35 @@ function flattenPlugins(plugins: unknown): unknown[] {
 }
 
 /**
- * Whether the Cloudflare adapter collects static images at build through the
- * configured image service, which its `compile` and `custom` image modes do.
- * It then imports that service by path in Node, outside Vite, where
- * `emdash/internal/image-service` can't load its virtual modules (`dist/index.js`
- * `hasUserBuildImageService`, `dist/prerenderer.js`).
+ * How the Cloudflare adapter treats the configured image service at build:
  *
- * `image.service` and `image.endpoint` look the same for those modes and the
- * default one, so this reads the adapter's resolved `compileImageConfig`. Its
- * setup hook runs before EmDash's and serializes it through its config Vite
- * plugin. The value is `null` without build-time image work (and in
- * `astro dev`). `transformWithBinding` marks the binding build, which
- * transforms through the Images binding and never loads the configured
- * service. When the config can't be read, the answer is `false`.
+ * - `"collects"`: its `compile` and `custom` image modes collect static images
+ *   at build through the configured service, which they import by path in
+ *   Node, outside Vite, where `emdash/internal/image-service` can't load its
+ *   virtual modules (`dist/index.js` `hasUserBuildImageService`,
+ *   `dist/prerenderer.js`).
+ * - `"binding"`: the build never loads the configured service. Either there is
+ *   no build-time image work (`compileImageConfig` is `null`: the default modes,
+ *   and every mode under `astro dev`, where the adapter skips build image work
+ *   and the service only runs in the dev server), or the build transforms
+ *   through the Images binding (`transformWithBinding`).
+ * - `"unknown"`: the adapter's resolved config can't be read.
  */
-export function cloudflareCollectsImagesThroughService(vitePlugins: unknown): boolean {
+export type CloudflareImageMode = "collects" | "binding" | "unknown";
+
+/**
+ * Read the Cloudflare adapter's image mode. `image.service` and
+ * `image.endpoint` look the same for every mode, so this reads the adapter's
+ * resolved `compileImageConfig`, which its setup hook (run before EmDash's)
+ * serializes through its private `virtual:astro-cloudflare:config` Vite plugin.
+ */
+export function detectCloudflareImageMode(vitePlugins: unknown): CloudflareImageMode {
 	const plugin = flattenPlugins(vitePlugins).find(
 		(candidate) => isRecord(candidate) && candidate.name === CLOUDFLARE_CONFIG_PLUGIN,
 	);
 	const load = isRecord(plugin) ? plugin.load : undefined;
 	const handler = isRecord(load) ? load.handler : load;
-	if (typeof handler !== "function") return false;
+	if (typeof handler !== "function") return "unknown";
 	try {
 		const source: unknown = handler.call(
 			{ environment: { name: "ssr" } },
@@ -89,11 +99,15 @@ export function cloudflareCollectsImagesThroughService(vitePlugins: unknown): bo
 		);
 		const json =
 			typeof source === "string" ? COMPILE_IMAGE_CONFIG_EXPORT.exec(source)?.[1] : undefined;
-		if (json === undefined) return false;
+		if (json === undefined) return "unknown";
 		const compileImageConfig: unknown = JSON.parse(json);
-		return isRecord(compileImageConfig) && compileImageConfig.transformWithBinding !== true;
+		if (compileImageConfig === null) return "binding";
+		if (!isRecord(compileImageConfig)) return "unknown";
+		if (compileImageConfig.transformWithBinding === true) return "binding";
+		if (compileImageConfig.transformWithBinding === false) return "collects";
+		return "unknown";
 	} catch {
-		return false;
+		return "unknown";
 	}
 }
 
@@ -107,6 +121,8 @@ export function planImageSigning(opts: {
 	isCloudflare: boolean;
 	service: { entrypoint: string; config?: Record<string, unknown> } | undefined;
 	vitePlugins: unknown;
+	/** The project root, where the installed adapter's version is looked up. */
+	root: URL;
 }): ReturnType<typeof wrapImageService> {
 	if (!opts.endpointInstalled) {
 		return {
@@ -115,12 +131,24 @@ export function planImageSigning(opts: {
 				"site does not use, so image URLs are not signed.",
 		};
 	}
-	if (opts.isCloudflare && cloudflareCollectsImagesThroughService(opts.vitePlugins)) {
-		return {
-			warn:
-				"images.signedUrls is not supported with the Cloudflare adapter's compile or " +
-				"custom image modes, so image URLs are not signed.",
-		};
+	if (opts.isCloudflare) {
+		const mode = detectCloudflareImageMode(opts.vitePlugins);
+		if (mode === "collects") {
+			return {
+				warn:
+					"images.signedUrls is not supported with the Cloudflare adapter's compile or " +
+					"custom image modes, so image URLs are not signed.",
+			};
+		}
+		if (mode === "unknown") {
+			const version =
+				installedPackageVersion(opts.root, "@astrojs/cloudflare") ?? "(version unknown)";
+			return {
+				warn:
+					`images.signedUrls could not read the image mode of @astrojs/cloudflare ${version}, ` +
+					"so image URLs are not signed. EmDash may not support this adapter version.",
+			};
+		}
 	}
 	return wrapImageService(opts.service);
 }

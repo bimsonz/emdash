@@ -10,9 +10,7 @@
  * to avoid bundling Node.js-only code into the production build.
  */
 
-import { existsSync, readFileSync } from "node:fs";
 import { createRequire } from "node:module";
-import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import type {
@@ -50,6 +48,7 @@ import { startDevSchedulerBridge } from "./dev-scheduler-bridge.js";
 import { createDebouncedTypegenRefresh, listenForDevTypegenRefresh } from "./dev-typegen.js";
 import { notoSans } from "./font-provider.js";
 import { planImageSigning } from "./image-service-wrap.js";
+import { installedPackageVersion } from "./installed-package.js";
 import {
 	hasUserDefinedPublicRoute,
 	injectCoreRoutes,
@@ -99,24 +98,14 @@ export function adapterVersionMismatchWarning(
 	version: string = VERSION,
 ): string | undefined {
 	if (version === "dev") return undefined;
-	for (let dir = fileURLToPath(root); dir !== dirname(dir); dir = dirname(dir)) {
-		const file = join(dir, "node_modules", "@emdash-cms", "cloudflare", "package.json");
-		if (!existsSync(file)) continue;
-		let pkg: { version?: unknown };
-		try {
-			pkg = JSON.parse(readFileSync(file, "utf8")) as { version?: unknown };
-		} catch {
-			return undefined;
-		}
-		if (typeof pkg.version !== "string" || pkg.version === version) return undefined;
-		return (
-			`@emdash-cms/cloudflare ${pkg.version} requires emdash ${pkg.version}, ` +
-			`but emdash ${version} is installed. ` +
-			`Install the same version of both packages, for example:\n\n` +
-			`  npm install emdash@${version} @emdash-cms/cloudflare@${version}`
-		);
-	}
-	return undefined;
+	const installed = installedPackageVersion(root, "@emdash-cms/cloudflare");
+	if (installed === undefined || installed === version) return undefined;
+	return (
+		`@emdash-cms/cloudflare ${installed} requires emdash ${installed}, ` +
+		`but emdash ${version} is installed. ` +
+		`Install the same version of both packages, for example:\n\n` +
+		`  npm install emdash@${version} @emdash-cms/cloudflare@${version}`
+	);
 }
 
 /** Default storage: Local filesystem in .emdash directory */
@@ -794,6 +783,7 @@ export function emdash(config: EmDashConfig = {}): AstroIntegration {
 						isCloudflare: usesCloudflareAdapter,
 						service: astroConfig.image?.service,
 						vitePlugins: astroConfig.vite?.plugins,
+						root: astroConfig.root,
 					});
 					if ("warn" in signing) {
 						logger.warn(signing.warn);
