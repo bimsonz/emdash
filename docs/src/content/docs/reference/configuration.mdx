@@ -117,6 +117,40 @@ emdash({
 });
 ```
 
+#### `images.signedUrls`
+
+**Optional.** Set `images: { signedUrls: true }` to bound image transformation to the variants your site renders. The default is `false`, which leaves `/_image` open: it creates any width, height, quality and format a request names.
+
+```js
+emdash({
+	images: { signedUrls: true },
+});
+```
+
+With signing on, EmDash adds a signature to every transform URL it renders: stored media, bundled `/_astro` assets and allowed remote images. `<Image>` from `emdash/ui`, Astro's `<Image>` and `<Picture>`, and `getImage()` all sign without template changes. The endpoint verifies the signature before it reads storage or transforms anything, and answers `403` with code `IMAGE_SIGNATURE_INVALID` when it is missing or wrong. It answers `503` with code `IMAGE_SIGNING_UNAVAILABLE` when the secret cannot be resolved, which happens only with no `EMDASH_IMAGE_SECRET` and no database.
+
+Contributors and above, anyone with the `media:upload` permission, need no signature, because the media library and the visual editor's picker build thumbnail URLs in the browser. Subscribers can open the media library, but their thumbnails get `403` and fall back to the full originals.
+
+<Aside type="caution">
+	Hand-written `/_image` URLs, for any source, return `403` to visitors and Subscribers once signing
+	is on. Build them with `getImage()`. Do not render an image at a size taken from the request, such
+	as a query parameter: EmDash signs whatever size the page asks for.
+</Aside>
+
+EmDash signs with a site secret. Without configuration it generates one on first use and stores it as the `emdash:image_secret` option, shared by every deployment that uses the same database. Set `EMDASH_IMAGE_SECRET` to supply your own, as a comma-separated list: the first value signs and every value verifies, which is how you rotate. Deployments that have their own secrets must share the value. See [Image secret](/deployment/secrets/#image-secret).
+
+Most builds need no secret, because Astro turns the transform URLs on prerendered pages into static files. Under Cloudflare's default image mode, `cloudflare-binding`, prerendered pages keep runtime `/_image` URLs and EmDash signs them during the build, so the build needs the secret. See [Image transformation](/deployment/cloudflare/#image-transformation) for the Cloudflare setup. Without it the build fails with `ImageSigningSecretRequiredError`. A `getImage()` call made outside the page render during a prerender, for example in `getStaticPaths`, ships an unsigned URL, so call it from the page.
+
+Signing supports the stock runtime image service. With a custom image service, or Cloudflare's `compile` or `custom` image modes, EmDash logs a warning and signing stays off.
+
+##### Turn signing on
+
+Enable it with a full deploy, not a gradual one, so no version serves unsigned pages to a version that rejects them.
+
+- Under Workers Cache's default configuration, a deploy starts from an empty cache and no purge is needed.
+- With `cache.cross_version_cache: true`, purge after the deploy with `ctx.cache.purge({ purgeEverything: true })`.
+- With another route-cache provider whose entries outlive a deploy, purge it too. Cached pages hold unsigned URLs that now return `403`.
+
 ### `imagePlaceholders`
 
 **Optional.** Controls whether EmDash generates blurhash and dominant-color placeholders for uploaded images. The default is `true` on every runtime, including Cloudflare Workers.
