@@ -74,14 +74,13 @@ describe("image transform signatures", () => {
 		}
 	});
 
-	it("excludes assetQueryParams", async () => {
-		const asset = new URLSearchParams({ dpl: "abc" });
+	it("verifies with the adapter's asset parameters added, which the canonical query leaves out", async () => {
 		const signed = await sign(BASE, a);
 		const withAsset = new URL(signed);
 		withAsset.searchParams.set("dpl", "abc");
-		expect(await hasValidTransformSignature(withAsset, [a], asset)).toBe(true);
+		expect(await hasValidTransformSignature(withAsset, [a])).toBe(true);
 		withAsset.searchParams.set("dpl", "other");
-		expect(await hasValidTransformSignature(withAsset, [a], asset)).toBe(true);
+		expect(await hasValidTransformSignature(withAsset, [a])).toBe(true);
 	});
 
 	it("signature is 22 base64url characters after the canonical and asset params", async () => {
