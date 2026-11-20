@@ -11,7 +11,7 @@ emdash({
 });
 ```
 
-With signing on, stored media, bundled `/_astro` assets and allowed remote images all get signed URLs through `<Image>` from `emdash/ui`, Astro's `<Image>` and `<Picture>`, and `getImage()`. Contributors and above (`media:upload`) need no signature. Everyone else gets `403` with code `IMAGE_SIGNATURE_INVALID` on an unsigned `/_image` request, and `503` with `IMAGE_SIGNING_UNAVAILABLE` when `EMDASH_IMAGE_SECRET` is unset and the database can't be reached. Signing needs the stock runtime image service; with a custom service, or Cloudflare's `compile` or `custom` image modes, EmDash logs a warning and leaves signing off, and it does the same, naming the installed `@astrojs/cloudflare` version, when it can't read the adapter's image mode.
+With signing on, stored media, bundled `/_astro` assets and allowed remote images all get signed URLs through `<Image>` from `emdash/ui`, Astro's `<Image>` and `<Picture>`, and `getImage()`. Contributors and above (`media:upload`) need no signature. Everyone else gets `403` with code `IMAGE_SIGNATURE_INVALID` on an unsigned `/_image` request, and `503` with `IMAGE_SIGNING_UNAVAILABLE` when `EMDASH_IMAGE_SECRET` is unset and the database can't be reached. Signing needs the stock runtime image service; with a custom service, including one that an integration set up after EmDash installs, or Cloudflare's `compile` or `custom` image modes, EmDash logs a warning and leaves signing off, and it does the same, naming the installed `@astrojs/cloudflare` version, when it can't read the adapter's image mode.
 
 #### Before you enable it
 

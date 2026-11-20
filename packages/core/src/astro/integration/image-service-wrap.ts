@@ -50,6 +50,22 @@ export function wrapImageService(
 	};
 }
 
+/**
+ * The warning when Astro's final `image.service` is no longer the signing
+ * service EmDash installed: an integration set up after EmDash replaced it,
+ * and its URLs carry no signature for the endpoints to accept.
+ */
+export function replacedSigningServiceWarning(
+	service: { entrypoint: string } | undefined,
+): string | undefined {
+	if (service?.entrypoint === SIGNING_IMAGE_SERVICE_ENTRYPOINT) return undefined;
+	return (
+		`images.signedUrls needs the image service EmDash installs, but an integration set up ` +
+		`after EmDash replaced it with ${service?.entrypoint ?? "another service"}, so image URLs ` +
+		`are not signed.`
+	);
+}
+
 /** The Vite plugin through which `@astrojs/cloudflare` serializes its resolved config. */
 const CLOUDFLARE_CONFIG_PLUGIN = "virtual:astro-cloudflare:config";
 const COMPILE_IMAGE_CONFIG_EXPORT = /^export const compileImageConfig = (.*);$/m;

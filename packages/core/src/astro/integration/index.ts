@@ -47,7 +47,7 @@ import { loadDevEnv } from "./dev-env.js";
 import { startDevSchedulerBridge } from "./dev-scheduler-bridge.js";
 import { createDebouncedTypegenRefresh, listenForDevTypegenRefresh } from "./dev-typegen.js";
 import { notoSans } from "./font-provider.js";
-import { planImageSigning } from "./image-service-wrap.js";
+import { planImageSigning, replacedSigningServiceWarning } from "./image-service-wrap.js";
 import { installedPackageVersion } from "./installed-package.js";
 import {
 	hasUserDefinedPublicRoute,
@@ -861,6 +861,16 @@ export function emdash(config: EmDashConfig = {}): AstroIntegration {
 					? undefined
 					: missingSessionDriverWarning(finalConfig.session);
 				if (sessionWarning) logger.warn(sessionWarning);
+				// Astro generates the virtual modules after this hook, so the endpoints
+				// and the runtime still see signing off.
+				if (serializableConfig.imageRuntimeService) {
+					const replaced = replacedSigningServiceWarning(finalConfig.image.service);
+					if (replaced) {
+						logger.warn(replaced);
+						serializableConfig.imageSigning = false;
+						delete serializableConfig.imageRuntimeService;
+					}
+				}
 
 				if (astroCommand !== "build" && astroCommand !== "sync") return;
 				if (!migrationMetadata.database) {
