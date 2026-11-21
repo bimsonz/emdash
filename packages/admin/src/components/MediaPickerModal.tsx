@@ -1492,11 +1492,7 @@ export function MediaPickerModal({
 														const item =
 															activeSource === "local"
 																? (rawItem as MediaItem)
-																: toMediaItem({
-																		key,
-																		providerId: activeSource,
-																		item: rawItem,
-																	});
+																: providerItemToMediaItem(activeSource, rawItem);
 														return (
 															<MediaBrowserItem
 																key={key}
@@ -1538,11 +1534,7 @@ export function MediaPickerModal({
 														const item =
 															activeSource === "local"
 																? (rawItem as MediaItem)
-																: toMediaItem({
-																		key,
-																		providerId: activeSource,
-																		item: rawItem,
-																	});
+																: providerItemToMediaItem(activeSource, rawItem);
 														return (
 															<MediaBrowserItem
 																key={key}

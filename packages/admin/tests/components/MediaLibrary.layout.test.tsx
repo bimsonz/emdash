@@ -4,9 +4,11 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { page, userEvent } from "vitest/browser";
 
 import "../../dist/styles.css";
+import { MediaBrowserItem } from "../../src/components/media/MediaBrowserItems.js";
 import { MediaLibrary } from "../../src/components/MediaLibrary.js";
 import type { LocalMediaItem, MediaFolder, MediaItem } from "../../src/lib/api/media.js";
 import { formatFileSize } from "../../src/lib/media-utils.js";
+import { leftEdgeOf } from "../utils/bidi.js";
 import { render } from "../utils/render.js";
 
 vi.mock("../../src/lib/api", async (importOriginal) => ({
@@ -62,6 +64,8 @@ const listItems = [
 		filename: "campaign_hero_banner_final_approved_version_2026_q1_export_retina.png",
 		mimeType: "image/png",
 		size: 2_457_600,
+		width: 12000,
+		height: 8000,
 		alt: "A hero banner",
 	}),
 	localItem("report", {
@@ -257,7 +261,7 @@ describe("Media Library list view at phone width", () => {
 			const box = tray.getBoundingClientRect();
 
 			expect(tray.scrollWidth).toBeLessThanOrEqual(tray.clientWidth);
-			for (const name of ["Type", "Size", "Alt text"]) {
+			for (const name of ["Type", "Size", "Dimensions", "Alt text"]) {
 				expect(
 					screen.getByRole("columnheader", { name, includeHidden: true }).element(),
 				).not.toBeVisible();
@@ -270,6 +274,7 @@ describe("Media Library list view at phone width", () => {
 				for (const detail of [
 					item.mimeType,
 					formatFileSize(item.size),
+					...(item.width && item.height ? [`${item.width} × ${item.height}`] : []),
 					item.alt ? "Alt text set" : "No alt text",
 				]) {
 					const text = cell.getByText(detail, { exact: true });
@@ -291,7 +296,7 @@ describe("Media Library list view at phone width", () => {
 });
 
 describe("Media Library list view at desktop width", () => {
-	it("keeps each file's size and alt text on one line beside a long filename in a 716px table", async () => {
+	it("keeps each file's size, dimensions and alt text on one line beside a long filename in a 716px table", async () => {
 		const screen = await renderListView({ width: 716 });
 		await screen.getByRole("tab", { name: "List view" }).click();
 		const tray = screen.getByRole("table").element().parentElement!;
@@ -307,6 +312,52 @@ describe("Media Library list view at desktop width", () => {
 				expect(lineCount(cell)).toBe(1);
 			}
 		}
+	});
+});
+
+describe("Media grid card", () => {
+	it.each(["ltr", "rtl"] as const)(
+		"keeps whole dimensions and shortens a long format on a 195px card in %s",
+		async (dir) => {
+			const screen = await render(
+				<div dir={dir} style={{ width: 195 }}>
+					<MediaBrowserItem
+						layout="grid"
+						item={localItem("film", {
+							filename: "launch-film.mkv",
+							mimeType: "video/x-matroska",
+							width: 12000,
+							height: 8000,
+						})}
+					/>
+				</div>,
+			);
+			const card = screen.getByRole("button", { name: "launch-film.mkv" }).element();
+			const dimensions = screen.getByText("12000 × 8000", { exact: true }).element();
+			const format = screen.getByText("X-MATROSKA", { exact: true }).element();
+			const line = dimensions.parentElement!;
+
+			expectInside(dimensions, card.getBoundingClientRect());
+			expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth);
+			expect(line.scrollWidth).toBeLessThanOrEqual(line.clientWidth);
+			expect(format.scrollWidth).toBeGreaterThan(format.clientWidth);
+		},
+	);
+});
+
+describe("Media Library list view in a right-to-left layout", () => {
+	it("keeps the width on the left of the Dimensions column", async () => {
+		const screen = await renderListView({ dir: "rtl", width: 900 });
+		await screen.getByRole("tab", { name: "List view" }).click();
+		const row = screen
+			.getByRole("button", { name: listItems[0]!.filename, exact: true })
+			.element()
+			.closest("tr")!;
+		const cell = [...row.cells].find((td) => td.textContent === "12000 × 8000")!;
+
+		expect(cell).toBeVisible();
+		expect(getComputedStyle(cell).direction).toBe("rtl");
+		expect(leftEdgeOf(cell, "12000")).toBeLessThan(leftEdgeOf(cell, "8000"));
 	});
 });
 

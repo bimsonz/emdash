@@ -65,6 +65,7 @@ import { useDebouncedValue } from "../lib/hooks.js";
 import {
 	providerItemToMediaItem,
 	getFileIcon,
+	formatDimensions,
 	formatFileSize,
 	getMediaThumbnailUrl,
 	getMediaPreviewUrl,
@@ -1149,6 +1150,9 @@ export function MediaLibrary({
 							<th scope="col" {...tertiaryColumn}>
 								{t`Size`}
 							</th>
+							<th scope="col" {...tertiaryColumn}>
+								{t`Dimensions`}
+							</th>
 							<th scope="col" className="text-end" {...tertiaryColumn}>
 								{t`Alt text`}
 							</th>
@@ -1156,7 +1160,7 @@ export function MediaLibrary({
 					</thead>
 					<tbody>
 						{showFolderResults && foldersLoading && visibleFolders.length === 0 && (
-							<DataTableMessage colSpan={5}>
+							<DataTableMessage colSpan={6}>
 								<span className="inline-flex items-center gap-2">
 									<Loader size="sm" />
 									{t`Loading folders`}
@@ -1183,7 +1187,7 @@ export function MediaLibrary({
 						)}
 						{showFolderResults && hasMoreFolders && onLoadMoreFolders && (
 							<tr>
-								<td colSpan={5}>
+								<td colSpan={6}>
 									<Button
 										variant="outline"
 										className="mx-auto"
@@ -1452,6 +1456,10 @@ function MediaFolderListItem({
 				<span aria-hidden="true">—</span>
 				<span className="sr-only">{t`Size is not applicable to folders`}</span>
 			</td>
+			<td className="text-sm text-kumo-subtle" {...tertiaryColumn}>
+				<span aria-hidden="true">—</span>
+				<span className="sr-only">{t`Dimensions are not applicable to folders`}</span>
+			</td>
 			<td className="text-end text-sm text-kumo-subtle" {...tertiaryColumn}>
 				<span aria-hidden="true">—</span>
 				<span className="sr-only">{t`Alt text is not applicable to folders`}</span>
@@ -1464,7 +1472,7 @@ function MediaFolderErrorRow({ onRetry }: { onRetry?: () => void }) {
 	const { t } = useLingui();
 	return (
 		<tr>
-			<td colSpan={5}>
+			<td colSpan={6}>
 				<div className="flex flex-wrap items-center justify-start gap-3 rounded-md bg-kumo-danger/10 p-3 text-sm text-kumo-danger">
 					<span role="alert">{t`Folders could not be loaded.`}</span>
 					{onRetry && (
@@ -1679,6 +1687,8 @@ function MediaListItem({ item, selected, draggable, isMoving, onClick }: MediaLi
 				filename={item.filename}
 				mimeType={item.mimeType}
 				size={formatFileSize(item.size)}
+				width={item.width}
+				height={item.height}
 				hasAlt={Boolean(item.alt)}
 			/>
 		</tr>
@@ -1730,6 +1740,8 @@ function ProviderListItem({ item, selected, onClick, onDimensionsLoaded }: Provi
 				filename={item.filename}
 				mimeType={item.mimeType}
 				size={size ? formatFileSize(size) : undefined}
+				width={item.width}
+				height={item.height}
 				hasAlt={Boolean(item.alt)}
 			/>
 		</tr>
@@ -1737,22 +1749,27 @@ function ProviderListItem({ item, selected, onClick, onDimensionsLoaded }: Provi
 }
 
 /**
- * The filename, type, size, and alt text cells of a media list row. The filename is a
+ * The filename, type, size, dimensions, and alt text cells of a media list row. The filename is a
  * button so keyboard users can open the file; its click reaches the row's `onClick`.
  */
 function MediaListDetailCells({
 	filename,
 	mimeType,
 	size,
+	width,
+	height,
 	hasAlt,
 }: {
 	filename: string;
 	mimeType: string;
 	size?: string;
+	width?: number;
+	height?: number;
 	hasAlt: boolean;
 }) {
-	const { t } = useLingui();
+	const { t, i18n } = useLingui();
 	const type = <span className={cellCodeClassName}>{mimeType}</span>;
+	const dimensions = formatDimensions(width, height, i18n);
 	const altText = hasAlt ? t`Alt text set` : t`No alt text`;
 
 	return (
@@ -1770,6 +1787,14 @@ function MediaListDetailCells({
 								<bdi className="tabular-nums">{size}</bdi>
 							</>
 						)}
+						{dimensions && (
+							<>
+								<span aria-hidden="true">·</span>
+								<bdi dir="ltr" className="tabular-nums">
+									{dimensions}
+								</bdi>
+							</>
+						)}
 					</RowMeta>
 					<RowMeta priority="tertiary">{altText}</RowMeta>
 				</div>
@@ -1779,6 +1804,9 @@ function MediaListDetailCells({
 			</td>
 			<td className="text-sm whitespace-nowrap text-kumo-subtle tabular-nums" {...tertiaryColumn}>
 				{size ? <bdi>{size}</bdi> : "—"}
+			</td>
+			<td className="text-sm whitespace-nowrap text-kumo-subtle tabular-nums" {...tertiaryColumn}>
+				{dimensions ? <bdi dir="ltr">{dimensions}</bdi> : "—"}
 			</td>
 			<td className="text-end text-sm whitespace-nowrap text-kumo-subtle" {...tertiaryColumn}>
 				{altText}

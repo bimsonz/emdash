@@ -3,7 +3,11 @@ import * as React from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { MediaPickerModal } from "../../src/components/MediaPickerModal";
+import { LocaleDirectionProvider } from "../../src/locales/index.js";
+import { activateLocale, leftEdgeOf } from "../utils/bidi.ts";
 import { render } from "../utils/render.tsx";
+
+import "../../dist/styles.css";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -235,6 +239,44 @@ describe("MediaPickerModal", () => {
 				.element()
 				.querySelector("img");
 			expect(image?.style.objectPosition).toBe("20% 80%");
+		});
+
+		it("shows and describes each image's dimensions in grid and list view", async () => {
+			const screen = await renderModal({ open: true });
+			const photo = screen.getByRole("button", { name: "photo.jpg" });
+			await expect.element(photo.getByText("800 × 600")).toBeInTheDocument();
+			await expect.element(photo).toHaveAccessibleDescription("800 × 600 JPEG");
+			await expect
+				.element(screen.getByRole("button", { name: "landscape.png" }).getByText("1200 × 800"))
+				.toBeInTheDocument();
+
+			screen.getByRole("tab", { name: "List view" }).element().click();
+			await expect.element(photo).toHaveAttribute("data-media-layout", "list");
+			await expect.element(photo.getByText("800 × 600")).toBeInTheDocument();
+			await expect.element(photo).toHaveAccessibleDescription("image/jpeg · 1 KB · 800 × 600");
+		});
+
+		it("writes dimensions in the admin language's digits", async () => {
+			activateLocale("fa");
+			const screen = await renderModal({ open: true });
+			await expect
+				.element(screen.getByRole("button", { name: "photo.jpg" }).getByText("۸۰۰ × ۶۰۰"))
+				.toBeInTheDocument();
+		});
+
+		it("keeps the width on the left in an Arabic admin", async () => {
+			activateLocale("ar");
+			const screen = await render(
+				<QueryWrapper>
+					<MediaPickerModal open onOpenChange={vi.fn()} onSelect={vi.fn()} />
+				</QueryWrapper>,
+				{ wrapper: LocaleDirectionProvider },
+			);
+			const card = screen.getByRole("button", { name: "photo.jpg" });
+			const size = card.getByText("800 × 600");
+			await expect.element(size).toBeVisible();
+			expect(getComputedStyle(card.element()).direction).toBe("rtl");
+			expect(leftEdgeOf(size.element(), "800")).toBeLessThan(leftEdgeOf(size.element(), "600"));
 		});
 
 		it("shows the modal title", async () => {
@@ -796,6 +838,80 @@ describe("MediaPickerModal", () => {
 			expect(onSelect).toHaveBeenCalledWith(
 				expect.objectContaining({ id: "missing-size", width: 1280, height: 720 }),
 			);
+		});
+
+		it("shows a local image's dimensions once the picker has measured it", async () => {
+			const api = await import("../../src/lib/api");
+			(api.fetchMediaList as any).mockResolvedValueOnce({
+				items: [
+					{
+						id: "missing-size",
+						filename: "missing-size.jpg",
+						mimeType: "image/jpeg",
+						url: "/media/missing-size.jpg",
+						size: 1024,
+						createdAt: "2024-01-01",
+					},
+				],
+				totalCount: 1,
+			});
+			const screen = await renderModal();
+			const item = screen.getByRole("button", { name: "missing-size.jpg" });
+			await expect.element(item).toBeInTheDocument();
+			expect(item.element().textContent).not.toContain("×");
+
+			const image = item.element().querySelector("img")!;
+			Object.defineProperties(image, {
+				naturalWidth: { configurable: true, value: 1280 },
+				naturalHeight: { configurable: true, value: 720 },
+			});
+			image.dispatchEvent(new Event("load", { bubbles: true }));
+
+			await expect.element(item.getByText("1280 × 720")).toBeInTheDocument();
+		});
+
+		it("shows a provider image's reported dimensions, never its preview's", async () => {
+			const api = await import("../../src/lib/api");
+			(api.fetchMediaProviders as any).mockResolvedValueOnce([
+				{
+					id: "cloudflare-images",
+					name: "Cloudflare Images",
+					capabilities: { browse: true, search: false, upload: false, delete: false },
+				},
+			]);
+			(api.fetchProviderMedia as any).mockResolvedValueOnce({
+				items: [
+					{
+						id: "reported",
+						filename: "reported.jpg",
+						mimeType: "image/jpeg",
+						previewUrl: "https://example.com/reported.jpg",
+						width: 4000,
+						height: 3000,
+					},
+					{
+						id: "unreported",
+						filename: "unreported.jpg",
+						mimeType: "image/jpeg",
+						previewUrl: "https://example.com/unreported.jpg",
+					},
+				],
+			});
+			const screen = await renderModal();
+			screen.getByRole("tab", { name: "Cloudflare Images" }).element().click();
+			const reported = screen.getByRole("button", { name: "reported.jpg" });
+			await expect.element(reported.getByText("4000 × 3000")).toBeInTheDocument();
+
+			const unreported = screen.getByRole("button", { name: "unreported.jpg" });
+			const preview = unreported.element().querySelector("img")!;
+			Object.defineProperties(preview, {
+				naturalWidth: { configurable: true, value: 400 },
+				naturalHeight: { configurable: true, value: 300 },
+			});
+			preview.dispatchEvent(new Event("load", { bubbles: true }));
+			await new Promise((resolve) => setTimeout(resolve, 100));
+
+			expect(unreported.element().textContent).not.toContain("×");
 		});
 
 		it("shows direct URLs as a source", async () => {

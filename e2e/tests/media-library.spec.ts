@@ -604,7 +604,10 @@ test.describe("Media Library", () => {
 			const table = page.getByRole("table");
 			const loadingRow = table.getByRole("row").filter({ hasText: "Loading folders" });
 			await expect(loadingRow).toBeVisible();
-			await expect(loadingRow.locator("td")).toHaveAttribute("colspan", "5");
+			await expect(loadingRow.locator("td")).toHaveAttribute(
+				"colspan",
+				String(await table.locator("thead th").count()),
+			);
 
 			releaseFolders();
 			await expect(loadingRow).not.toBeVisible();

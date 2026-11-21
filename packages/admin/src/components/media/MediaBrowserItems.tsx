@@ -6,6 +6,7 @@ import * as React from "react";
 import type { MediaFolder, MediaItem } from "../../lib/api/media.js";
 import {
 	fallbackToOriginalThumbnail,
+	formatDimensions,
 	formatFileSize,
 	getFileIcon,
 	getMediaObjectPosition,
@@ -57,9 +58,12 @@ export function MediaBrowserItem({
 	className,
 	mediaDraggable,
 }: MediaBrowserItemProps) {
+	const { i18n } = useLingui();
+	const detailsId = React.useId();
 	const isImage = item.mimeType.startsWith("image/");
 	const hasVisualPreview = Boolean(item.url) && (isImage || Boolean(item.provider));
 	const needsDimensions = hasVisualPreview && (!item.width || !item.height);
+	const dimensions = formatDimensions(item.width, item.height, i18n);
 	const previewUrl = item.url ? getMediaPreviewUrl(item.url, item.contentHash) : "";
 	const imageUrl =
 		needsDimensions && onDimensionsLoaded
@@ -96,6 +100,7 @@ export function MediaBrowserItem({
 				render={<button type="button" />}
 				onClick={onClick}
 				aria-label={item.filename}
+				aria-describedby={detailsId}
 				aria-pressed={selectable ? selected : undefined}
 				data-media-layout="list"
 				data-media-draggable={mediaDraggable || undefined}
@@ -110,8 +115,16 @@ export function MediaBrowserItem({
 					<p dir="auto" className="truncate text-sm font-medium leading-5" title={item.filename}>
 						{item.filename}
 					</p>
-					<p className="truncate text-sm text-kumo-subtle">
+					<p id={detailsId} className="truncate text-sm text-kumo-subtle">
 						{item.mimeType} · {formatFileSize(item.size)}
+						{dimensions && (
+							<>
+								{" · "}
+								<bdi dir="ltr" className="tabular-nums">
+									{dimensions}
+								</bdi>
+							</>
+						)}
 					</p>
 				</div>
 				{selectable && selected ? (
@@ -134,6 +147,7 @@ export function MediaBrowserItem({
 			render={<button type="button" />}
 			onClick={onClick}
 			aria-label={item.filename}
+			aria-describedby={detailsId}
 			aria-pressed={selectable ? selected : undefined}
 			data-media-layout="grid"
 			data-media-draggable={mediaDraggable || undefined}
@@ -144,19 +158,28 @@ export function MediaBrowserItem({
 			)}
 		>
 			<LayerCard.Primary className="aspect-video p-0">{preview}</LayerCard.Primary>
-			<LayerCard.Secondary className="my-0 min-w-0 justify-between px-3 py-2.5 text-sm text-kumo-default">
-				<span
-					dir="auto"
-					title={item.filename}
-					className="min-w-0 flex-1 truncate font-medium leading-5"
-				>
+			<LayerCard.Secondary className="my-0 grid min-w-0 gap-1 px-3 py-2.5 text-sm text-kumo-default">
+				<span dir="auto" title={item.filename} className="min-w-0 truncate font-medium leading-5">
 					{item.filename}
 				</span>
-				<Badge variant="secondary" className="h-5 min-w-11 justify-center rounded-md px-2 py-0">
-					<span className="text-[11px] leading-none text-kumo-default/75">
-						{formatFileFormat(item.mimeType)}
-					</span>
-				</Badge>
+				<span id={detailsId} className="flex min-w-0 items-center gap-2">
+					{dimensions && (
+						<bdi
+							dir="ltr"
+							className="shrink-0 font-normal whitespace-nowrap text-kumo-subtle tabular-nums"
+						>
+							{dimensions}
+						</bdi>
+					)}
+					<Badge
+						variant="secondary"
+						className="ms-auto h-5 min-w-11 flex-initial justify-center rounded-md px-2 py-0"
+					>
+						<span className="min-w-0 truncate text-[11px] leading-none text-kumo-default/75">
+							{formatFileFormat(item.mimeType)}
+						</span>
+					</Badge>
+				</span>
 			</LayerCard.Secondary>
 			{selectable && selected && (
 				<span className="absolute end-2 top-2 flex size-6 items-center justify-center rounded-full bg-kumo-brand text-kumo-inverse ring-2 ring-kumo-base">

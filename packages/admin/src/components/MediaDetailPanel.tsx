@@ -66,6 +66,7 @@ import {
 import { useDebouncedValue, useStableCallback } from "../lib/hooks";
 import {
 	getFileIcon,
+	formatDimensions,
 	formatFileSize,
 	getMediaPreviewUrl,
 	getMediaThumbnailUrl,
@@ -1341,9 +1342,9 @@ export function MediaDetailPanel({
 										</span>
 										<p className="flex min-w-0 flex-nowrap items-baseline gap-1 whitespace-nowrap leading-5">
 											<span className="text-kumo-subtle">{t`Dimensions:`}</span>
-											<span className="tabular-nums">
-												{item.width} × {item.height}
-											</span>
+											<bdi dir="ltr" className="tabular-nums">
+												{formatDimensions(item.width, item.height, i18n)}
+											</bdi>
 										</p>
 									</div>
 								)}
@@ -1726,9 +1727,13 @@ export function MediaDetailPanel({
 														aria-label={t`Crop output dimensions`}
 														className="shrink-0 font-medium tabular-nums text-kumo-default"
 													>
-														{cropPixels
-															? `${cropPixels.width} × ${cropPixels.height}`
-															: t`Loading...`}
+														{cropPixels ? (
+															<bdi dir="ltr">
+																{formatDimensions(cropPixels.width, cropPixels.height, i18n)}
+															</bdi>
+														) : (
+															t`Loading...`
+														)}
 													</output>
 												</div>
 												{canReplaceOriginal && cropAspectMode !== "original" ? (

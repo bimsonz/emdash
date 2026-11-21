@@ -4,7 +4,12 @@ import { useLingui } from "@lingui/react/macro";
 import * as React from "react";
 
 import { toDatetimeLocalInputValue } from "../../lib/datetime-local.js";
-import { formatFileSize, getFileIcon, getMediaObjectPosition } from "../../lib/media-utils.js";
+import {
+	formatDimensions,
+	formatFileSize,
+	getFileIcon,
+	getMediaObjectPosition,
+} from "../../lib/media-utils.js";
 import { isRecord } from "../../lib/revision-diff/normalize.js";
 import type { ChangeStatus, FieldDiff } from "../../lib/revision-diff/types.js";
 import { cn, formatDate } from "../../lib/utils.js";
@@ -294,7 +299,7 @@ function ImageValue({
 	featured: boolean;
 	marked: boolean;
 }) {
-	const { t } = useLingui();
+	const { t, i18n } = useLingui();
 	const prefix = useStatusLabel(field.status);
 	const removed = marked && field.status === "removed";
 	const value = imageFieldValue(removed ? field.before : field.after);
@@ -334,10 +339,7 @@ function ImageValue({
 	}
 
 	const filename = record?.filename || t`Selected image`;
-	const dimensions =
-		typeof record?.width === "number" && typeof record.height === "number"
-			? `${record.width} × ${record.height}`
-			: "";
+	const dimensions = formatDimensions(record?.width, record?.height, i18n);
 	const metadata = [dimensions, record?.mimeType].filter(Boolean).join(" · ");
 	return (
 		<div className="@container/featured">

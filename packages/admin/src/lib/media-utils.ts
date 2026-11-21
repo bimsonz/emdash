@@ -1,3 +1,5 @@
+import type { I18n } from "@lingui/core";
+
 import type { MediaItem, MediaProviderItem } from "./api/media.js";
 
 export function canonicalMediaProviderId(provider: string | undefined): string {
@@ -292,4 +294,19 @@ export function formatFileSize(bytes: number): string {
 	const sizes = ["B", "KB", "MB", "GB"];
 	const i = Math.floor(Math.log(bytes) / Math.log(k));
 	return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
+}
+
+/**
+ * An image's dimensions such as "800 × 600", in the admin language's digits and without thousands
+ * separators, or `undefined` when either side is unknown. Show them in `<bdi dir="ltr">`: alone in a
+ * right-to-left line, the bidirectional algorithm would draw the height on the left.
+ */
+export function formatDimensions(
+	width: number | null | undefined,
+	height: number | null | undefined,
+	i18n: I18n,
+): string | undefined {
+	if (!width || !height) return undefined;
+	const digits = { useGrouping: false };
+	return `${i18n.number(width, digits)} × ${i18n.number(height, digits)}`;
 }

@@ -200,6 +200,11 @@ function makeFolder(overrides: Partial<MediaFolder> = {}): MediaFolder {
 	return { id: "folder-1", name: "Product photos", ...overrides };
 }
 
+/** The number of columns in the list view's table, as a `colspan` value. */
+function columnCount(): string {
+	return String(document.querySelectorAll("table thead th").length);
+}
+
 function makePagination(
 	overrides: Partial<NonNullable<React.ComponentProps<typeof MediaLibrary>["pagination"]>> = {},
 ): NonNullable<React.ComponentProps<typeof MediaLibrary>["pagination"]> {
@@ -661,7 +666,8 @@ describe("MediaLibrary", () => {
 			);
 			expect(folderCells?.[2]).toHaveTextContent("Type: Folder");
 			expect(folderCells?.[3]).toHaveTextContent("Size is not applicable to folders");
-			expect(folderCells?.[4]).toHaveTextContent("Alt text is not applicable to folders");
+			expect(folderCells?.[4]).toHaveTextContent("Dimensions are not applicable to folders");
+			expect(folderCells?.[5]).toHaveTextContent("Alt text is not applicable to folders");
 			expect(rows[2]?.element()).toHaveTextContent("photo.jpg");
 		});
 
@@ -677,7 +683,7 @@ describe("MediaLibrary", () => {
 			await screen.getByRole("tab", { name: "List view" }).click();
 			let rows = screen.getByRole("row").all();
 			expect(rows[1]?.element()).toHaveTextContent("Loading folders");
-			expect(rows[1]?.element().querySelector("td")).toHaveAttribute("colspan", "5");
+			expect(rows[1]?.element().querySelector("td")).toHaveAttribute("colspan", columnCount());
 			expect(rows[2]?.element()).toHaveTextContent("photo.jpg");
 
 			await screen.rerender(
@@ -692,7 +698,7 @@ describe("MediaLibrary", () => {
 			);
 			rows = screen.getByRole("row").all();
 			expect(rows[1]?.element()).toHaveTextContent("Folders could not be loaded.");
-			expect(rows[1]?.element().querySelector("td")).toHaveAttribute("colspan", "5");
+			expect(rows[1]?.element().querySelector("td")).toHaveAttribute("colspan", columnCount());
 			await screen.getByRole("button", { name: "Retry" }).click();
 			expect(onRetryFolders).toHaveBeenCalledTimes(1);
 			expect(rows[2]?.element()).toHaveTextContent("photo.jpg");
@@ -1389,6 +1395,45 @@ describe("MediaLibrary", () => {
 	});
 
 	describe("list view details", () => {
+		it("shows dimensions on grid cards and in the list's Dimensions column", async () => {
+			const screen = await renderLibrary({
+				items: [
+					makeMediaItem({ id: "1", filename: "photo.jpg" }),
+					makeMediaItem({
+						id: "2",
+						filename: "report.pdf",
+						mimeType: "application/pdf",
+						width: undefined,
+						height: undefined,
+					}),
+				],
+			});
+			await expect
+				.element(
+					screen.getByRole("button", { name: "photo.jpg", exact: true }).getByText("800 × 600"),
+				)
+				.toBeInTheDocument();
+			expect(
+				screen.getByRole("button", { name: "report.pdf", exact: true }).element().textContent,
+			).not.toContain("×");
+
+			await screen.getByRole("tab", { name: "List view" }).click();
+			await expect
+				.element(screen.getByRole("columnheader", { name: "Dimensions", exact: true }))
+				.toBeInTheDocument();
+			const photoRow = screen.getByRole("row", { name: /photo\.jpg/ });
+			await expect
+				.element(photoRow.getByRole("cell", { name: "800 × 600", exact: true }))
+				.toBeInTheDocument();
+			await expect
+				.element(
+					screen
+						.getByRole("row", { name: /report\.pdf/ })
+						.getByRole("cell", { name: "—", exact: true }),
+				)
+				.toBeInTheDocument();
+		});
+
 		it("list view shows table with filename and details", async () => {
 			const items = [
 				makeMediaItem({

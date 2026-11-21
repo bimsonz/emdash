@@ -30,7 +30,7 @@ import { X, Plus, Trash, ImageSquare, PencilSimple } from "@phosphor-icons/react
 import * as React from "react";
 
 import type { MediaItem } from "../../lib/api";
-import { canonicalMediaProviderId, metaString } from "../../lib/media-utils";
+import { canonicalMediaProviderId, formatDimensions, metaString } from "../../lib/media-utils";
 import { cn } from "../../lib/utils";
 import { useMediaAssetEditor } from "../media/useMediaAssetEditor.js";
 import { MediaPickerModal } from "../MediaPickerModal";
@@ -420,7 +420,7 @@ function GalleryImageSettings({
 	onAssetEditorActiveChange,
 	onRemove,
 }: GalleryImageSettingsProps) {
-	const { t } = useLingui();
+	const { t, i18n } = useLingui();
 	const [showReplacePicker, setShowReplacePicker] = React.useState(false);
 	const assetEditor = useMediaAssetEditor(onAssetChange);
 	React.useEffect(() => {
@@ -430,7 +430,7 @@ function GalleryImageSettings({
 	const canEditAsset =
 		Boolean(image.asset._ref) && canonicalMediaProviderId(image.asset.provider) === "local";
 
-	const hasOriginalSize = typeof image.width === "number" && typeof image.height === "number";
+	const originalDimensions = formatDimensions(image.width, image.height, i18n);
 
 	return (
 		<div className="border rounded-lg p-3 space-y-3">
@@ -473,12 +473,10 @@ function GalleryImageSettings({
 					{t`Remove`}
 				</Button>
 			</div>
-			{hasOriginalSize && (
+			{originalDimensions && (
 				<div className="flex items-center gap-2 text-xs leading-4">
 					<span className="text-kumo-subtle">{t`Original:`}</span>
-					<span>
-						{image.width} × {image.height}
-					</span>
+					<bdi dir="ltr">{originalDimensions}</bdi>
 				</div>
 			)}
 			<Input

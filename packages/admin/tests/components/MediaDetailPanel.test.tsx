@@ -6,8 +6,11 @@ import { userEvent } from "vitest/browser";
 
 import { MediaDetailPanel } from "../../src/components/MediaDetailPanel";
 import { ApiResponseError, type LocalMediaItem, type MediaItem } from "../../src/lib/api";
+import { LocaleDirectionProvider } from "../../src/locales/index.js";
 
+import "../../dist/styles.css";
 import "../../src/media-image-cropper.css";
+import { activateLocale, leftEdgeOf } from "../utils/bidi.ts";
 import { render } from "../utils/render.tsx";
 
 const TEST_IMAGE_URL =
@@ -315,6 +318,25 @@ describe("MediaDetailPanel", () => {
 		await expect.element(screen.getByText("Dimensions:")).toBeInTheDocument();
 		await expect.element(screen.getByText("Uploaded:")).toBeInTheDocument();
 		await expect.element(screen.getByText("Format:")).toBeInTheDocument();
+	});
+
+	it("keeps the width on the left of the dimensions in an Arabic admin", async () => {
+		activateLocale("ar");
+		const screen = await render(
+			<QueryWrapper>
+				<MediaDetailPanel
+					open
+					item={makeImageItem({ width: 1920, height: 1080 })}
+					onClose={vi.fn()}
+					onDeleted={vi.fn()}
+				/>
+			</QueryWrapper>,
+			{ wrapper: LocaleDirectionProvider },
+		);
+		const size = screen.getByText("1920 × 1080");
+		await expect.element(size).toBeVisible();
+		expect(getComputedStyle(size.element().parentElement!).direction).toBe("rtl");
+		expect(leftEdgeOf(size.element(), "1920")).toBeLessThan(leftEdgeOf(size.element(), "1080"));
 	});
 
 	it("keeps the Uploaded row in the wider column when dimensions are missing", async () => {

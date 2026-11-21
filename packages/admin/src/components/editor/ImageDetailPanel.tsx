@@ -30,7 +30,12 @@ import * as React from "react";
 
 import type { MediaItem } from "../../lib/api";
 import { useStableCallback } from "../../lib/hooks";
-import { canonicalMediaProviderId, dropsDisplayHeight, metaString } from "../../lib/media-utils.js";
+import {
+	canonicalMediaProviderId,
+	dropsDisplayHeight,
+	formatDimensions,
+	metaString,
+} from "../../lib/media-utils.js";
 import { cn } from "../../lib/utils.js";
 import { ConfirmDialog } from "../ConfirmDialog";
 import { FieldHelpLabel } from "../FieldHelpLabel.js";
@@ -101,7 +106,7 @@ export function ImageDetailPanel({
 	stickyFooter = false,
 	inline = false,
 }: ImageDetailPanelProps) {
-	const { t } = useLingui();
+	const { t, i18n } = useLingui();
 	const altInputId = React.useId();
 	const sourceInputId = React.useId();
 	const closeLabel = t`Close image settings`;
@@ -175,6 +180,7 @@ export function ImageDetailPanel({
 
 	// Calculate aspect ratio from original dimensions
 	const aspectRatio = asset.width && asset.height ? asset.width / asset.height : undefined;
+	const originalDimensions = formatDimensions(asset.width, asset.height, i18n);
 
 	const handleWidthChange = (value: string) => {
 		const parsedWidth = value ? parseInt(value, 10) : undefined;
@@ -414,13 +420,13 @@ export function ImageDetailPanel({
 					)}
 
 					{/* Original dimensions */}
-					{(asset.width || asset.height) && (
+					{originalDimensions && (
 						<Text size="xs" variant="secondary" DANGEROUS_className="mt-3 flex items-center gap-2">
 							<Ruler className="size-4" aria-hidden="true" />
 							<span className="text-kumo-subtle">{t`Original:`}</span>
-							<span className="tabular-nums text-kumo-default">
-								{asset.width} × {asset.height}
-							</span>
+							<bdi dir="ltr" className="tabular-nums text-kumo-default">
+								{originalDimensions}
+							</bdi>
 						</Text>
 					)}
 				</div>
@@ -651,14 +657,12 @@ export function ImageDetailPanel({
 				</div>
 
 				{/* Image Info - original dimensions */}
-				{(asset.width || asset.height) && (
+				{originalDimensions && (
 					<div className="p-4 border-b">
 						<div className="flex items-center gap-2 text-xs leading-4">
 							<Ruler className="h-4 w-4 text-kumo-subtle" />
 							<span className="text-kumo-subtle">{t`Original:`}</span>
-							<span>
-								{asset.width} × {asset.height}
-							</span>
+							<bdi dir="ltr">{originalDimensions}</bdi>
 						</div>
 					</div>
 				)}

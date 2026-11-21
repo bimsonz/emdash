@@ -25,6 +25,7 @@ import * as React from "react";
 import { fetchMediaItem, type MediaItem, type MediaUpdateInput } from "../lib/api";
 import {
 	canonicalMediaProviderId,
+	formatDimensions,
 	getMediaObjectPosition,
 	getMediaPreviewUrl,
 	localMediaFileUrl,
@@ -178,7 +179,7 @@ export function ImageFieldRenderer({
 	invalid = false,
 	thumbnail,
 }: ImageFieldRendererProps) {
-	const { t } = useLingui();
+	const { t, i18n } = useLingui();
 	const labelled = labelledBy !== undefined;
 	const [pickerOpen, setPickerOpen] = React.useState(false);
 	const errorId = React.useId();
@@ -368,10 +369,7 @@ export function ImageFieldRenderer({
 	const currentWidth = currentMedia?.width ?? (typeof value === "object" ? value.width : undefined);
 	const currentHeight =
 		currentMedia?.height ?? (typeof value === "object" ? value.height : undefined);
-	const dimensions =
-		typeof currentWidth === "number" && typeof currentHeight === "number"
-			? `${currentWidth} × ${currentHeight}`
-			: undefined;
+	const dimensions = formatDimensions(currentWidth, currentHeight, i18n);
 	const mimeType =
 		currentMedia?.mimeType ??
 		(typeof value === "object" && value.mimeType ? value.mimeType : undefined);
