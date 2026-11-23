@@ -188,7 +188,7 @@ msgstr ""
 #. placeholder {0}: items.length
 #. placeholder {0}: orphan.rowCount
 #: packages/admin/src/components/ContentTypeList.tsx:187
-#: packages/admin/src/components/RepeaterField.tsx:166
+#: packages/admin/src/components/RepeaterField.tsx:192
 msgid "{0, plural, one {(# item)} other {(# items)}}"
 msgstr "{0, plural, one {(# مورد)} other {(# مورد)}}"
 
@@ -367,7 +367,7 @@ msgstr ""
 #. placeholder {1}: state.columns
 #: packages/admin/src/components/editor/TableControls.tsx:190
 #: packages/admin/src/components/editor/TableControls.tsx:223
-#: packages/admin/src/components/PortableTextEditor.tsx:4256
+#: packages/admin/src/components/PortableTextEditor.tsx:4286
 msgid "{0, plural, one {# row} other {# rows}} × {1, plural, one {# column} other {# columns}} selected"
 msgstr ""
 
@@ -642,8 +642,8 @@ msgstr ""
 msgid "{base} to: {0}"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:2039
-#: packages/admin/src/components/PortableTextEditor.tsx:2051
+#: packages/admin/src/components/PortableTextEditor.tsx:2068
+#: packages/admin/src/components/PortableTextEditor.tsx:2080
 msgid "{characters, plural, one {# character} other {# characters}}"
 msgstr ""
 
@@ -979,7 +979,7 @@ msgstr ""
 msgid "{policyRejected, plural, one {Open the affected entry, fix the reason shown, and schedule it again. A successful schedule or publish clears this notice.} other {Open the affected entries, fix the reasons shown, and schedule them again. A successful schedule or publish clears each notice.}}"
 msgstr ""
 
-#: packages/admin/src/components/media/MediaBrowserItems.tsx:309
+#: packages/admin/src/components/media/MediaBrowserItems.tsx:314
 msgid "{position} of {total}"
 msgstr ""
 
@@ -987,8 +987,8 @@ msgstr ""
 msgid "{previewRows} × {previewColumns} table"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:2041
-#: packages/admin/src/components/PortableTextEditor.tsx:2052
+#: packages/admin/src/components/PortableTextEditor.tsx:2070
+#: packages/admin/src/components/PortableTextEditor.tsx:2081
 msgid "{readingTime, plural, one {# min read} other {# min read}}"
 msgstr ""
 
@@ -1017,7 +1017,7 @@ msgstr ""
 msgid "{rows, plural, one {Row deleted} other {# rows deleted}}"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:2329
+#: packages/admin/src/components/PortableTextEditor.tsx:2358
 msgid "{rows} × {columns} table pasted"
 msgstr ""
 
@@ -1137,8 +1137,8 @@ msgstr ""
 msgid "{widgetType} in {areaName}"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:2037
-#: packages/admin/src/components/PortableTextEditor.tsx:2050
+#: packages/admin/src/components/PortableTextEditor.tsx:2066
+#: packages/admin/src/components/PortableTextEditor.tsx:2079
 msgid "{words, plural, one {# word} other {# words}}"
 msgstr ""
 
@@ -1190,21 +1190,21 @@ msgid "<0>{name}</0> now holds this entry, so your changes are no longer being s
 msgstr ""
 
 #: packages/admin/src/components/BlocksField.tsx:1518
-#: packages/admin/src/components/editor/DragHandleWrapper.tsx:239
+#: packages/admin/src/components/editor/DragHandleWrapper.tsx:265
 msgid "<0>Alt-click</0> to add above"
 msgstr ""
 
-#: packages/admin/src/components/editor/DragHandleWrapper.tsx:235
+#: packages/admin/src/components/editor/DragHandleWrapper.tsx:261
 msgid "<0>Click</0> to add below"
 msgstr ""
 
 #: packages/admin/src/components/BlocksField.tsx:1564
-#: packages/admin/src/components/editor/DragHandleWrapper.tsx:281
+#: packages/admin/src/components/editor/DragHandleWrapper.tsx:307
 msgid "<0>Click</0> to open menu"
 msgstr ""
 
 #: packages/admin/src/components/BlocksField.tsx:1560
-#: packages/admin/src/components/editor/DragHandleWrapper.tsx:277
+#: packages/admin/src/components/editor/DragHandleWrapper.tsx:303
 msgid "<0>Drag</0> to move"
 msgstr ""
 
@@ -1557,7 +1557,7 @@ msgstr "افزودن"
 #. placeholder {0}: option.byline.displayName
 #: packages/admin/src/components/BylineCreditsEditor.tsx:399
 #: packages/admin/src/components/ContentList.tsx:716
-#: packages/admin/src/components/PortableTextEditor.tsx:1633
+#: packages/admin/src/components/PortableTextEditor.tsx:1661
 #: packages/admin/src/components/TaxonomyManager.tsx:716
 #: packages/admin/src/components/TaxonomyManager.tsx:1249
 msgid "Add {0}"
@@ -1638,15 +1638,22 @@ msgstr ""
 
 #: packages/admin/src/components/editor/VideoNode.tsx:321
 #: packages/admin/src/components/editor/VideoNode.tsx:323
-#: packages/admin/src/components/PortableTextEditor.tsx:4718
+#: packages/admin/src/components/PortableTextEditor.tsx:4748
 msgid "Add caption"
 msgstr ""
 
+#: packages/admin/src/components/editor/ColumnsNode.tsx:295
+#: packages/admin/src/components/editor/ColumnsNode.tsx:304
+msgid "Add column"
+msgstr ""
+
+#: packages/admin/src/components/editor/ColumnsNode.tsx:421
 #: packages/admin/src/components/editor/TableControls.tsx:26
-#: packages/admin/src/components/PortableTextEditor.tsx:4269
+#: packages/admin/src/components/PortableTextEditor.tsx:4299
 msgid "Add column after"
 msgstr ""
 
+#: packages/admin/src/components/editor/ColumnsNode.tsx:415
 #: packages/admin/src/components/editor/TableControls.tsx:26
 msgid "Add column before"
 msgstr ""
@@ -1693,11 +1700,13 @@ msgstr ""
 msgid "Add First Field"
 msgstr ""
 
-#: packages/admin/src/components/RepeaterField.tsx:188
+#: packages/admin/src/components/RepeaterField.tsx:226
 msgid "Add First Item"
 msgstr "افزودن اولین مورد"
 
 #: packages/admin/src/components/editor/GalleryDetailPanel.tsx:265
+#: packages/admin/src/components/RepeaterField.tsx:205
+#: packages/admin/src/components/RepeaterField.tsx:269
 msgid "Add Images"
 msgstr ""
 
@@ -1706,11 +1715,11 @@ msgid "Add images to gallery"
 msgstr ""
 
 #: packages/admin/src/components/BlockListField.tsx:900
-#: packages/admin/src/components/PortableTextEditor.tsx:1633
+#: packages/admin/src/components/PortableTextEditor.tsx:1661
 msgid "Add item"
 msgstr ""
 
-#: packages/admin/src/components/RepeaterField.tsx:172
+#: packages/admin/src/components/RepeaterField.tsx:209
 msgid "Add Item"
 msgstr "افزودن مورد"
 
@@ -1726,9 +1735,10 @@ msgstr ""
 msgid "Add item to {label}"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:3893
-#: packages/admin/src/components/PortableTextEditor.tsx:4711
-#: packages/admin/src/components/PortableTextEditor.tsx:5160
+#: packages/admin/src/components/editor/TextLinkControl.tsx:71
+#: packages/admin/src/components/PortableTextEditor.tsx:3923
+#: packages/admin/src/components/PortableTextEditor.tsx:4741
+#: packages/admin/src/components/PortableTextEditor.tsx:5190
 msgid "Add link"
 msgstr ""
 
@@ -1754,7 +1764,7 @@ msgstr ""
 msgid "Add noindex meta tag"
 msgstr "افزودن تگ متای noindex"
 
-#: packages/admin/src/components/PortableTextEditor.tsx:2409
+#: packages/admin/src/components/PortableTextEditor.tsx:2438
 msgid "Add one or more link buttons"
 msgstr ""
 
@@ -1776,7 +1786,7 @@ msgid "Add row above"
 msgstr ""
 
 #: packages/admin/src/components/editor/TableControls.tsx:25
-#: packages/admin/src/components/PortableTextEditor.tsx:4262
+#: packages/admin/src/components/PortableTextEditor.tsx:4292
 msgid "Add row below"
 msgstr ""
 
@@ -1928,7 +1938,7 @@ msgid "Administrator"
 msgstr "مدیر"
 
 #: packages/admin/src/components/BlocksField.tsx:2454
-#: packages/admin/src/components/PortableTextEditor.tsx:501
+#: packages/admin/src/components/PortableTextEditor.tsx:511
 msgid "Advanced"
 msgstr ""
 
@@ -1970,26 +1980,27 @@ msgstr ""
 msgid "Agent-callable MCP tools"
 msgstr ""
 
-#: packages/admin/src/components/editor/BlockMenu.tsx:165
-#: packages/admin/src/components/PortableTextEditor.tsx:4157
+#: packages/admin/src/components/editor/BlockMenu.tsx:159
+#: packages/admin/src/components/PortableTextEditor.tsx:4187
 msgid "Align"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:5334
+#: packages/admin/src/components/PortableTextEditor.tsx:5364
 msgid "Align center"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:5326
+#: packages/admin/src/components/PortableTextEditor.tsx:5356
 msgid "Align left"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:5342
+#: packages/admin/src/components/PortableTextEditor.tsx:5372
 msgid "Align right"
 msgstr ""
 
+#: packages/admin/src/components/editor/ColumnsNode.tsx:332
 #: packages/admin/src/components/editor/ImageDetailPanel.tsx:485
 #: packages/admin/src/components/editor/ImageDetailPanel.tsx:726
-#: packages/admin/src/components/PortableTextEditor.tsx:4692
+#: packages/admin/src/components/PortableTextEditor.tsx:4722
 msgid "Alignment"
 msgstr ""
 
@@ -2115,8 +2126,8 @@ msgstr ""
 #: packages/admin/src/components/editor/ImageDetailPanel.tsx:516
 #: packages/admin/src/components/editor/ImageDetailPanel.tsx:520
 #: packages/admin/src/components/MediaLibrary.tsx:1153
-#: packages/admin/src/components/PortableTextEditor.tsx:4623
-#: packages/admin/src/components/PortableTextEditor.tsx:4689
+#: packages/admin/src/components/PortableTextEditor.tsx:4653
+#: packages/admin/src/components/PortableTextEditor.tsx:4719
 msgid "Alt text"
 msgstr ""
 
@@ -2322,7 +2333,7 @@ msgid "Applies to every collection. Sections a collection doesn't use are skippe
 msgstr ""
 
 #: packages/admin/src/components/editor/ImageDetailPanel.tsx:611
-#: packages/admin/src/components/PortableTextEditor.tsx:5425
+#: packages/admin/src/components/PortableTextEditor.tsx:5455
 msgid "Apply"
 msgstr ""
 
@@ -2330,8 +2341,8 @@ msgstr ""
 msgid "Apply changes"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:3867
-#: packages/admin/src/components/PortableTextEditor.tsx:4664
+#: packages/admin/src/components/PortableTextEditor.tsx:3897
+#: packages/admin/src/components/PortableTextEditor.tsx:4694
 msgid "Apply link"
 msgstr ""
 
@@ -2688,7 +2699,7 @@ msgstr ""
 msgid "Bash"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:499
+#: packages/admin/src/components/PortableTextEditor.tsx:509
 msgid "Basic blocks"
 msgstr ""
 
@@ -2716,15 +2727,16 @@ msgstr "تأیید بینگ"
 msgid "Bio"
 msgstr ""
 
-#: packages/admin/src/components/editor/BlockMenu.tsx:92
+#: packages/admin/src/components/editor/BlockMenu.tsx:86
+#: packages/admin/src/components/editor/ColumnsNode.tsx:192
 msgid "Block"
 msgstr ""
 
-#: packages/admin/src/components/editor/BlockMenu.tsx:138
+#: packages/admin/src/components/editor/BlockMenu.tsx:132
 msgid "Block actions"
 msgstr ""
 
-#: packages/admin/src/components/editor/DragHandleWrapper.tsx:299
+#: packages/admin/src/components/editor/DragHandleWrapper.tsx:325
 msgid "Block actions - drag to reorder, click for menu"
 msgstr ""
 
@@ -2756,8 +2768,8 @@ msgstr ""
 msgid "Blocks"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:3644
-#: packages/admin/src/components/PortableTextEditor.tsx:5194
+#: packages/admin/src/components/PortableTextEditor.tsx:3674
+#: packages/admin/src/components/PortableTextEditor.tsx:5224
 msgid "Bold"
 msgstr ""
 
@@ -2773,6 +2785,10 @@ msgstr ""
 
 #: packages/admin/src/components/RelationForm.tsx:404
 msgid "Both reference fields bound to this relation share these limits, so the two sides cannot disagree about the same links."
+msgstr ""
+
+#: packages/admin/src/components/editor/ColumnsNode.tsx:230
+msgid "Bottom"
 msgstr ""
 
 #: packages/admin/src/locales/KumoTranslationsProvider.tsx:17
@@ -2820,18 +2836,18 @@ msgstr "قالب‌ها را انتخاب کرده، و با محتوای خود
 msgid "Build provenance verified"
 msgstr ""
 
-#: packages/admin/src/components/editor/blockTypes.ts:93
-#: packages/admin/src/components/PortableTextEditor.tsx:542
-#: packages/admin/src/components/PortableTextEditor.tsx:5251
+#: packages/admin/src/components/editor/blockTypes.ts:94
+#: packages/admin/src/components/PortableTextEditor.tsx:552
+#: packages/admin/src/components/PortableTextEditor.tsx:5281
 msgid "Bullet List"
 msgstr "لیست نشانه‌دار"
 
-#: packages/admin/src/components/PortableTextEditor.tsx:2426
+#: packages/admin/src/components/PortableTextEditor.tsx:2455
 msgid "button"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:2407
-#: packages/admin/src/components/PortableTextEditor.tsx:2425
+#: packages/admin/src/components/PortableTextEditor.tsx:2436
+#: packages/admin/src/components/PortableTextEditor.tsx:2454
 msgid "Buttons"
 msgstr ""
 
@@ -2947,7 +2963,8 @@ msgstr ""
 #: packages/admin/src/components/ContentPickerModal.tsx:386
 #: packages/admin/src/components/editor/ImageDetailPanel.tsx:608
 #: packages/admin/src/components/editor/ImageDetailPanel.tsx:827
-#: packages/admin/src/components/editor/PluginBlockNode.tsx:421
+#: packages/admin/src/components/editor/PluginBlockNode.tsx:422
+#: packages/admin/src/components/editor/TextLinkControl.tsx:123
 #: packages/admin/src/components/EditorDraftPatchPreview.tsx:85
 #: packages/admin/src/components/FieldEditor.tsx:1821
 #: packages/admin/src/components/MediaDetailPanel.tsx:1839
@@ -2957,10 +2974,10 @@ msgstr ""
 #: packages/admin/src/components/MenuEditor.tsx:664
 #: packages/admin/src/components/MenuEditor.tsx:894
 #: packages/admin/src/components/MenuList.tsx:238
-#: packages/admin/src/components/PortableTextEditor.tsx:1431
-#: packages/admin/src/components/PortableTextEditor.tsx:4635
-#: packages/admin/src/components/PortableTextEditor.tsx:4661
-#: packages/admin/src/components/PortableTextEditor.tsx:5409
+#: packages/admin/src/components/PortableTextEditor.tsx:1449
+#: packages/admin/src/components/PortableTextEditor.tsx:4665
+#: packages/admin/src/components/PortableTextEditor.tsx:4691
+#: packages/admin/src/components/PortableTextEditor.tsx:5439
 #: packages/admin/src/components/PublishingDateTimeEditor.tsx:384
 #: packages/admin/src/components/Redirects.tsx:306
 #: packages/admin/src/components/RelationDialog.tsx:72
@@ -2981,7 +2998,7 @@ msgstr ""
 msgid "Cancel"
 msgstr "لغو"
 
-#: packages/admin/src/components/editor/PluginBlockNode.tsx:420
+#: packages/admin/src/components/editor/PluginBlockNode.tsx:421
 msgid "Cancel (Esc)"
 msgstr ""
 
@@ -3071,10 +3088,11 @@ msgstr ""
 msgid "Cells merged"
 msgstr ""
 
-#: packages/admin/src/components/editor/BlockMenu.tsx:54
+#: packages/admin/src/components/editor/BlockMenu.tsx:47
+#: packages/admin/src/components/editor/ColumnsNode.tsx:229
 #: packages/admin/src/components/editor/ImageDetailPanel.tsx:277
-#: packages/admin/src/components/PortableTextEditor.tsx:4161
-#: packages/admin/src/components/PortableTextEditor.tsx:4282
+#: packages/admin/src/components/PortableTextEditor.tsx:4191
+#: packages/admin/src/components/PortableTextEditor.tsx:4312
 msgid "Center"
 msgstr ""
 
@@ -3488,7 +3506,7 @@ msgstr ""
 msgid "Clear filters"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:4171
+#: packages/admin/src/components/PortableTextEditor.tsx:4201
 msgid "Clear formatting"
 msgstr ""
 
@@ -3595,9 +3613,9 @@ msgstr ""
 msgid "Code"
 msgstr "کد"
 
-#: packages/admin/src/components/editor/blockTypes.ts:117
-#: packages/admin/src/components/PortableTextEditor.tsx:572
-#: packages/admin/src/components/PortableTextEditor.tsx:5293
+#: packages/admin/src/components/editor/blockTypes.ts:118
+#: packages/admin/src/components/PortableTextEditor.tsx:582
+#: packages/admin/src/components/PortableTextEditor.tsx:5323
 msgid "Code Block"
 msgstr "بلوک کد"
 
@@ -3660,8 +3678,23 @@ msgstr ""
 msgid "Collections created:"
 msgstr "مجموعه‌های ساخته‌شده:"
 
+#. placeholder {0}: index + 1
+#: packages/admin/src/components/editor/ColumnsNode.tsx:251
+msgid "Column {0} of {columnCount}"
+msgstr ""
+
+#. placeholder {0}: index + 1
+#: packages/admin/src/components/editor/ColumnsNode.tsx:388
+msgid "Column {0} of {siblings}"
+msgstr ""
+
+#: packages/admin/src/components/editor/ColumnsNode.tsx:399
+#: packages/admin/src/components/editor/ColumnsNode.tsx:408
+msgid "Column actions"
+msgstr ""
+
 #: packages/admin/src/components/editor/TableControls.tsx:26
-#: packages/admin/src/components/PortableTextEditor.tsx:4267
+#: packages/admin/src/components/PortableTextEditor.tsx:4297
 msgid "Column added after"
 msgstr ""
 
@@ -3677,7 +3710,7 @@ msgstr ""
 msgid "Column width increased"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:2329
+#: packages/admin/src/components/PortableTextEditor.tsx:2358
 msgid "Column width resized"
 msgstr ""
 
@@ -3685,9 +3718,12 @@ msgstr ""
 msgid "Column widths reset"
 msgstr ""
 
+#: packages/admin/src/components/editor/blockTypes.ts:144
+#: packages/admin/src/components/editor/ColumnsNode.tsx:289
 #: packages/admin/src/components/editor/GalleryDetailPanel.tsx:249
 #: packages/admin/src/components/editor/TableControls.tsx:26
 #: packages/admin/src/components/editor/TableControls.tsx:162
+#: packages/admin/src/components/PortableTextEditor.tsx:620
 msgid "Columns"
 msgstr ""
 
@@ -3889,11 +3925,11 @@ msgstr ""
 msgid "Content reverted to draft"
 msgstr ""
 
-#: packages/admin/src/components/editor/LinkDestinationInput.tsx:351
+#: packages/admin/src/components/editor/LinkDestinationInput.tsx:370
 msgid "Content search is unavailable. Paste a URL instead."
 msgstr ""
 
-#: packages/admin/src/components/editor/LinkDestinationInput.tsx:299
+#: packages/admin/src/components/editor/LinkDestinationInput.tsx:318
 msgid "Content search results"
 msgstr ""
 
@@ -3947,8 +3983,8 @@ msgstr "ادامه →"
 msgid "Continue Import"
 msgstr "ادامه درون‌ریزی"
 
-#: packages/admin/src/components/editor/BlockMenu.tsx:187
-#: packages/admin/src/components/PortableTextEditor.tsx:5268
+#: packages/admin/src/components/editor/BlockMenu.tsx:181
+#: packages/admin/src/components/PortableTextEditor.tsx:5298
 msgid "Continue numbering"
 msgstr ""
 
@@ -4037,8 +4073,8 @@ msgstr "این توکن را الان کپی کنید — دیگر نمایش د
 msgid "Copy token"
 msgstr "کپی توکن"
 
-#: packages/admin/src/components/editor/PluginBlockNode.tsx:334
 #: packages/admin/src/components/editor/PluginBlockNode.tsx:335
+#: packages/admin/src/components/editor/PluginBlockNode.tsx:336
 #: packages/admin/src/components/MediaDetailPanel.tsx:1396
 msgid "Copy URL"
 msgstr ""
@@ -4067,7 +4103,7 @@ msgstr "کپی خودکار ممکن نبود. لطفاً آدرس بالا را
 msgid "Could not create {singularLower}"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:3433
+#: packages/admin/src/components/PortableTextEditor.tsx:3463
 msgid "Could not insert section"
 msgstr ""
 
@@ -4277,7 +4313,7 @@ msgstr ""
 msgid "Create a block type before adding a blocks field."
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:543
+#: packages/admin/src/components/PortableTextEditor.tsx:553
 msgid "Create a bullet list"
 msgstr "ساخت لیست نشانه‌دار"
 
@@ -4290,7 +4326,7 @@ msgstr "ساخت {0} جدید"
 msgid "Create a new {singularLabel}"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:553
+#: packages/admin/src/components/PortableTextEditor.tsx:563
 msgid "Create a numbered list"
 msgstr "ساخت لیست شماره‌دار"
 
@@ -4648,7 +4684,7 @@ msgstr ""
 msgid "Decrease column width"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:2435
+#: packages/admin/src/components/PortableTextEditor.tsx:2464
 msgctxt "button style"
 msgid "Default"
 msgstr ""
@@ -4699,8 +4735,8 @@ msgstr ""
 #: packages/admin/src/components/ContentTypeEditor.tsx:908
 #: packages/admin/src/components/ContentTypeList.tsx:266
 #: packages/admin/src/components/ContentTypeList.tsx:393
-#: packages/admin/src/components/editor/BlockMenu.tsx:218
-#: packages/admin/src/components/editor/PluginBlockNode.tsx:392
+#: packages/admin/src/components/editor/BlockMenu.tsx:212
+#: packages/admin/src/components/editor/PluginBlockNode.tsx:393
 #: packages/admin/src/components/MediaDetailPanel.tsx:1808
 #: packages/admin/src/components/MediaDetailPanel.tsx:1910
 #: packages/admin/src/components/MediaFolderDialog.tsx:198
@@ -4779,7 +4815,7 @@ msgstr ""
 msgid "Delete backup?"
 msgstr ""
 
-#: packages/admin/src/components/editor/EmbedBlockShell.tsx:349
+#: packages/admin/src/components/editor/EmbedBlockShell.tsx:351
 msgid "Delete block"
 msgstr ""
 
@@ -4799,6 +4835,7 @@ msgstr ""
 msgid "Delete byline field?"
 msgstr ""
 
+#: packages/admin/src/components/editor/ColumnsNode.tsx:459
 #: packages/admin/src/components/editor/TableControls.tsx:26
 msgid "Delete column"
 msgstr ""
@@ -4815,7 +4852,7 @@ msgstr "حذف دیدگاه؟"
 msgid "Delete Content Type?"
 msgstr "حذف نوع محتوا؟"
 
-#: packages/admin/src/components/editor/PluginBlockNode.tsx:393
+#: packages/admin/src/components/editor/PluginBlockNode.tsx:394
 msgid "Delete embed"
 msgstr ""
 
@@ -4835,7 +4872,7 @@ msgstr ""
 msgid "Delete gallery"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:4730
+#: packages/admin/src/components/PortableTextEditor.tsx:4760
 msgid "Delete image"
 msgstr ""
 
@@ -5005,7 +5042,7 @@ msgid "visualEditing.altTextPlaceholder"
 msgstr ""
 
 #: packages/admin/src/components/editor/ImageDetailPanel.tsx:523
-#: packages/admin/src/components/PortableTextEditor.tsx:4624
+#: packages/admin/src/components/PortableTextEditor.tsx:4654
 msgid "Describe the image"
 msgstr ""
 
@@ -5162,7 +5199,7 @@ msgstr ""
 
 #: packages/admin/src/components/CoreUpdateBanner.tsx:76
 #: packages/admin/src/components/Dashboard.tsx:208
-#: packages/admin/src/components/editor/ImageUploadExtension.ts:117
+#: packages/admin/src/components/editor/ImageUploadExtension.ts:118
 #: packages/admin/src/components/settings/ApiTokenSettings.tsx:282
 msgid "Dismiss"
 msgstr "رد کردن"
@@ -5180,11 +5217,11 @@ msgstr ""
 msgid "Dismiss save error"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:3454
+#: packages/admin/src/components/PortableTextEditor.tsx:3484
 msgid "Dismiss section error"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:3421
+#: packages/admin/src/components/PortableTextEditor.tsx:3451
 msgid "Dismiss table paste error"
 msgstr ""
 
@@ -5225,8 +5262,8 @@ msgstr "به‌عنوان زیرنویس قابل مشاهده زیر تصویر
 msgid "Distribute columns evenly"
 msgstr ""
 
-#: packages/admin/src/components/editor/BlockMenu.tsx:46
-#: packages/admin/src/components/PortableTextEditor.tsx:582
+#: packages/admin/src/components/editor/blockTypes.ts:140
+#: packages/admin/src/components/PortableTextEditor.tsx:592
 msgid "Divider"
 msgstr "جداکننده"
 
@@ -5275,6 +5312,7 @@ msgstr ""
 #: packages/admin/src/components/BulkTagDialog.tsx:506
 #: packages/admin/src/components/BylineCreditsEditor.tsx:777
 #: packages/admin/src/components/ContentList.tsx:1280
+#: packages/admin/src/components/editor/ColumnsNode.tsx:481
 #: packages/admin/src/components/MediaUploadDialog.tsx:338
 #: packages/admin/src/components/users/InviteUserModal.tsx:225
 #: packages/admin/src/components/WordPressImport.tsx:2178
@@ -5392,7 +5430,7 @@ msgstr "بکشید و رها کنید یا برای مرور کلیک کنید (
 msgid "Drag here to add"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:1809
+#: packages/admin/src/components/PortableTextEditor.tsx:1837
 msgid "Drag to reorder"
 msgstr ""
 
@@ -5448,7 +5486,7 @@ msgid "Dropped {label}."
 msgstr ""
 
 #: packages/admin/src/components/ContentList.tsx:1673
-#: packages/admin/src/components/editor/BlockMenu.tsx:201
+#: packages/admin/src/components/editor/BlockMenu.tsx:195
 #: packages/admin/src/components/RowMenuItems.tsx:68
 msgid "Duplicate"
 msgstr ""
@@ -5500,8 +5538,8 @@ msgstr ""
 
 #: packages/admin/src/components/ContentList.tsx:1650
 #: packages/admin/src/components/ContentTypeList.tsx:382
-#: packages/admin/src/components/editor/PluginBlockNode.tsx:380
 #: packages/admin/src/components/editor/PluginBlockNode.tsx:381
+#: packages/admin/src/components/editor/PluginBlockNode.tsx:382
 #: packages/admin/src/components/MenuCard.tsx:59
 #: packages/admin/src/components/MenuEditor.tsx:785
 #: packages/admin/src/components/Redirects.tsx:519
@@ -5519,7 +5557,7 @@ msgstr "ویرایش"
 #. placeholder {0}: collection.label
 #. placeholder {0}: domain.domain
 #: packages/admin/src/components/ContentTypeList.tsx:379
-#: packages/admin/src/components/PortableTextEditor.tsx:1372
+#: packages/admin/src/components/PortableTextEditor.tsx:1389
 #: packages/admin/src/components/RelationFormPanel.tsx:128
 #: packages/admin/src/components/RelationList.tsx:183
 #: packages/admin/src/components/RelationsPanel.tsx:203
@@ -5573,7 +5611,7 @@ msgstr ""
 
 #: packages/admin/src/components/editor/VideoNode.tsx:321
 #: packages/admin/src/components/editor/VideoNode.tsx:323
-#: packages/admin/src/components/PortableTextEditor.tsx:4718
+#: packages/admin/src/components/PortableTextEditor.tsx:4748
 msgid "Edit caption"
 msgstr ""
 
@@ -5618,10 +5656,10 @@ msgstr ""
 msgid "Edit image {0}"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:3893
-#: packages/admin/src/components/PortableTextEditor.tsx:4002
-#: packages/admin/src/components/PortableTextEditor.tsx:4711
-#: packages/admin/src/components/PortableTextEditor.tsx:5159
+#: packages/admin/src/components/PortableTextEditor.tsx:3923
+#: packages/admin/src/components/PortableTextEditor.tsx:4032
+#: packages/admin/src/components/PortableTextEditor.tsx:4741
+#: packages/admin/src/components/PortableTextEditor.tsx:5189
 msgid "Edit link"
 msgstr ""
 
@@ -5669,8 +5707,8 @@ msgstr ""
 msgid "Edit section"
 msgstr ""
 
-#: packages/admin/src/components/editor/PluginBlockNode.tsx:380
 #: packages/admin/src/components/editor/PluginBlockNode.tsx:381
+#: packages/admin/src/components/editor/PluginBlockNode.tsx:382
 msgid "Edit URL"
 msgstr ""
 
@@ -5840,17 +5878,17 @@ msgstr "ایمیل تأیید شده"
 msgid "Email verified!"
 msgstr "ایمیل تأیید شد!"
 
-#: packages/admin/src/components/editor/BlockMenu.tsx:49
+#: packages/admin/src/components/editor/blockTypes.ts:143
 #: packages/admin/src/components/revisions/RevisionDocument.tsx:496
 msgid "Embed"
 msgstr ""
 
 #. placeholder {0}: block.label
-#: packages/admin/src/components/PortableTextEditor.tsx:2539
+#: packages/admin/src/components/PortableTextEditor.tsx:2568
 msgid "Embed a {0}"
 msgstr "جاسازی {0}"
 
-#: packages/admin/src/components/PortableTextEditor.tsx:626
+#: packages/admin/src/components/PortableTextEditor.tsx:647
 msgid "Embed a page from another site"
 msgstr ""
 
@@ -5862,7 +5900,7 @@ msgstr ""
 msgid "Embedded content"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:502
+#: packages/admin/src/components/PortableTextEditor.tsx:512
 msgid "Embeds"
 msgstr "جاسازی‌ها"
 
@@ -5925,6 +5963,7 @@ msgid "EmDash will scan existing content to show where media is used."
 msgstr ""
 
 #: packages/admin/src/components/block-field-notes.tsx:159
+#: packages/admin/src/components/editor/ColumnsNode.tsx:275
 #: packages/admin/src/components/revisions/RevisionDocument.tsx:437
 #: packages/admin/src/components/revisions/RevisionSegments.tsx:21
 msgid "Empty"
@@ -6020,7 +6059,7 @@ msgstr ""
 msgid "Enter a full URL that starts with https:// or http://."
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:1205
+#: packages/admin/src/components/PortableTextEditor.tsx:1221
 msgid "Enter a full URL, such as https://example.com."
 msgstr ""
 
@@ -6047,15 +6086,15 @@ msgstr ""
 msgid "Enter a name."
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:1190
+#: packages/admin/src/components/PortableTextEditor.tsx:1204
 msgid "Enter a number between {min} and {max}."
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:1192
+#: packages/admin/src/components/PortableTextEditor.tsx:1206
 msgid "Enter a number of {max} or less."
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:1191
+#: packages/admin/src/components/PortableTextEditor.tsx:1205
 msgid "Enter a number of {min} or more."
 msgstr ""
 
@@ -6173,7 +6212,7 @@ msgstr ""
 
 #: packages/admin/src/components/editor/PluginBlockNode.tsx:127
 #: packages/admin/src/components/editor/PluginBlockNode.tsx:136
-#: packages/admin/src/components/PortableTextEditor.tsx:1416
+#: packages/admin/src/components/PortableTextEditor.tsx:1437
 msgid "Enter URL..."
 msgstr ""
 
@@ -6236,7 +6275,7 @@ msgstr "خطا در ذخیره بخش"
 msgid "Error updating widget"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:1126
+#: packages/admin/src/components/PortableTextEditor.tsx:1147
 msgid "esc"
 msgstr ""
 
@@ -7578,16 +7617,16 @@ msgstr "نام فایل پس از بارگذاری قابل تغییر نیست"
 msgid "Files upload as soon as you add them."
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:2437
+#: packages/admin/src/components/PortableTextEditor.tsx:2466
 msgctxt "button style"
 msgid "Fill"
 msgstr ""
 
 #: packages/admin/src/components/PortableTextEditor.tsx:1208
-msgid "Fill in at least one field."
-msgstr ""
+#~ msgid "Fill in at least one field."
+#~ msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:1375
+#: packages/admin/src/components/PortableTextEditor.tsx:1395
 msgid "Fill in what this block shows."
 msgstr ""
 
@@ -7757,7 +7796,7 @@ msgstr "برای درون‌ریزی کامل شامل پیش‌نویس‌ها 
 msgid "For the best import experience, install the <0>EmDash Exporter</0> plugin on your WordPress site."
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:3845
+#: packages/admin/src/components/PortableTextEditor.tsx:3875
 msgid "Format selection"
 msgstr ""
 
@@ -7803,9 +7842,9 @@ msgstr "دسترسی کامل"
 msgid "Full admin access"
 msgstr "دسترسی مدیریتی کامل"
 
-#: packages/admin/src/components/editor/BlockMenu.tsx:44
+#: packages/admin/src/components/editor/blockTypes.ts:138
 #: packages/admin/src/components/editor/GalleryDetailPanel.tsx:235
-#: packages/admin/src/components/PortableTextEditor.tsx:2487
+#: packages/admin/src/components/PortableTextEditor.tsx:2516
 #: packages/admin/src/components/revisions/RevisionDocument.tsx:437
 msgid "Gallery"
 msgstr ""
@@ -7813,6 +7852,10 @@ msgstr ""
 #: packages/admin/src/components/editor/GalleryNode.tsx:221
 #: packages/admin/src/components/editor/GalleryNode.tsx:222
 msgid "Gallery settings"
+msgstr ""
+
+#: packages/admin/src/components/editor/ColumnsNode.tsx:326
+msgid "Gap"
 msgstr ""
 
 #: packages/admin/src/components/Settings.tsx:56
@@ -7961,39 +8004,39 @@ msgstr ""
 msgid "Headers"
 msgstr ""
 
-#: packages/admin/src/components/editor/blockTypes.ts:85
+#: packages/admin/src/components/editor/blockTypes.ts:86
 #: packages/admin/src/components/editor/HeadingDropdownMenu.tsx:33
-#: packages/admin/src/components/PortableTextEditor.tsx:537
+#: packages/admin/src/components/PortableTextEditor.tsx:547
 msgid "Heading 1"
 msgstr "سرفصل ۱"
 
-#: packages/admin/src/components/editor/blockTypes.ts:86
+#: packages/admin/src/components/editor/blockTypes.ts:87
 #: packages/admin/src/components/editor/HeadingDropdownMenu.tsx:34
-#: packages/admin/src/components/PortableTextEditor.tsx:538
+#: packages/admin/src/components/PortableTextEditor.tsx:548
 msgid "Heading 2"
 msgstr "سرفصل ۲"
 
-#: packages/admin/src/components/editor/blockTypes.ts:87
+#: packages/admin/src/components/editor/blockTypes.ts:88
 #: packages/admin/src/components/editor/HeadingDropdownMenu.tsx:35
-#: packages/admin/src/components/PortableTextEditor.tsx:539
+#: packages/admin/src/components/PortableTextEditor.tsx:549
 msgid "Heading 3"
 msgstr "سرفصل ۳"
 
-#: packages/admin/src/components/editor/blockTypes.ts:88
+#: packages/admin/src/components/editor/blockTypes.ts:89
 #: packages/admin/src/components/editor/HeadingDropdownMenu.tsx:36
-#: packages/admin/src/components/PortableTextEditor.tsx:608
+#: packages/admin/src/components/PortableTextEditor.tsx:629
 msgid "Heading 4"
 msgstr ""
 
-#: packages/admin/src/components/editor/blockTypes.ts:89
+#: packages/admin/src/components/editor/blockTypes.ts:90
 #: packages/admin/src/components/editor/HeadingDropdownMenu.tsx:37
-#: packages/admin/src/components/PortableTextEditor.tsx:609
+#: packages/admin/src/components/PortableTextEditor.tsx:630
 msgid "Heading 5"
 msgstr ""
 
-#: packages/admin/src/components/editor/blockTypes.ts:90
+#: packages/admin/src/components/editor/blockTypes.ts:91
 #: packages/admin/src/components/editor/HeadingDropdownMenu.tsx:38
-#: packages/admin/src/components/PortableTextEditor.tsx:610
+#: packages/admin/src/components/PortableTextEditor.tsx:631
 msgid "Heading 6"
 msgstr ""
 
@@ -8084,7 +8127,7 @@ msgstr "صفحه اصلی"
 msgid "Hooks"
 msgstr "هوک‌ها"
 
-#: packages/admin/src/components/PortableTextEditor.tsx:2418
+#: packages/admin/src/components/PortableTextEditor.tsx:2447
 msgid "Horizontal"
 msgstr ""
 
@@ -8122,10 +8165,10 @@ msgstr ""
 msgid "How to create an Application Password"
 msgstr "چگونه گذرواژه برنامه بسازیم"
 
-#: packages/admin/src/components/editor/BlockMenu.tsx:47
+#: packages/admin/src/components/editor/blockTypes.ts:141
 #: packages/admin/src/components/editor/codeBlockLanguages.ts:38
 #: packages/admin/src/components/editor/HtmlBlockNode.tsx:51
-#: packages/admin/src/components/PortableTextEditor.tsx:615
+#: packages/admin/src/components/PortableTextEditor.tsx:636
 #: packages/admin/src/components/revisions/RevisionDocument.tsx:502
 msgid "HTML"
 msgstr ""
@@ -8204,8 +8247,8 @@ msgstr ""
 msgid "If you didn't request this, you can safely ignore this email."
 msgstr ""
 
-#: packages/admin/src/components/editor/BlockMenu.tsx:48
-#: packages/admin/src/components/PortableTextEditor.tsx:625
+#: packages/admin/src/components/editor/blockTypes.ts:142
+#: packages/admin/src/components/PortableTextEditor.tsx:646
 msgid "Iframe"
 msgstr ""
 
@@ -8218,10 +8261,10 @@ msgstr ""
 msgid "visualEditing.image"
 msgstr ""
 
-#: packages/admin/src/components/editor/BlockMenu.tsx:42
+#: packages/admin/src/components/editor/blockTypes.ts:136
 #: packages/admin/src/components/FieldEditor.tsx:711
 #: packages/admin/src/components/FieldEditor.tsx:1704
-#: packages/admin/src/components/PortableTextEditor.tsx:2474
+#: packages/admin/src/components/PortableTextEditor.tsx:2503
 #: packages/admin/src/components/revisions/RevisionDocument.tsx:302
 #: packages/admin/src/components/revisions/RevisionDocument.tsx:458
 msgid "Image"
@@ -8243,7 +8286,7 @@ msgstr ""
 msgid "Image actions"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:4589
+#: packages/admin/src/components/PortableTextEditor.tsx:4619
 msgid "Image controls"
 msgstr ""
 
@@ -8251,7 +8294,7 @@ msgstr ""
 msgid "Image from media library"
 msgstr "تصویر از کتابخانه رسانه"
 
-#: packages/admin/src/components/PortableTextEditor.tsx:5157
+#: packages/admin/src/components/PortableTextEditor.tsx:5187
 msgid "Image link"
 msgstr ""
 
@@ -8273,7 +8316,7 @@ msgid "Image replaced."
 msgstr ""
 
 #: packages/admin/src/components/editor/ImageDetailPanel.tsx:392
-#: packages/admin/src/components/PortableTextEditor.tsx:4723
+#: packages/admin/src/components/PortableTextEditor.tsx:4753
 msgid "Image settings"
 msgstr ""
 
@@ -8285,7 +8328,7 @@ msgstr "تنظیمات تصویر"
 msgid "Image shown when this page is shared on social media"
 msgstr "تصویر نمایش داده شده هنگام اشتراک‌گذاری این صفحه در شبکه‌های اجتماعی"
 
-#: packages/admin/src/components/editor/ImageUploadExtension.ts:263
+#: packages/admin/src/components/editor/ImageUploadExtension.ts:265
 #: packages/admin/src/components/media/ImageDropTarget.tsx:84
 msgid "Image upload failed. Try again."
 msgstr ""
@@ -8505,68 +8548,72 @@ msgstr ""
 msgid "Inline blocks use your site's styles. Your site removes scripts, style tags and style attributes, and empties iframes other than YouTube and Vimeo."
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:3648
-#: packages/admin/src/components/PortableTextEditor.tsx:5226
+#: packages/admin/src/components/PortableTextEditor.tsx:3678
+#: packages/admin/src/components/PortableTextEditor.tsx:5256
 msgid "Inline Code"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:1433
+#: packages/admin/src/components/PortableTextEditor.tsx:1451
 msgid "Insert"
 msgstr ""
 
 #. placeholder {0}: block?.label || ""
-#: packages/admin/src/components/PortableTextEditor.tsx:1372
+#: packages/admin/src/components/PortableTextEditor.tsx:1389
 msgid "Insert {0}"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:563
+#: packages/admin/src/components/PortableTextEditor.tsx:573
 msgid "Insert a blockquote"
 msgstr "درج نقل‌قول"
 
-#: packages/admin/src/components/PortableTextEditor.tsx:573
+#: packages/admin/src/components/PortableTextEditor.tsx:583
 msgid "Insert a code block"
 msgstr "درج بلوک کد"
 
-#: packages/admin/src/components/PortableTextEditor.tsx:583
+#: packages/admin/src/components/PortableTextEditor.tsx:593
 msgid "Insert a horizontal rule"
 msgstr "درج خط افقی"
 
-#: packages/admin/src/components/PortableTextEditor.tsx:2518
+#: packages/admin/src/components/PortableTextEditor.tsx:2547
 msgid "Insert a reusable section"
 msgstr "درج بخش قابل استفاده مجدد"
 
-#: packages/admin/src/components/PortableTextEditor.tsx:601
+#: packages/admin/src/components/PortableTextEditor.tsx:611
 msgid "Insert a table"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:2475
+#: packages/admin/src/components/PortableTextEditor.tsx:2504
 msgid "Insert an image"
 msgstr "درج تصویر"
 
-#: packages/admin/src/components/PortableTextEditor.tsx:2488
+#: packages/admin/src/components/PortableTextEditor.tsx:2517
 msgid "Insert an image gallery"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:1022
+#: packages/admin/src/components/PortableTextEditor.tsx:1043
 msgid "Insert block"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:5173
-#: packages/admin/src/components/PortableTextEditor.tsx:5183
+#: packages/admin/src/components/PortableTextEditor.tsx:5203
+#: packages/admin/src/components/PortableTextEditor.tsx:5213
 msgid "Insert block after current block"
 msgstr ""
 
-#: packages/admin/src/components/editor/DragHandleWrapper.tsx:267
+#: packages/admin/src/components/editor/DragHandleWrapper.tsx:293
 msgid "Insert block below"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:5307
+#: packages/admin/src/components/PortableTextEditor.tsx:5337
 msgid "Insert HTML"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:3554
-#: packages/admin/src/components/PortableTextEditor.tsx:5300
+#: packages/admin/src/components/PortableTextEditor.tsx:3584
+#: packages/admin/src/components/PortableTextEditor.tsx:5330
 msgid "Insert image"
+msgstr ""
+
+#: packages/admin/src/components/editor/TextLinkControl.tsx:110
+msgid "Insert link"
 msgstr ""
 
 #: packages/admin/src/components/auth/PasskeyRegistration.tsx:691
@@ -8581,7 +8628,7 @@ msgstr ""
 msgid "Insert paragraph before"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:616
+#: packages/admin/src/components/PortableTextEditor.tsx:637
 msgid "Insert raw HTML"
 msgstr ""
 
@@ -8594,7 +8641,7 @@ msgstr "درج بخش"
 msgid "Insert table"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:3568
+#: packages/admin/src/components/PortableTextEditor.tsx:3598
 msgid "Insert video"
 msgstr ""
 
@@ -8730,15 +8777,15 @@ msgstr ""
 msgid "It’s shown read-only. An entry in Trash can be restored from there."
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:3645
-#: packages/admin/src/components/PortableTextEditor.tsx:5202
+#: packages/admin/src/components/PortableTextEditor.tsx:3675
+#: packages/admin/src/components/PortableTextEditor.tsx:5232
 msgid "Italic"
 msgstr ""
 
 #. placeholder {0}: index + 1
 #: packages/admin/src/components/BlockListField.tsx:401
-#: packages/admin/src/components/PortableTextEditor.tsx:1795
-#: packages/admin/src/components/RepeaterField.tsx:268
+#: packages/admin/src/components/PortableTextEditor.tsx:1823
+#: packages/admin/src/components/RepeaterField.tsx:318
 msgid "Item {0}"
 msgstr "مورد {0}"
 
@@ -8916,7 +8963,11 @@ msgstr ""
 msgid "Language"
 msgstr "زبان"
 
-#: packages/admin/src/components/PortableTextEditor.tsx:537
+#: packages/admin/src/components/editor/ColumnsNode.tsx:224
+msgid "Large"
+msgstr ""
+
+#: packages/admin/src/components/PortableTextEditor.tsx:547
 msgid "Large section heading"
 msgstr "سرتیتر بزرگ بخش"
 
@@ -8967,7 +9018,11 @@ msgstr "آخرین استفاده {0}"
 msgid "Later entries weren't loaded. The range has more entries than the calendar can show."
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:2415
+#: packages/admin/src/components/PortableTextEditor.tsx:621
+msgid "Lay blocks out side by side"
+msgstr ""
+
+#: packages/admin/src/components/PortableTextEditor.tsx:2444
 msgid "Layout"
 msgstr ""
 
@@ -8996,10 +9051,10 @@ msgstr "بدون تخصیص بگذارید"
 msgid "Leave without saving?"
 msgstr ""
 
-#: packages/admin/src/components/editor/BlockMenu.tsx:53
+#: packages/admin/src/components/editor/BlockMenu.tsx:46
 #: packages/admin/src/components/editor/ImageDetailPanel.tsx:276
-#: packages/admin/src/components/PortableTextEditor.tsx:4160
-#: packages/admin/src/components/PortableTextEditor.tsx:4281
+#: packages/admin/src/components/PortableTextEditor.tsx:4190
+#: packages/admin/src/components/PortableTextEditor.tsx:4311
 msgid "Left"
 msgstr ""
 
@@ -9021,7 +9076,7 @@ msgid "Limit"
 msgstr ""
 
 #: packages/admin/src/components/BlocksField.tsx:2348
-#: packages/admin/src/components/PortableTextEditor.tsx:5386
+#: packages/admin/src/components/PortableTextEditor.tsx:5416
 msgid "Link"
 msgstr ""
 
@@ -9029,12 +9084,20 @@ msgstr ""
 msgid "Link expired"
 msgstr "لینک منقضی شده"
 
-#: packages/admin/src/components/PortableTextEditor.tsx:3980
+#: packages/admin/src/components/PortableTextEditor.tsx:4010
 msgid "Link options"
+msgstr ""
+
+#: packages/admin/src/components/editor/TextLinkControl.tsx:89
+msgid "Link text"
 msgstr ""
 
 #: packages/admin/src/components/BylineFormDialog.tsx:468
 msgid "Link this byline to a user or mark it as a guest profile."
+msgstr ""
+
+#: packages/admin/src/components/editor/TextLinkControl.tsx:99
+msgid "Link to"
 msgstr ""
 
 #: packages/admin/src/components/FieldEditor.tsx:724
@@ -9117,7 +9180,7 @@ msgstr ""
 msgid "Links to {0}"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:2250
+#: packages/admin/src/components/PortableTextEditor.tsx:2279
 msgid "List"
 msgstr ""
 
@@ -9215,7 +9278,7 @@ msgstr ""
 msgid "Loading content..."
 msgstr "در حال بارگذاری محتوا..."
 
-#: packages/admin/src/components/PortableTextEditor.tsx:3384
+#: packages/admin/src/components/PortableTextEditor.tsx:3414
 msgid "Loading editor..."
 msgstr ""
 
@@ -9318,7 +9381,7 @@ msgstr ""
 #: packages/admin/src/components/MediaDetailPanel.tsx:1731
 #: packages/admin/src/components/MediaLibrary.tsx:1254
 #: packages/admin/src/components/MediaUsedIn.tsx:245
-#: packages/admin/src/components/PortableTextEditor.tsx:1925
+#: packages/admin/src/components/PortableTextEditor.tsx:1953
 #: packages/admin/src/components/Redirects.tsx:851
 #: packages/admin/src/components/RegistryBrowse.tsx:179
 #: packages/admin/src/components/SandboxedPluginPage.tsx:110
@@ -9564,7 +9627,7 @@ msgstr ""
 msgid "MDX"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:500
+#: packages/admin/src/components/PortableTextEditor.tsx:510
 #: packages/admin/src/components/Settings.tsx:75
 #: packages/admin/src/components/settings/transfer/labels.ts:17
 #: packages/admin/src/components/settings/transfer/labels.ts:84
@@ -9668,7 +9731,11 @@ msgstr ""
 msgid "Media Write"
 msgstr "نوشتن رسانه"
 
-#: packages/admin/src/components/PortableTextEditor.tsx:538
+#: packages/admin/src/components/editor/ColumnsNode.tsx:223
+msgid "Medium"
+msgstr ""
+
+#: packages/admin/src/components/PortableTextEditor.tsx:548
 msgid "Medium section heading"
 msgstr "سرتیتر متوسط بخش"
 
@@ -9790,7 +9857,7 @@ msgstr "حداقل مقدار"
 msgid "Minimum blocks"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:609
+#: packages/admin/src/components/PortableTextEditor.tsx:630
 msgid "Minor section heading"
 msgstr ""
 
@@ -9839,7 +9906,7 @@ msgstr ""
 msgid "More actions for {0}"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:4127
+#: packages/admin/src/components/PortableTextEditor.tsx:4157
 msgid "More formatting"
 msgstr ""
 
@@ -9889,12 +9956,12 @@ msgid "Move {0} down"
 msgstr ""
 
 #. placeholder {0}: item.filename
-#: packages/admin/src/components/media/MediaBrowserItems.tsx:318
+#: packages/admin/src/components/media/MediaBrowserItems.tsx:323
 msgid "Move {0} earlier"
 msgstr ""
 
 #. placeholder {0}: item.filename
-#: packages/admin/src/components/media/MediaBrowserItems.tsx:327
+#: packages/admin/src/components/media/MediaBrowserItems.tsx:332
 msgid "Move {0} later"
 msgstr ""
 
@@ -9905,13 +9972,21 @@ msgstr ""
 msgid "Move {0} up"
 msgstr ""
 
-#: packages/admin/src/components/editor/BlockMenu.tsx:212
+#: packages/admin/src/components/editor/BlockMenu.tsx:206
 #: packages/admin/src/components/MenuEditor.tsx:778
 #: packages/admin/src/components/RowMenuItems.tsx:83
 #: packages/admin/src/components/TaxonomyManager.tsx:429
 #: packages/admin/src/routes/byline-schema.tsx:443
 msgid "Move down"
 msgstr "انتقال به پایین"
+
+#: packages/admin/src/components/editor/ColumnsNode.tsx:427
+msgid "Move earlier"
+msgstr ""
+
+#: packages/admin/src/components/editor/ColumnsNode.tsx:433
+msgid "Move later"
+msgstr ""
 
 #: packages/admin/src/components/MediaDetailPanel.tsx:535
 msgid "Move the focal point to choose what stays visible in cropped images."
@@ -9952,7 +10027,7 @@ msgstr "انتقال به سطل زباله"
 msgid "Move to Trash?"
 msgstr "انتقال به سطل زباله؟"
 
-#: packages/admin/src/components/editor/BlockMenu.tsx:206
+#: packages/admin/src/components/editor/BlockMenu.tsx:200
 #: packages/admin/src/components/MenuEditor.tsx:769
 #: packages/admin/src/components/RowMenuItems.tsx:76
 #: packages/admin/src/components/TaxonomyManager.tsx:421
@@ -10399,7 +10474,7 @@ msgstr "هنوز نوع محتوایی وجود ندارد."
 msgid "No custom fields yet"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:4685
+#: packages/admin/src/components/PortableTextEditor.tsx:4715
 msgid "No description yet"
 msgstr ""
 
@@ -10411,7 +10486,7 @@ msgstr "توضیحات تفصیلی موجود نیست."
 msgid "No domains configured. Users must be invited individually."
 msgstr "دامنه‌ای پیکربندی نشده. کاربران باید به‌صورت جداگانه دعوت شوند."
 
-#: packages/admin/src/components/editor/PluginBlockNode.tsx:310
+#: packages/admin/src/components/editor/PluginBlockNode.tsx:311
 msgid "No editor is available for this block type. Its content is preserved."
 msgstr ""
 
@@ -10496,8 +10571,8 @@ msgid "No invite token provided"
 msgstr ""
 
 #: packages/admin/src/components/BlockListField.tsx:885
-#: packages/admin/src/components/PortableTextEditor.tsx:1718
-#: packages/admin/src/components/RepeaterField.tsx:179
+#: packages/admin/src/components/PortableTextEditor.tsx:1746
+#: packages/admin/src/components/RepeaterField.tsx:217
 #: packages/admin/src/components/settings/BackupSettings.tsx:298
 msgid "No items yet"
 msgstr "هنوز موردی نیست"
@@ -10535,7 +10610,7 @@ msgstr ""
 msgid "No matching bylines."
 msgstr ""
 
-#: packages/admin/src/components/editor/LinkDestinationInput.tsx:356
+#: packages/admin/src/components/editor/LinkDestinationInput.tsx:375
 msgid "No matching content found."
 msgstr ""
 
@@ -10647,8 +10722,8 @@ msgstr ""
 msgid "No relations yet."
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:1064
-#: packages/admin/src/components/RepeaterField.tsx:434
+#: packages/admin/src/components/PortableTextEditor.tsx:1085
+#: packages/admin/src/components/RepeaterField.tsx:484
 msgid "No results"
 msgstr "بدون نتایج"
 
@@ -10720,8 +10795,9 @@ msgstr ""
 msgid "Non-guest"
 msgstr ""
 
+#: packages/admin/src/components/editor/ColumnsNode.tsx:221
 #: packages/admin/src/components/editor/ImageDetailPanel.tsx:275
-#: packages/admin/src/components/PortableTextEditor.tsx:4280
+#: packages/admin/src/components/PortableTextEditor.tsx:4310
 msgid "None"
 msgstr ""
 
@@ -10732,6 +10808,10 @@ msgstr "هیچ‌کدام (سطح بالا)"
 
 #: packages/admin/src/components/settings/EmailSettings.tsx:301
 msgid "noreply@example.com"
+msgstr ""
+
+#: packages/admin/src/components/editor/ColumnsNode.tsx:380
+msgid "Normal"
 msgstr ""
 
 #: packages/admin/src/components/RegistryPluginDetail.tsx:713
@@ -10809,9 +10889,9 @@ msgstr ""
 msgid "Number of posts to show per page on list views"
 msgstr "تعداد نوشته‌ها برای نمایش در هر صفحه در نمای لیستی"
 
-#: packages/admin/src/components/editor/blockTypes.ts:101
-#: packages/admin/src/components/PortableTextEditor.tsx:552
-#: packages/admin/src/components/PortableTextEditor.tsx:5259
+#: packages/admin/src/components/editor/blockTypes.ts:102
+#: packages/admin/src/components/PortableTextEditor.tsx:562
+#: packages/admin/src/components/PortableTextEditor.tsx:5289
 msgid "Numbered List"
 msgstr "لیست شماره‌دار"
 
@@ -10874,12 +10954,12 @@ msgstr ""
 msgid "Only image and file fields, images in rich text, and site settings are tracked. Custom rich text blocks and template code aren’t checked."
 msgstr ""
 
-#: packages/admin/src/components/editor/ImageUploadExtension.ts:246
+#: packages/admin/src/components/editor/ImageUploadExtension.ts:248
 #: packages/admin/src/components/media/ImageDropTarget.tsx:60
 msgid "Only image files can be uploaded here."
 msgstr ""
 
-#: packages/admin/src/components/editor/ImageUploadExtension.ts:245
+#: packages/admin/src/components/editor/ImageUploadExtension.ts:247
 msgid "Only images and videos can be uploaded here."
 msgstr ""
 
@@ -10901,7 +10981,7 @@ msgid "Open {0} in a new tab"
 msgstr ""
 
 #. placeholder {0}: folder.name
-#: packages/admin/src/components/media/MediaBrowserItems.tsx:182
+#: packages/admin/src/components/media/MediaBrowserItems.tsx:187
 #: packages/admin/src/components/MediaLibrary.tsx:1360
 #: packages/admin/src/components/MediaLibrary.tsx:1426
 msgid "Open folder {0}"
@@ -10922,8 +11002,8 @@ msgstr ""
 #: packages/admin/src/components/editor/ImageDetailPanel.tsx:784
 #: packages/admin/src/components/editor/ImageDetailPanel.tsx:804
 #: packages/admin/src/components/editor/ImageDetailPanel.tsx:805
-#: packages/admin/src/components/editor/PluginBlockNode.tsx:345
 #: packages/admin/src/components/editor/PluginBlockNode.tsx:346
+#: packages/admin/src/components/editor/PluginBlockNode.tsx:347
 msgid "Open in new tab"
 msgstr "باز کردن در زبانه جدید"
 
@@ -11062,7 +11142,7 @@ msgstr ""
 msgid "Outline"
 msgstr "فهرست مطالب"
 
-#: packages/admin/src/components/PortableTextEditor.tsx:2436
+#: packages/admin/src/components/PortableTextEditor.tsx:2465
 msgctxt "button style"
 msgid "Outline"
 msgstr ""
@@ -11125,8 +11205,8 @@ msgstr ""
 msgid "Pages"
 msgstr "صفحات"
 
-#: packages/admin/src/components/editor/blockTypes.ts:80
-#: packages/admin/src/components/PortableTextEditor.tsx:530
+#: packages/admin/src/components/editor/blockTypes.ts:81
+#: packages/admin/src/components/PortableTextEditor.tsx:540
 msgid "Paragraph"
 msgstr "پاراگراف"
 
@@ -11245,7 +11325,7 @@ msgstr ""
 msgid "Paste an embed code or an https link…"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:1375
+#: packages/admin/src/components/PortableTextEditor.tsx:1393
 msgid "Paste the address of what to embed."
 msgstr ""
 
@@ -11790,11 +11870,6 @@ msgstr ""
 msgid "Publish, unpublish, schedule, and unschedule content"
 msgstr ""
 
-#. js-lingui-explicit-id
-#: packages/admin/src/locales/server.ts:54
-msgid "visualEditing.published"
-msgstr ""
-
 #: packages/admin/src/components/calendar/CalendarEntry.tsx:43
 #: packages/admin/src/components/calendar/CalendarEntryPanel.tsx:226
 #: packages/admin/src/components/ContentList.tsx:1072
@@ -11807,6 +11882,11 @@ msgstr ""
 #: packages/admin/src/router.tsx:1984
 msgid "Published"
 msgstr "منتشرشده"
+
+#. js-lingui-explicit-id
+#: packages/admin/src/locales/server.ts:54
+msgid "visualEditing.published"
+msgstr ""
 
 #. placeholder {0}: isolate(formatDate(latest.publishedAt, i18n.locale))
 #: packages/admin/src/components/MarketplacePluginDetail.tsx:348
@@ -11878,10 +11958,10 @@ msgstr ""
 msgid "Quick create names the relationship after this field and this collection, takes how many entries it holds from the switch above, and puts no limit on how many entries link back the other way. <0>Create the relationship yourself</0> to set its slug, the name each side goes by, and both limits, then pick it above."
 msgstr ""
 
-#: packages/admin/src/components/editor/blockTypes.ts:109
-#: packages/admin/src/components/PortableTextEditor.tsx:562
-#: packages/admin/src/components/PortableTextEditor.tsx:2251
-#: packages/admin/src/components/PortableTextEditor.tsx:5285
+#: packages/admin/src/components/editor/blockTypes.ts:110
+#: packages/admin/src/components/PortableTextEditor.tsx:572
+#: packages/admin/src/components/PortableTextEditor.tsx:2280
+#: packages/admin/src/components/PortableTextEditor.tsx:5315
 msgid "Quote"
 msgstr "نقل‌قول"
 
@@ -12056,7 +12136,7 @@ msgstr "تغییر مسیر‌ها"
 msgid "Redirects that loop will be imported turned off"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:5448
+#: packages/admin/src/components/PortableTextEditor.tsx:5478
 msgid "Redo"
 msgstr ""
 
@@ -12187,8 +12267,8 @@ msgstr ""
 #: packages/admin/src/components/ImageFieldRenderer.tsx:534
 #: packages/admin/src/components/ImageFieldRenderer.tsx:605
 #: packages/admin/src/components/ImageFieldRenderer.tsx:846
-#: packages/admin/src/components/media/MediaBrowserItems.tsx:224
-#: packages/admin/src/components/PortableTextEditor.tsx:5421
+#: packages/admin/src/components/media/MediaBrowserItems.tsx:229
+#: packages/admin/src/components/PortableTextEditor.tsx:5451
 #: packages/admin/src/components/settings/GeneralSettings.tsx:478
 #: packages/admin/src/components/settings/GeneralSettings.tsx:538
 #: packages/admin/src/components/settings/PasskeyItem.tsx:160
@@ -12201,7 +12281,7 @@ msgstr "حذف"
 #. placeholder {0}: option.term.label
 #. placeholder {0}: passkey.name
 #: packages/admin/src/components/ContentEditor.tsx:4703
-#: packages/admin/src/components/media/MediaBrowserItems.tsx:223
+#: packages/admin/src/components/media/MediaBrowserItems.tsx:228
 #: packages/admin/src/components/MediaUploadDialog.tsx:147
 #: packages/admin/src/components/settings/PasskeyItem.tsx:161
 #: packages/admin/src/components/TaxonomySidebar.tsx:482
@@ -12209,7 +12289,7 @@ msgid "Remove {0}"
 msgstr "حذف {0}"
 
 #. placeholder {0}: item.filename
-#: packages/admin/src/components/media/MediaBrowserItems.tsx:335
+#: packages/admin/src/components/media/MediaBrowserItems.tsx:340
 msgid "Remove {0} from selection"
 msgstr ""
 
@@ -12263,14 +12343,15 @@ msgid "Remove image?"
 msgstr ""
 
 #. placeholder {0}: index + 1
-#: packages/admin/src/components/PortableTextEditor.tsx:1834
-#: packages/admin/src/components/RepeaterField.tsx:304
+#: packages/admin/src/components/PortableTextEditor.tsx:1862
+#: packages/admin/src/components/RepeaterField.tsx:354
 msgid "Remove item {0}"
 msgstr "حذف مورد {0}"
 
-#: packages/admin/src/components/PortableTextEditor.tsx:3871
-#: packages/admin/src/components/PortableTextEditor.tsx:4014
-#: packages/admin/src/components/PortableTextEditor.tsx:4657
+#: packages/admin/src/components/editor/TextLinkControl.tsx:119
+#: packages/admin/src/components/PortableTextEditor.tsx:3901
+#: packages/admin/src/components/PortableTextEditor.tsx:4044
+#: packages/admin/src/components/PortableTextEditor.tsx:4687
 msgid "Remove link"
 msgstr ""
 
@@ -12457,8 +12538,8 @@ msgstr ""
 #: packages/admin/src/components/ImageFieldRenderer.tsx:739
 #: packages/admin/src/components/ImageFieldRenderer.tsx:742
 #: packages/admin/src/components/ImageFieldRenderer.tsx:821
-#: packages/admin/src/components/PortableTextEditor.tsx:4679
-#: packages/admin/src/components/PortableTextEditor.tsx:4761
+#: packages/admin/src/components/PortableTextEditor.tsx:4709
+#: packages/admin/src/components/PortableTextEditor.tsx:4791
 #: packages/admin/src/components/SeoImageField.tsx:194
 #: packages/admin/src/components/SeoImageField.tsx:253
 msgid "Replace"
@@ -12486,7 +12567,7 @@ msgstr ""
 #: packages/admin/src/components/editor/ImageDetailPanel.tsx:373
 #: packages/admin/src/components/MediaDetailPanel.tsx:1819
 #: packages/admin/src/components/MediaDetailPanel.tsx:1942
-#: packages/admin/src/components/PortableTextEditor.tsx:4760
+#: packages/admin/src/components/PortableTextEditor.tsx:4790
 msgid "Replace image"
 msgstr ""
 
@@ -12675,8 +12756,8 @@ msgstr ""
 msgid "Resolving publisher handle..."
 msgstr ""
 
-#: packages/admin/src/components/editor/BlockMenu.tsx:193
-#: packages/admin/src/components/PortableTextEditor.tsx:5275
+#: packages/admin/src/components/editor/BlockMenu.tsx:187
+#: packages/admin/src/components/PortableTextEditor.tsx:5305
 msgid "Restart numbering"
 msgstr ""
 
@@ -12723,7 +12804,7 @@ msgstr ""
 #: packages/admin/src/components/ContentEditor.tsx:4717
 #: packages/admin/src/components/ContentPickerModal.tsx:278
 #: packages/admin/src/components/MarketplaceBrowse.tsx:143
-#: packages/admin/src/components/media/MediaBrowserItems.tsx:221
+#: packages/admin/src/components/media/MediaBrowserItems.tsx:226
 #: packages/admin/src/components/MediaDetailPanel.tsx:1558
 #: packages/admin/src/components/MediaLibrary.tsx:958
 #: packages/admin/src/components/MediaLibrary.tsx:1472
@@ -12745,7 +12826,7 @@ msgstr "تلاش مجدد"
 
 #. placeholder {0}: job.file.name
 #. placeholder {0}: row.file.name
-#: packages/admin/src/components/media/MediaBrowserItems.tsx:220
+#: packages/admin/src/components/media/MediaBrowserItems.tsx:225
 #: packages/admin/src/components/MediaUploadDialog.tsx:133
 msgid "Retry {0}"
 msgstr ""
@@ -12878,14 +12959,14 @@ msgid "Rich text content"
 msgstr "محتوای متن غنی"
 
 #: packages/admin/src/components/FieldEditor.tsx:706
-#: packages/admin/src/components/PortableTextEditor.tsx:2737
+#: packages/admin/src/components/PortableTextEditor.tsx:2768
 msgid "Rich text editor"
 msgstr "ویرایشگر متن غنی"
 
-#: packages/admin/src/components/editor/BlockMenu.tsx:55
+#: packages/admin/src/components/editor/BlockMenu.tsx:48
 #: packages/admin/src/components/editor/ImageDetailPanel.tsx:278
-#: packages/admin/src/components/PortableTextEditor.tsx:4162
-#: packages/admin/src/components/PortableTextEditor.tsx:4283
+#: packages/admin/src/components/PortableTextEditor.tsx:4192
+#: packages/admin/src/components/PortableTextEditor.tsx:4313
 msgid "Right"
 msgstr ""
 
@@ -12940,7 +13021,7 @@ msgid "Row added above"
 msgstr ""
 
 #: packages/admin/src/components/editor/TableControls.tsx:25
-#: packages/admin/src/components/PortableTextEditor.tsx:4260
+#: packages/admin/src/components/PortableTextEditor.tsx:4290
 msgid "Row added below"
 msgstr ""
 
@@ -12983,12 +13064,12 @@ msgstr ""
 
 #: packages/admin/src/components/BylineFormDialog.tsx:558
 #: packages/admin/src/components/editor/ImageDetailPanel.tsx:830
-#: packages/admin/src/components/editor/PluginBlockNode.tsx:432
+#: packages/admin/src/components/editor/PluginBlockNode.tsx:433
 #: packages/admin/src/components/MediaDetailPanel.tsx:1870
 #: packages/admin/src/components/MediaFolderDialog.tsx:207
 #: packages/admin/src/components/MenuEditor.tsx:571
 #: packages/admin/src/components/MenuEditor.tsx:896
-#: packages/admin/src/components/PortableTextEditor.tsx:1433
+#: packages/admin/src/components/PortableTextEditor.tsx:1451
 #: packages/admin/src/components/Redirects.tsx:313
 #: packages/admin/src/components/SaveButton.tsx:51
 #: packages/admin/src/components/settings/AllowedDomainsSettings.tsx:426
@@ -12996,11 +13077,11 @@ msgstr ""
 msgid "Save"
 msgstr "ذخیره"
 
-#: packages/admin/src/components/editor/PluginBlockNode.tsx:431
+#: packages/admin/src/components/editor/PluginBlockNode.tsx:432
 msgid "Save (Enter)"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:4638
+#: packages/admin/src/components/PortableTextEditor.tsx:4668
 msgid "Save alt text"
 msgstr ""
 
@@ -13336,11 +13417,11 @@ msgstr ""
 msgid "Search engines can index this site. Switch back to staging to hide it again, for example during a relaunch."
 msgstr ""
 
-#: packages/admin/src/components/editor/LinkDestinationInput.tsx:85
+#: packages/admin/src/components/editor/LinkDestinationInput.tsx:86
 msgid "Search failed"
 msgstr ""
 
-#: packages/admin/src/components/editor/LinkDestinationInput.tsx:352
+#: packages/admin/src/components/editor/LinkDestinationInput.tsx:371
 msgid "Search failed. Check your connection and try again."
 msgstr ""
 
@@ -13374,8 +13455,8 @@ msgstr ""
 msgid "Search or create {label}…"
 msgstr ""
 
-#: packages/admin/src/components/editor/LinkDestinationInput.tsx:282
-#: packages/admin/src/components/editor/LinkDestinationInput.tsx:283
+#: packages/admin/src/components/editor/LinkDestinationInput.tsx:299
+#: packages/admin/src/components/editor/LinkDestinationInput.tsx:300
 msgid "Search or type a URL"
 msgstr ""
 
@@ -13453,7 +13534,7 @@ msgstr "قابل جستجو"
 msgid "Searching…"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:2517
+#: packages/admin/src/components/PortableTextEditor.tsx:2546
 msgid "Section"
 msgstr "بخش"
 
@@ -13651,7 +13732,7 @@ msgstr "انتخاب فاوآیکون"
 msgid "Select file"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:3582
+#: packages/admin/src/components/PortableTextEditor.tsx:3612
 msgid "Select gallery images"
 msgstr ""
 
@@ -13659,7 +13740,7 @@ msgstr ""
 #: packages/admin/src/components/ImageFieldRenderer.tsx:821
 #: packages/admin/src/components/ImageFieldRenderer.tsx:964
 #: packages/admin/src/components/MediaPickerModal.tsx:237
-#: packages/admin/src/components/PortableTextEditor.tsx:3553
+#: packages/admin/src/components/PortableTextEditor.tsx:3583
 msgid "Select image"
 msgstr "انتخاب تصویر"
 
@@ -13692,7 +13773,7 @@ msgid "Select up to 50 posts at a time."
 msgstr ""
 
 #: packages/admin/src/components/MediaPickerModal.tsx:237
-#: packages/admin/src/components/PortableTextEditor.tsx:3567
+#: packages/admin/src/components/PortableTextEditor.tsx:3597
 msgid "Select video"
 msgstr ""
 
@@ -13701,8 +13782,8 @@ msgid "Select which content types to import."
 msgstr "انتخاب کنید کدام انواع محتوا درون‌ریزی شوند."
 
 #: packages/admin/src/components/BlockKitFieldWidget.tsx:108
-#: packages/admin/src/components/PortableTextEditor.tsx:1933
-#: packages/admin/src/components/RepeaterField.tsx:432
+#: packages/admin/src/components/PortableTextEditor.tsx:1961
+#: packages/admin/src/components/RepeaterField.tsx:482
 msgid "Select..."
 msgstr "انتخاب…"
 
@@ -13710,7 +13791,7 @@ msgstr "انتخاب…"
 msgid "Selected {label}"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:1055
+#: packages/admin/src/components/PortableTextEditor.tsx:1076
 msgid "Selected {selectedItemTitle}"
 msgstr ""
 
@@ -13891,6 +13972,7 @@ msgstr "در حال راه‌اندازی..."
 #: packages/admin/src/components/AdminCommandPalette.tsx:247
 #: packages/admin/src/components/ContentEditor.tsx:3132
 #: packages/admin/src/components/ContentTypeEditor.tsx:485
+#: packages/admin/src/components/editor/ColumnsNode.tsx:318
 #: packages/admin/src/components/Header.tsx:122
 #: packages/admin/src/components/PluginManager.tsx:546
 #: packages/admin/src/components/Settings.tsx:47
@@ -14258,15 +14340,19 @@ msgstr "نامک در کلیپ‌بورد کپی شد"
 msgid "Slugs cannot be changed after the field is created."
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:539
+#: packages/admin/src/components/editor/ColumnsNode.tsx:222
+msgid "Small"
+msgstr ""
+
+#: packages/admin/src/components/PortableTextEditor.tsx:549
 msgid "Small section heading"
 msgstr "سرتیتر کوچک بخش"
 
-#: packages/admin/src/components/PortableTextEditor.tsx:608
+#: packages/admin/src/components/PortableTextEditor.tsx:629
 msgid "Smaller section heading"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:610
+#: packages/admin/src/components/PortableTextEditor.tsx:631
 msgid "Smallest section heading"
 msgstr ""
 
@@ -14475,13 +14561,13 @@ msgstr ""
 msgid "Start with the template’s example posts and pages. Recommended for new sites."
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:531
+#: packages/admin/src/components/PortableTextEditor.tsx:541
 msgid "Start writing with plain text"
 msgstr ""
 
 #: packages/admin/src/components/ContentEditor.tsx:3978
 #: packages/admin/src/components/ContentEditor.tsx:4001
-#: packages/admin/src/components/PortableTextEditor.tsx:2239
+#: packages/admin/src/components/PortableTextEditor.tsx:2268
 msgid "Start writing, or type '/' for commands"
 msgstr ""
 
@@ -14559,8 +14645,12 @@ msgstr ""
 msgid "Stored per locale — each translation of a byline gets its own value."
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:3647
-#: packages/admin/src/components/PortableTextEditor.tsx:5218
+#: packages/admin/src/components/editor/ColumnsNode.tsx:227
+msgid "Stretch"
+msgstr ""
+
+#: packages/admin/src/components/PortableTextEditor.tsx:3677
+#: packages/admin/src/components/PortableTextEditor.tsx:5248
 msgid "Strikethrough"
 msgstr ""
 
@@ -14572,7 +14662,7 @@ msgstr "ساختار"
 msgid "Structured"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:2433
+#: packages/admin/src/components/PortableTextEditor.tsx:2462
 msgid "Style"
 msgstr ""
 
@@ -14594,11 +14684,11 @@ msgstr "زیرفیلدها"
 msgid "Subscriber"
 msgstr "مشترک"
 
-#: packages/admin/src/components/PortableTextEditor.tsx:4141
+#: packages/admin/src/components/PortableTextEditor.tsx:4171
 msgid "Subscript"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:4147
+#: packages/admin/src/components/PortableTextEditor.tsx:4177
 msgid "Superscript"
 msgstr ""
 
@@ -14642,19 +14732,19 @@ msgstr ""
 msgid "System Fields"
 msgstr ""
 
-#: packages/admin/src/components/editor/BlockMenu.tsx:45
+#: packages/admin/src/components/editor/blockTypes.ts:139
 #: packages/admin/src/components/editor/TableControls.tsx:31
 #: packages/admin/src/components/editor/TableControls.tsx:368
-#: packages/admin/src/components/PortableTextEditor.tsx:600
+#: packages/admin/src/components/PortableTextEditor.tsx:610
 #: packages/admin/src/components/revisions/RevisionDocument.tsx:505
 msgid "Table"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:3398
+#: packages/admin/src/components/PortableTextEditor.tsx:3428
 msgid "Table cells accept text, links, and formatting only."
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:4250
+#: packages/admin/src/components/PortableTextEditor.tsx:4280
 msgid "Table controls"
 msgstr ""
 
@@ -14663,7 +14753,7 @@ msgid "Table deleted"
 msgstr ""
 
 #: packages/admin/src/components/editor/TableControls.tsx:401
-#: packages/admin/src/components/PortableTextEditor.tsx:3286
+#: packages/admin/src/components/PortableTextEditor.tsx:3316
 msgid "Table inserted"
 msgstr ""
 
@@ -14671,7 +14761,7 @@ msgstr ""
 msgid "Table size"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:3395
+#: packages/admin/src/components/PortableTextEditor.tsx:3425
 msgid "Tables cannot be pasted inside lists or quotes. Paste the table into its own paragraph and try again."
 msgstr ""
 
@@ -14813,11 +14903,11 @@ msgid "test@example.com"
 msgstr "test@example.com"
 
 #: packages/admin/src/components/BlocksField.tsx:2347
-#: packages/admin/src/components/PortableTextEditor.tsx:2428
+#: packages/admin/src/components/PortableTextEditor.tsx:2457
 msgid "Text"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:5462
+#: packages/admin/src/components/PortableTextEditor.tsx:5492
 msgid "Text formatting"
 msgstr ""
 
@@ -14937,7 +15027,7 @@ msgstr ""
 msgid "The following tables contain content but aren't registered as collections. Register them to manage this content in the admin."
 msgstr "جداول زیر حاوی محتوا هستند اما به‌عنوان مجموعه ثبت نشده‌اند. آن‌ها را ثبت کنید تا این محتوا را در مدیریت مدیریت کنید."
 
-#: packages/admin/src/components/editor/ImageUploadExtension.ts:213
+#: packages/admin/src/components/editor/ImageUploadExtension.ts:215
 msgid "The image is in the Media Library, but this entry is now read-only."
 msgstr ""
 
@@ -15251,7 +15341,7 @@ msgstr ""
 msgid "The version from {when} is now your draft. Publish when you're ready."
 msgstr ""
 
-#: packages/admin/src/components/editor/ImageUploadExtension.ts:212
+#: packages/admin/src/components/editor/ImageUploadExtension.ts:214
 msgid "The video is in the Media Library, but this entry is now read-only."
 msgstr ""
 
@@ -15333,6 +15423,10 @@ msgstr ""
 msgid "This block has no fields."
 msgstr ""
 
+#: packages/admin/src/components/PortableTextEditor.tsx:1396
+msgid "This block has nothing to fill in."
+msgstr ""
+
 #: packages/admin/src/components/editor/HtmlBlockPreview.tsx:113
 msgid "This block runs JavaScript."
 msgstr ""
@@ -15345,7 +15439,7 @@ msgstr ""
 msgid "This block uses an older version of its type, so it can't be restored after you delete it."
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:3221
+#: packages/admin/src/components/PortableTextEditor.tsx:3251
 msgid "This block was deleted, so your changes can't be saved."
 msgstr ""
 
@@ -15379,7 +15473,7 @@ msgstr ""
 msgid "This collection is defined in code. Some settings cannot be changed here. Edit your live.config.ts file to modify the schema."
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:3370
+#: packages/admin/src/components/PortableTextEditor.tsx:3400
 msgid "This content cannot be edited safely"
 msgstr ""
 
@@ -15420,7 +15514,7 @@ msgstr ""
 msgid "This entry doesn't exist or was deleted."
 msgstr ""
 
-#: packages/admin/src/components/editor/LinkDestinationInput.tsx:234
+#: packages/admin/src/components/editor/LinkDestinationInput.tsx:250
 msgid "This entry has no URL until it is published. Paste a URL instead."
 msgstr ""
 
@@ -15458,11 +15552,11 @@ msgstr ""
 msgid "This field cannot be edited by this version of EmDash."
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:3353
+#: packages/admin/src/components/PortableTextEditor.tsx:3383
 msgid "This field contains table content that the editor cannot preserve. Update it through the API before editing or saving this content."
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:3372
+#: packages/admin/src/components/PortableTextEditor.tsx:3402
 msgid "This field contains unsupported Portable Text marks: <0>{markList}</0>. Remove them through the API before editing or saving this content."
 msgstr ""
 
@@ -15542,7 +15636,7 @@ msgstr "این یک وبسایت وردپرس است."
 msgid "This is not the package the import was started with. Choose the same file again."
 msgstr ""
 
-#: packages/admin/src/components/editor/LinkDestinationInput.tsx:345
+#: packages/admin/src/components/editor/LinkDestinationInput.tsx:364
 msgid "This link can't be used. Enter a web address, such as https://example.com."
 msgstr ""
 
@@ -15591,7 +15685,7 @@ msgstr ""
 msgid "This passkey is already registered on this device."
 msgstr "این شاه‌کلید از قبل روی این دستگاه ثبت شده است."
 
-#: packages/admin/src/components/PortableTextEditor.tsx:3391
+#: packages/admin/src/components/PortableTextEditor.tsx:3421
 msgid "This paste is too large. Paste fewer cells or less text at a time."
 msgstr ""
 
@@ -15668,12 +15762,12 @@ msgstr ""
 msgid "This saved timezone isn't recognized. Choose a suggestion for reliable date display."
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:3436
+#: packages/admin/src/components/PortableTextEditor.tsx:3466
 msgid "This section contains table content that the editor cannot preserve. Update the section before inserting it."
 msgstr ""
 
 #. placeholder {0}: sectionInsertErrorMarks.join(", ")
-#: packages/admin/src/components/PortableTextEditor.tsx:3438
+#: packages/admin/src/components/PortableTextEditor.tsx:3468
 msgid "This section contains unsupported Portable Text marks: <0>{0}</0>. Update the section before inserting it."
 msgstr ""
 
@@ -15731,15 +15825,15 @@ msgstr ""
 msgid "This slug is reserved. Enter a different one."
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:3393
+#: packages/admin/src/components/PortableTextEditor.tsx:3423
 msgid "This spreadsheet data has invalid quoted cells. Fix the quotes or remove the tab separators and try again."
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:3351
+#: packages/admin/src/components/PortableTextEditor.tsx:3381
 msgid "This table cannot be edited safely"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:3397
+#: packages/admin/src/components/PortableTextEditor.tsx:3427
 msgid "This table has unsupported cell formatting, merged cells, or column widths. Paste it as plain text or simplify the table and try again."
 msgstr ""
 
@@ -15892,6 +15986,7 @@ msgstr ""
 msgid "Tooltip text"
 msgstr ""
 
+#: packages/admin/src/components/editor/ColumnsNode.tsx:228
 #: packages/admin/src/components/settings/SidebarsSettings.tsx:138
 msgid "Top"
 msgstr ""
@@ -16063,10 +16158,10 @@ msgstr "با داده‌های من امتحان کنید"
 msgid "TSX"
 msgstr ""
 
-#: packages/admin/src/components/editor/BlockMenu.tsx:146
-#: packages/admin/src/components/PortableTextEditor.tsx:4064
-#: packages/admin/src/components/PortableTextEditor.tsx:4066
-#: packages/admin/src/components/PortableTextEditor.tsx:4083
+#: packages/admin/src/components/editor/BlockMenu.tsx:140
+#: packages/admin/src/components/PortableTextEditor.tsx:4094
+#: packages/admin/src/components/PortableTextEditor.tsx:4096
+#: packages/admin/src/components/PortableTextEditor.tsx:4113
 msgid "Turn into"
 msgstr ""
 
@@ -16133,11 +16228,11 @@ msgstr ""
 msgid "Type mismatch ({0})"
 msgstr "عدم تطابق نوع ({0})"
 
-#: packages/admin/src/components/PortableTextEditor.tsx:1123
+#: packages/admin/src/components/PortableTextEditor.tsx:1144
 msgid "Type to filter"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:3508
+#: packages/admin/src/components/PortableTextEditor.tsx:3538
 msgid "Type to search"
 msgstr ""
 
@@ -16159,13 +16254,13 @@ msgstr "دسترسی به فروشگاه ممکن نیست"
 msgid "Unassigned"
 msgstr "بدون تخصیص"
 
-#: packages/admin/src/components/PortableTextEditor.tsx:3646
-#: packages/admin/src/components/PortableTextEditor.tsx:5210
+#: packages/admin/src/components/PortableTextEditor.tsx:3676
+#: packages/admin/src/components/PortableTextEditor.tsx:5240
 msgid "Underline"
 msgstr ""
 
 #: packages/admin/src/components/block-field-undo.tsx:219
-#: packages/admin/src/components/PortableTextEditor.tsx:5441
+#: packages/admin/src/components/PortableTextEditor.tsx:5471
 #: packages/admin/src/components/settings/SidebarsSettings.tsx:68
 msgid "Undo"
 msgstr ""
@@ -16333,6 +16428,10 @@ msgstr ""
 msgid "Update Field"
 msgstr "به‌روزرسانی فیلد"
 
+#: packages/admin/src/components/editor/TextLinkControl.tsx:110
+msgid "Update link"
+msgstr ""
+
 #: packages/admin/src/components/calendar/CalendarEntry.tsx:45
 msgid "Update scheduled"
 msgstr ""
@@ -16440,7 +16539,7 @@ msgstr ""
 msgid "Upload Export File"
 msgstr "بارگذاری فایل برون‌ریزی"
 
-#: packages/admin/src/components/media/MediaBrowserItems.tsx:208
+#: packages/admin/src/components/media/MediaBrowserItems.tsx:213
 #: packages/admin/src/components/MediaUploadDialog.tsx:76
 msgid "Upload failed"
 msgstr ""
@@ -16476,7 +16575,7 @@ msgstr ""
 msgid "Upload not finished"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:2504
+#: packages/admin/src/components/PortableTextEditor.tsx:2533
 msgid "Upload or choose a video"
 msgstr ""
 
@@ -16505,7 +16604,7 @@ msgstr ""
 msgid "Uploaded:"
 msgstr "بارگذاری‌شد:"
 
-#: packages/admin/src/components/media/MediaBrowserItems.tsx:208
+#: packages/admin/src/components/media/MediaBrowserItems.tsx:213
 #: packages/admin/src/components/MediaUploadDialog.tsx:60
 #: packages/admin/src/components/WordPressImport.tsx:2177
 msgid "Uploading"
@@ -16516,7 +16615,7 @@ msgstr "در حال آپلود"
 msgid "visualEditing.uploadingFile"
 msgstr ""
 
-#: packages/admin/src/components/editor/ImageUploadExtension.ts:125
+#: packages/admin/src/components/editor/ImageUploadExtension.ts:126
 #: packages/admin/src/components/media/ImageDropTarget.tsx:147
 #: packages/admin/src/components/media/ImageDropTarget.tsx:160
 msgid "Uploading image…"
@@ -16526,7 +16625,7 @@ msgstr ""
 msgid "Uploading the package"
 msgstr ""
 
-#: packages/admin/src/components/editor/ImageUploadExtension.ts:125
+#: packages/admin/src/components/editor/ImageUploadExtension.ts:126
 msgid "Uploading video…"
 msgstr ""
 
@@ -16535,8 +16634,8 @@ msgstr ""
 #: packages/admin/src/components/FieldEditor.tsx:1703
 #: packages/admin/src/components/MenuEditor.tsx:626
 #: packages/admin/src/components/MenuEditor.tsx:847
-#: packages/admin/src/components/PortableTextEditor.tsx:1415
-#: packages/admin/src/components/PortableTextEditor.tsx:2429
+#: packages/admin/src/components/PortableTextEditor.tsx:1436
+#: packages/admin/src/components/PortableTextEditor.tsx:2458
 msgid "URL"
 msgstr "URL"
 
@@ -16834,15 +16933,15 @@ msgstr ""
 msgid "Version restored"
 msgstr ""
 
-#: packages/admin/src/components/PortableTextEditor.tsx:2419
+#: packages/admin/src/components/PortableTextEditor.tsx:2448
 msgid "Vertical"
 msgstr ""
 
 #: packages/admin/src/components/AllowedTypesEditor.tsx:99
-#: packages/admin/src/components/editor/BlockMenu.tsx:43
+#: packages/admin/src/components/editor/blockTypes.ts:137
 #: packages/admin/src/components/MediaLibrary.tsx:923
 #: packages/admin/src/components/MediaPickerModal.tsx:407
-#: packages/admin/src/components/PortableTextEditor.tsx:2503
+#: packages/admin/src/components/PortableTextEditor.tsx:2532
 #: packages/admin/src/components/revisions/RevisionDocument.tsx:485
 msgid "Video"
 msgstr ""
@@ -16856,7 +16955,7 @@ msgstr ""
 msgid "Video player for {0}"
 msgstr ""
 
-#: packages/admin/src/components/editor/ImageUploadExtension.ts:262
+#: packages/admin/src/components/editor/ImageUploadExtension.ts:264
 msgid "Video upload failed. Try again."
 msgstr ""
 
@@ -17130,8 +17229,13 @@ msgstr ""
 msgid "Why is this important?"
 msgstr ""
 
+#: packages/admin/src/components/editor/ColumnsNode.tsx:381
 #: packages/admin/src/components/editor/ImageDetailPanel.tsx:279
 msgid "Wide"
+msgstr ""
+
+#: packages/admin/src/components/editor/ColumnsNode.tsx:382
+msgid "Wider"
 msgstr ""
 
 #: packages/admin/src/components/Widgets.tsx:874
@@ -17178,6 +17282,7 @@ msgstr ""
 msgid "Widgets"
 msgstr "ابزارک‌ها"
 
+#: packages/admin/src/components/editor/ColumnsNode.tsx:437
 #: packages/admin/src/components/editor/ImageDetailPanel.tsx:451
 #: packages/admin/src/components/editor/ImageDetailPanel.tsx:685
 msgid "Width"
@@ -17225,6 +17330,10 @@ msgstr ""
 
 #: packages/admin/src/components/SandboxedContentEditorActions.tsx:285
 msgid "Working…"
+msgstr ""
+
+#: packages/admin/src/components/editor/ColumnsNode.tsx:342
+msgid "Wrap columns"
 msgstr ""
 
 #: packages/admin/src/components/editor/HtmlBlockNode.tsx:60
