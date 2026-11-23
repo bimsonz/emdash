@@ -28,15 +28,42 @@ export interface RecordedImageService {
 	config: Record<string, unknown>;
 }
 
+interface ImageServiceEntry {
+	entrypoint: string;
+	config?: Record<string, unknown>;
+}
+
+/**
+ * Astro's `image.service`: one service, or one for the build and one for the
+ * runtime. `@astrojs/cloudflare` 15 sets the pair; 14 resolves its options to
+ * one service.
+ */
+export type ImageServiceSetting =
+	| ImageServiceEntry
+	| { build?: ImageServiceEntry; runtime?: ImageServiceEntry };
+
+function isServicePair(
+	service: ImageServiceSetting,
+): service is { build?: ImageServiceEntry; runtime?: ImageServiceEntry } {
+	return "build" in service || "runtime" in service;
+}
+
+/** The service a deployed site runs, the one whose URLs EmDash signs. */
+function runtimeService(service: ImageServiceSetting | undefined): ImageServiceEntry | undefined {
+	return service && isServicePair(service) ? service.runtime : service;
+}
+
 /**
  * Wrap Astro's `image.service` (as the adapter left it) for signing. Returns
  * the service to install and the stock service to record, or a warning for a
- * service EmDash can't sign for.
+ * service EmDash can't sign for. Of a build and runtime pair, only the runtime
+ * service is replaced: the build service's images are files, not URLs to sign.
  */
 export function wrapImageService(
-	service: { entrypoint: string; config?: Record<string, unknown> } | undefined,
-): { service: { entrypoint: string }; original: RecordedImageService } | { warn: string } {
-	const entrypoint = service?.entrypoint ?? SHARP_IMAGE_SERVICE;
+	service: ImageServiceSetting | undefined,
+): { service: ImageServiceSetting; original: RecordedImageService } | { warn: string } {
+	const runtime = runtimeService(service);
+	const entrypoint = runtime?.entrypoint ?? SHARP_IMAGE_SERVICE;
 	if (!STOCK_RUNTIME_IMAGE_SERVICES.has(entrypoint)) {
 		return {
 			warn:
@@ -44,9 +71,10 @@ export function wrapImageService(
 				`image service (${entrypoint}) is not one, so image URLs are not signed.`,
 		};
 	}
+	const signing = { entrypoint: SIGNING_IMAGE_SERVICE_ENTRYPOINT };
 	return {
-		service: { entrypoint: SIGNING_IMAGE_SERVICE_ENTRYPOINT },
-		original: { entrypoint, config: service?.config ?? {} },
+		service: service && isServicePair(service) ? { ...service, runtime: signing } : signing,
+		original: { entrypoint, config: runtime?.config ?? {} },
 	};
 }
 
@@ -56,12 +84,13 @@ export function wrapImageService(
  * and its URLs carry no signature for the endpoints to accept.
  */
 export function replacedSigningServiceWarning(
-	service: { entrypoint: string } | undefined,
+	service: ImageServiceSetting | undefined,
 ): string | undefined {
-	if (service?.entrypoint === SIGNING_IMAGE_SERVICE_ENTRYPOINT) return undefined;
+	const runtime = runtimeService(service);
+	if (runtime?.entrypoint === SIGNING_IMAGE_SERVICE_ENTRYPOINT) return undefined;
 	return (
 		`images.signedUrls needs the image service EmDash installs, but an integration set up ` +
-		`after EmDash replaced it with ${service?.entrypoint ?? "another service"}, so image URLs ` +
+		`after EmDash replaced it with ${runtime?.entrypoint ?? "another service"}, so image URLs ` +
 		`are not signed.`
 	);
 }
@@ -135,7 +164,7 @@ export function planImageSigning(opts: {
 	/** EmDash installed its image endpoint, the only place signatures are checked. */
 	endpointInstalled: boolean;
 	isCloudflare: boolean;
-	service: { entrypoint: string; config?: Record<string, unknown> } | undefined;
+	service: ImageServiceSetting | undefined;
 	vitePlugins: unknown;
 	/** The project root, where the installed adapter's version is looked up. */
 	root: URL;
