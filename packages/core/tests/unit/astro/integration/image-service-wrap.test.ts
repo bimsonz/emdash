@@ -9,6 +9,7 @@ import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import {
 	detectCloudflareImageMode,
 	planImageSigning,
+	replacedSigningServiceWarning,
 	wrapImageService,
 } from "../../../../src/astro/integration/image-service-wrap.js";
 import { emdash, type EmDashConfig } from "../../../../src/astro/integration/index.js";
@@ -62,6 +63,47 @@ describe("wrapImageService", () => {
 
 		expect(result).toEqual({ warn: expect.stringContaining(entrypoint) });
 		expect(result).not.toHaveProperty("service");
+	});
+
+	// @astrojs/cloudflare 15 sets Astro's `image.service` to a pair: the binding
+	// service transforms prerendered images at build, and the workerd service
+	// builds runtime URLs. Read as one service, the pair has no entrypoint, so the
+	// workerd service was recorded as sharp and the endpoint didn't treat it as stock.
+	it("replaces only the runtime service of a build and runtime pair", () => {
+		const build = { entrypoint: "@astrojs/cloudflare/image-service-binding" };
+
+		expect(wrapImageService({ build, runtime: { entrypoint: WORKERD } })).toEqual({
+			service: { build, runtime: { entrypoint: "emdash/internal/image-service" } },
+			original: { entrypoint: WORKERD, config: {} },
+		});
+	});
+
+	it("refuses a pair whose runtime service is not a stock one", () => {
+		const result = wrapImageService({
+			build: { entrypoint: SHARP },
+			runtime: { entrypoint: "./src/thumbnail-service.ts" },
+		});
+
+		expect(result).toEqual({ warn: expect.stringContaining("./src/thumbnail-service.ts") });
+	});
+});
+
+describe("replacedSigningServiceWarning", () => {
+	const build = { entrypoint: "@astrojs/cloudflare/image-service-binding" };
+
+	it("says nothing while a pair's runtime service is the signing service", () => {
+		expect(
+			replacedSigningServiceWarning({
+				build,
+				runtime: { entrypoint: "emdash/internal/image-service" },
+			}),
+		).toBeUndefined();
+	});
+
+	it("names the service that replaced a pair's signing runtime service", () => {
+		expect(
+			replacedSigningServiceWarning({ build, runtime: { entrypoint: "./src/later.ts" } }),
+		).toContain("./src/later.ts");
 	});
 });
 
